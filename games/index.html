@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SETT — mini-games built with AI, playable in your browser</title>
+<style>
+  :root{--bg:#0d1117;--card:#161b22;--line:#2a3138;--text:#e8e4d8;--dim:#9a958a;--amber:#e8a33d;--red:#c8452c}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:Georgia,'Times New Roman',serif;padding:44px 20px 64px}
+  .wrap{max-width:640px;margin:0 auto}
+  h1{font-size:32px;font-weight:normal;letter-spacing:.5px}
+  h1 b{color:var(--amber);font-weight:normal}
+  .sub{color:var(--dim);margin:14px 0 8px;font-size:16px;line-height:1.6}
+  .note{background:#1c1710;border:1px solid #4a3a1c;border-radius:10px;padding:14px 18px;margin:22px 0 8px;font-size:14.5px;line-height:1.65}
+  .note b{color:var(--amber);font-weight:normal}
+  h3.sec{font-size:20px;font-weight:normal;margin:32px 0 12px;color:var(--text)}
+  ol.how{margin:0 0 6px 20px;color:var(--dim);font-size:15px;line-height:1.75}
+  ol.how b{color:var(--text);font-weight:normal}
+  .gloss{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px}
+  .gloss span{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:5px 12px;font-size:13px;color:var(--dim)}
+  .gloss span b{color:var(--amber);font-weight:normal}
+  a.game{display:block;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:18px 20px;margin-bottom:14px;text-decoration:none;color:var(--text)}
+  a.game:hover{border-color:var(--amber)}
+  a.game h2{font-size:19px;font-weight:normal;margin-bottom:6px}
+  a.game p{color:var(--dim);font-size:14px;line-height:1.55}
+  a.game .tag{color:var(--red);font-size:12px;letter-spacing:1.5px;text-transform:uppercase}
+  a.game .play{color:var(--amber);font-size:14px}
+  .more{color:var(--dim);font-size:14px;line-height:2}
+  .more a{color:var(--amber);text-decoration:none}
+  footer{color:var(--dim);font-size:14px;margin-top:36px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>SETT — mini-games built <b>with AI</b></h1>
+  <p class="sub">I'm a college student in China. I design mini-games, AI writes the bulk code, I playtest every button myself — then I ship them to a real platform with real players. My biggest game has 8,011 players. The three games below run right in your browser, free, no download, no sign-up.</p>
+
+  <div class="note"><b>One honest heads-up:</b> the games' interfaces are in Chinese — they were made for a Chinese platform. Don't let that stop you: they're choice-based story games, and the 30-second guide below is genuinely all you need. <b>Tip:</b> in Chrome, right-click the game page → “Translate to English” — it translates most of the text live.</div>
+
+  <h3 class="sec">How to play (same engine, all three games)</h3>
+  <ol class="how">
+    <li>Tap the big <b>Start</b> button.</li>
+    <li>You start as a nobody. Pick your <b>background / faction</b> when asked.</li>
+    <li>Each chapter tells a short scene, then offers you <b>choices</b>. Every choice changes your stats, your allies and your fate.</li>
+    <li>When you meet a famous figure, you can <b>take one of their skills</b> and build your own mix. That's the whole game: assemble a legend out of other legends.</li>
+    <li>Survive all <b>20 chapters</b> to reach an ending. Your final score and ending appear on a poster you can save and share.</li>
+  </ol>
+  <div class="gloss">
+    <span><b>开始</b> = Start</span>
+    <span><b>继续</b> = Continue</span>
+    <span><b>排行榜</b> = Leaderboard</span>
+    <span><b>图鉴</b> = Collection</span>
+    <span><b>战绩</b> = My records</span>
+    <span><b>结局</b> = Ending</span>
+    <span><b>评分</b> = Score</span>
+  </div>
+
+  <h3 class="sec">The games</h3>
+  <a class="game" href="https://peiyuanliu212-prog.github.io/luanshi-pinjiang/">
+    <span class="tag">Strategy · Three Kingdoms</span>
+    <h2>Puzzle General — Three Kingdoms</h2>
+    <p>Steal skills from Lü Bu, Zhuge Liang and Cao Cao. 90 historical figures, 20 chapters, 20 endings. My biggest game: 8,011 players.</p>
+    <span class="play">▶ Play in browser</span>
+  </a>
+  <a class="game" href="https://peiyuanliu212-prog.github.io/fengshen-pinjiang/">
+    <span class="tag">Mythology · Investiture of the Gods</span>
+    <h2>Puzzle General — Fengshen</h2>
+    <p>Same engine, Chinese mythology: gods, demons and divine treasures. Take a god's treasure, become the storm that ends a dynasty.</p>
+    <span class="play">▶ Play in browser</span>
+  </a>
+  <a class="game" href="https://peiyuanliu212-prog.github.io/shuihu-pinjiang/">
+    <span class="tag">Outlaw heroes · Water Margin</span>
+    <h2>Puzzle General — Water Margin</h2>
+    <p>Same engine, the 108 outlaw heroes of Liangshan. Loyalty or glory — pick a side, live with it for 20 chapters.</p>
+    <span class="play">▶ Play in browser</span>
+  </a>
+
+  <h3 class="sec">More games (Chinese UI, no guide yet)</h3>
+  <p class="more">
+    <a href="https://peiyuanliu212-prog.github.io/dajin-cheli/">One More Cell</a> — push-your-luck looting game ·
+    <a href="https://peiyuanliu212-prog.github.io/kaibao-daheng/">Card King: Football</a> — pack-opening card game ·
+    <a href="https://peiyuanliu212-prog.github.io/lantan-kawang/">Card King: Basketball</a> — its twin ·
+    <a href="https://peiyuanliu212-prog.github.io/chaidao/">Hidden One</a> — blind-box game
+  </p>
+
+  <footer>Built and shipped solo, in a dorm, with AI as the crew.<br>Talk to me on X — that's the only inbox for these games.</footer>
+</div>
+</body>
+</html>
