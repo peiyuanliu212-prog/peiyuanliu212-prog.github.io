@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>三国挂机卡牌 · demo v0</title>
+<style>
+:root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:"PingFang SC","Microsoft YaHei",sans-serif;font-size:15px;padding-bottom:76px}
+header{position:sticky;top:0;z-index:20;background:var(--paper);border-bottom:2px solid var(--ink);padding:8px 12px}
+header h1{font-size:19px;letter-spacing:2px}
+header h1 .seal{background:var(--red);color:#fff;padding:1px 6px;border-radius:3px;font-size:14px;margin-right:6px}
+.resbar{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;font-size:13px;color:var(--ink)}
+.resbar b{color:var(--red2)}
+nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;background:var(--ink)}
+nav.tabs button{flex:1;background:var(--ink);color:#f4eedb;border:none;padding:12px 0;font-size:14px;cursor:pointer}
+nav.tabs button.on{background:var(--red);color:#fff}
+main{max-width:560px;margin:0 auto;padding:12px}
+section.page{display:none}section.page.on{display:block}
+h2.sec{font-size:16px;border-left:5px solid var(--red);padding-left:8px;margin:14px 0 8px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px;margin-bottom:10px}
+.btn{background:var(--red);color:#fff;border:none;border-radius:6px;padding:9px 14px;font-size:14px;cursor:pointer}
+.btn.sub{background:#fff;color:var(--ink);border:1px solid var(--ink)}
+.btn.dark{background:var(--ink);color:#f4eedb}
+.btn:disabled{background:#b9ae8d;color:#efe9d6;cursor:not-allowed}
+.btn.sm{padding:5px 10px;font-size:13px}
+.note{font-size:12px;color:var(--mut);line-height:1.6}
+.gen{display:flex;gap:10px;align-items:flex-start}
+.avatar{width:46px;height:46px;flex:0 0 46px;border-radius:50%;background:var(--paper2);border:2px solid var(--ink);display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;color:var(--ink)}
+.gen .nm{font-weight:700;font-size:15px}
+.star{color:var(--red);font-size:12px}
+.tag{display:inline-block;border:1px solid var(--line);border-radius:10px;padding:0 7px;font-size:11px;color:var(--mut);margin-right:4px;background:#fff}
+.tag.hot{border-color:var(--red);color:var(--red2)}
+.stats{font-size:12px;color:var(--mut);line-height:1.7}
+.log{background:var(--ink);color:#f4eedb;border-radius:8px;padding:10px;font-size:12.5px;line-height:1.75;max-height:300px;overflow:auto;white-space:pre-wrap}
+.log .r{color:#e8a08e}
+select,input{background:#fff;color:var(--ink);border:1px solid var(--ink);border-radius:5px;padding:6px;font-size:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.starterOpt{width:100%;text-align:left;margin-bottom:10px}
+.bar{height:10px;background:#e3d8b4;border-radius:5px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--red)}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.win{color:var(--ok);font-weight:700}.lose{color:var(--red2);font-weight:700}
+#starterScreen{max-width:560px;margin:0 auto;padding:16px 12px}
+h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
+.sub{text-align:center;color:var(--mut);font-size:13px;margin-bottom:16px}
+</style>
+</head>
+<body>
+<div id="app" style="display:none">
+<header>
+  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">demo v0 · 设计：知白守黑</span></h1>
+  <div class="resbar">
+    <span>元宝 <b id="resYuanbao">0</b></span>
+    <span>招募券 <b id="resTickets">0</b></span>
+    <span>功绩 <b id="resMerit">0</b></span>
+    <span>演武积分 <b id="resArena">0</b></span>
+    <span>官职 <b id="resRank">白身</b></span>
+    <span>卡 <b id="resCards">0</b></span>
+  </div>
+</header>
+<main>
+<section class="page" id="tab-home">
+  <h2 class="sec">主页</h2>
+  <div class="card">
+    <div class="kv"><span>初始武将</span><b id="homeStarter">—</b></div>
+    <div class="kv"><span>已推关</span><b id="homeStage">0 / 30 关</b></div>
+    <div class="kv"><span>全民爬塔</span><b id="homeTower">第 0 层</b></div>
+    <div class="kv"><span>上阵战力</span><b id="homePower">0</b></div>
+    <p class="note" style="margin-top:8px">玩法：挂机/抽卡拿卡 → 组 5 人上阵 → 全自动推关 → 升星强化升官 → 饭点爬塔。纯系统挂机，无剧情线。演示版参数已在各页明示，正式口径见定版规格。</p>
+  </div>
+  <h2 class="sec">官职（功绩只来自全民爬塔）</h2>
+  <div class="card" id="rankBox"></div>
+</section>
+<section class="page" id="tab-pool">
+  <h2 class="sec">挂机卡池（招牌）</h2>
+  <div class="card">
+    <p class="note">花元宝开启，开启后自动出卡。演示加速：出卡节拍压缩（<b>演示 5 秒/张</b>，正式版 1 分钟/张），池时长按演示时钟折算显示。</p>
+    <div class="kv"><span>英雄池（选阵营）</span>
+      <select id="heroFac"><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select></div>
+    <div class="kv"><span>英雄池剩余</span><b id="heroPoolInfo">未开启</b></div>
+    <div style="margin:8px 0"><button class="btn" id="btnHeroPool" data-testid="open-hero-pool">开启/延长 1 小时 · 100 元宝</button></div>
+    <div class="kv"><span>技能池剩余</span><b id="skillPoolInfo">未开启</b></div>
+    <div style="margin:8px 0"><button class="btn sub" id="btnSkillPool">开启/延长 1 小时 · 80 元宝</button></div>
+    <p class="note">开启时长可叠加，上限 6 小时。已拥有技能卡：<b id="skillOwned">0</b> 张（每张技能卡使全队技能伤害 +2%，在战斗结算中生效）。</p>
+  </div>
+  <h2 class="sec">抽卡</h2>
+  <div class="card">
+    <div class="kv"><span>普通招募（招募券）</span><b>1 券 1 抽 · 不出五星</b></div>
+    <div style="margin:8px 0"><button class="btn dark" id="btnTicketDraw" data-testid="ticket-draw">招募 1 次</button>
+    <button class="btn sub" id="btnTicketDraw10">招募 10 次</button></div>
+    <div class="kv"><span>限时池（元宝）</span><b>单抽 200 · 10 连 2000 保底五星</b></div>
+    <div style="margin:8px 0"><button class="btn" id="btnLimit1">限时单抽 200 元宝</button>
+    <button class="btn" id="btnLimit10" data-testid="limit10">限时 10 连 2000 元宝</button></div>
+    <p class="note">限时池入驻高星与限定变体卡（龙胆赵云 / 无双吕布）。距离保底：<b id="pityInfo">0</b></p>
+    <div class="log" id="gachaLog" style="max-height:180px">尚无抽卡记录。</div>
+  </div>
+</section>
+<section class="page" id="tab-cards">
+  <h2 class="sec">武将（收集 / 升星 / 强化 / 装备 / 上阵）</h2>
+  <div class="card">
+    <span>阵营筛选 </span><select id="factionFilter" data-testid="faction-filter"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
+    <button class="btn sm dark" id="btnAutoForm" data-testid="auto-form" style="margin-left:8px">一键上阵（战力前 5）</button>
+    <p class="note" id="formationInfo" style="margin-top:6px"></p>
+    <p class="note">强化：先点一张卡「设为强化目标」，再勾选 5 张饲料卡（不能是上阵/橱窗中的卡），成功率实时显示；同名饲料贡献翻倍，封顶 95%；<b>失败强化等级归 0</b>，卡与升星不丢。</p>
+    <p class="note" id="enhInfo"></p>
+  </div>
+  <div id="cardList"></div>
+</section>
+<section class="page" id="tab-stage">
+  <h2 class="sec">推关副本（3 章 × 10 关 · 无剧情，纯关卡）</h2>
+  <div class="card"><p class="note">每章第 5 关小 BOSS、第 10 关章末大 BOSS（有概率掉装备与好卡）。战斗全自动：攻速定出手、枪克骑/骑克弓/弓克枪 ×1.25、怒气满放技能。</p></div>
+  <div id="stageList"></div>
+  <h2 class="sec">战报</h2>
+  <div class="log" id="battleLog">尚未出战。</div>
+</section>
+<section class="page" id="tab-tower">
+  <h2 class="sec">全民爬塔（合并版 · 10 层）</h2>
+  <div class="card">
+    <p class="note">正式版每天 12:00–13:00、18:00–19:00 开放；<b>demo 演示期间开放时间放宽，全天可打</b>。最多失败 3 次出局。每层奖励 5 张招募券；功绩：胜 +50 / 败 +20（功绩只来自这里，用来升官职）。</p>
+    <div class="kv"><span>今日进度</span><b id="towerInfo">第 0 层 · 失败 0/3</b></div>
+    <div style="margin-top:8px"><button class="btn" id="btnTowerFight" data-testid="tower-fight">挑战下一层</button>
+    <button class="btn sub" id="btnTowerReset">重置今日爬塔（demo 调试）</button></div>
+  </div>
+  <div class="log" id="towerLog">尚未挑战。</div>
+</section>
+<section class="page" id="tab-more">
+  <h2 class="sec">演武台（简化版）</h2>
+  <div class="card">
+    <p class="note">打 AI 对手赢积分，定向兑换。胜 +10 分，败 +3 分。</p>
+    <div style="margin:8px 0"><button class="btn dark" id="btnArena">演武挑战</button></div>
+    <div class="grid2">
+      <button class="btn sub sm" data-exch="tickets">50 分 → 招募券 ×5</button>
+      <button class="btn sub sm" data-exch="yuanbao">100 分 → 元宝 ×100</button>
+      <button class="btn sub sm" data-exch="equip">150 分 → 随机装备 1 件</button>
+      <button class="btn sub sm" data-exch="meritless">30 分 → 招募券 ×2</button>
+    </div>
+    <div class="log" id="arenaLog" style="max-height:140px;margin-top:8px">尚未挑战。</div>
+  </div>
+  <h2 class="sec">橱窗（限定卡摆入产元宝）</h2>
+  <div class="card">
+    <p class="note">限定变体卡（龙胆赵云 / 无双吕布等）摆入橱窗后按时产元宝（demo 演示速率：每张 2 元宝/分钟，正式版速率另定）。点卡片上的「摆入橱窗/撤下」切换。</p>
+    <div class="kv"><span>待领取元宝</span><b id="showAcc">0</b></div>
+    <div style="margin-top:8px"><button class="btn" id="btnClaimShow">领取橱窗元宝</button></div>
+    <div id="showcaseList" style="margin-top:8px"></div>
+  </div>
+  <h2 class="sec">签到与领取</h2>
+  <div class="card">
+    <div style="margin:6px 0"><button class="btn sub" id="btnSign">每日签到 · 元宝 +80</button>
+    <span class="note">demo 可重复点测（正式版每日一次），仅作演示。</span></div>
+    <div style="margin:6px 0"><button class="btn sub" id="btnClaimNoon">12 点领取 · 招募券 +5</button>
+    <button class="btn sub" id="btnClaimEvening">18 点领取 · 招募券 +5</button>
+    <span class="note">demo 放宽为可领并明示；正式版限对应时段。</span></div>
+    <div style="margin:6px 0"><button class="btn dark" id="btnAd" data-testid="ad-btn">模拟广告 · 招募券 +5</button>
+    <span class="note" id="adInfo">今日 0/20 次。demo 用模拟广告代替真实广告。</span></div>
+    <div style="margin:6px 0"><button class="btn sub" id="btnReset">清空存档重开（demo 调试）</button></div>
+  </div>
+</section>
+</main>
+<nav class="tabs">
+  <button data-tab="home" class="on">主页</button>
+  <button data-tab="pool">卡池</button>
+  <button data-tab="cards">武将</button>
+  <button data-tab="stage">副本</button>
+  <button data-tab="tower">爬塔</button>
+  <button data-tab="more">更多</button>
+</nav>
+</div>
+<div id="starterScreen" style="display:none">
+  <h1 class="big">三国挂机卡牌</h1>
+  <p class="sub">设计：知白守黑 · demo v0<br>开局选将：按你的选择，领一位对应性格的初始武将（开局元宝 1000）</p>
+  <div id="starterOpts"></div>
+  <p class="note" style="text-align:center">性格修正：刚胆 攻防各 +8% · 鲁莽 攻 +20% 防 −10% · 冷静 无变化（最稳） · 胆小 防 +15%</p>
+</div>
+<script>
+"use strict";
+/* ============ CFG 配置区（全部数值只许在此） ============ */
+const CFG = {
+  startYuanbao: 1000,
+  limitSingle: 200, limitTen: 2000, limitTenGuaranteeFive: true,
+  ticketDrawCost: 1,
+  adReward: 5, adDailyCap: 20,
+  claimReward: 5, claimAdBonus: 5,
+  signReward: 80,
+  heroPoolCost: 100, skillPoolCost: 80, poolHourSec: 3600, poolMaxSec: 21600,
+  demoTickRate: 12,            // 演示加速：池时钟每真实秒走 12 秒
+  heroCardEveryRealSec: 5,     // 演示加速出卡节拍（正式版 60 秒/张，页面已明示）
+  skillCardEveryRealSec: 7,
+  counterMul: 1.25,
+  persMul: { "刚胆":{atk:1.08,def:1.08}, "鲁莽":{atk:1.20,def:0.90}, "冷静":{atk:1.0,def:1.0}, "胆小":{atk:1.0,def:1.15} },
+  starMulPer: 0.25,            // 升星每星能力 +25%
+  starSkillPer: 0.20,          // 升星每星技能伤害 +20%
+  enhMulPer: 0.05,             // 强化每级攻防 +5%
+  enhBasePerStar: 3,           // 强化：每张饲料按星级 ×3% 计成功率
+  enhRateCap: 95,
+  rankMulPer: 0.02,            // 官职每级全队攻防 +2%
+  skillCardTeamBonus: 0.02,    // 每张技能卡全队技能伤害 +2%
+  towerLayers: 10, towerMaxFails: 3, towerTicketPerLayer: 5, towerMeritWin: 50, towerMeritLose: 20,
+  arenaWinPts: 10, arenaLosePts: 3,
+  showcasePerMin: 2,           // demo 演示速率：每张橱窗卡 2 元宝/分钟
+  stageYuanbaoBase: 20, stageYuanbaoPer: 2,
+};
+const BEATS = { "枪":"骑", "骑":"弓", "弓":"枪" };
+const RANKS = [
+  {name:"白身", merit:0},{name:"亭长", merit:100},{name:"县尉", merit:250},{name:"校尉", merit:450},
+  {name:"都尉", merit:700},{name:"偏将军", merit:1000},{name:"骠骑将军", merit:1400},{name:"大将军", merit:1900},
+  {name:"太尉", merit:2500},{name:"丞相", merit:3200}
+];
+/* ============ DATA 数据区 ============ */
+/* [名,阵营,星,武,智,统,攻速,兵种,性格,技能名,技能倍率] */
+const GEN_ROWS = [
+["曹操","魏",5,82,94,96,55,"骑","冷静","魏武挥鞭",1.9],["司马懿","魏",5,68,97,90,48,"弓","冷静","鬼谋连环",1.9],
+["夏侯惇","魏",4,90,52,78,62,"骑","刚胆","刚烈突刺",1.6],["张辽","魏",4,88,66,84,70,"骑","刚胆","逍遥突袭",1.6],
+["夏侯渊","魏",3,84,48,70,78,"弓","鲁莽","神速连射",1.45],["徐晃","魏",3,82,55,72,58,"枪","刚胆","长驱直入",1.45],
+["许褚","魏",3,93,30,64,50,"枪","鲁莽","虎痴蛮力",1.45],["曹仁","魏",3,76,50,80,45,"枪","胆小","江陵铁壁",1.4],
+["程昱","魏",2,45,82,66,42,"弓","冷静","火攻之计",1.3],
+["刘备","蜀",4,72,70,82,52,"枪","刚胆","仁德双剑",1.6],["关羽","蜀",5,96,72,88,60,"枪","刚胆","青龙偃月",1.95],
+["张飞","蜀",4,95,38,74,58,"枪","鲁莽","长坂怒吼",1.6],["赵云","蜀",5,93,70,86,82,"骑","刚胆","七进七出",1.9],
+["诸葛亮","蜀",5,50,99,94,44,"弓","冷静","八阵图",1.95],["黄忠","蜀",4,88,55,76,56,"弓","冷静","老当益壮",1.6],
+["马超","蜀",4,92,45,78,76,"骑","鲁莽","西凉铁骑",1.6],["魏延","蜀",3,84,50,70,64,"骑","鲁莽","子午奇袭",1.45],
+["姜维","蜀",3,82,78,76,66,"枪","冷静","麒麟之才",1.45],
+["孙权","吴",4,68,74,84,50,"弓","胆小","制衡之术",1.55],["周瑜","吴",5,72,95,92,58,"弓","冷静","赤壁火计",1.9],
+["吕蒙","吴",4,78,80,82,54,"枪","冷静","白衣渡江",1.6],["陆逊","吴",4,66,92,84,52,"弓","冷静","夷陵火营",1.6],
+["孙策","吴",4,90,58,80,72,"骑","刚胆","小霸王",1.6],["太史慈","吴",3,86,52,72,68,"弓","刚胆","神亭酣战",1.45],
+["甘宁","吴",3,85,46,68,74,"骑","鲁莽","百骑劫营",1.45],["黄盖","吴",2,74,44,66,46,"枪","刚胆","苦肉诈降",1.3],
+["周泰","吴",3,84,38,70,52,"枪","胆小","不屈护主",1.4],
+["吕布","群",5,99,35,82,78,"骑","鲁莽","天下无双",2.0],["貂蝉","群",4,60,86,68,62,"弓","冷静","闭月离间",1.6],
+["董卓","群",4,80,42,78,40,"枪","胆小","暴虐镇压",1.55],["张角","群",4,55,88,74,46,"弓","冷静","苍天已死",1.6],
+["华雄","群",3,88,32,66,56,"骑","鲁莽","汜水斩将",1.45],["袁绍","群",3,62,60,80,44,"枪","胆小","四世三公",1.4],
+["公孙瓒","群",3,80,50,70,70,"骑","刚胆","白马义从",1.45],["颜良","群",2,86,30,62,54,"枪","鲁莽","河北双壁",1.3],
+["文丑","群",2,85,28,60,58,"骑","鲁莽","河北双壁",1.3]
+];
+const GENS = GEN_ROWS.map((r,i)=>({id:i+1,name:r[0],fac:r[1],star:r[2],wu:r[3],zhi:r[4],tong:r[5],spd:r[6],troop:r[7],pers:r[8],skill:r[9],skillMul:r[10],variant:false,baseId:i+1}));
+GENS.push({id:101,name:"龙胆赵云",fac:"蜀",star:5,wu:96,zhi:74,tong:88,spd:86,troop:"骑",pers:"刚胆",skill:"龙胆枪魂",skillMul:2.05,variant:true,baseId:13});
+GENS.push({id:102,name:"无双吕布",fac:"群",star:5,wu:100,zhi:38,tong:84,spd:80,troop:"骑",pers:"鲁莽",skill:"无双乱舞",skillMul:2.1,variant:true,baseId:28});
+const GEN_BY_ID = {}; GENS.forEach(g=>GEN_BY_ID[g.id]=g);
+const SKILL_CARDS = ["火计","连环计","铁壁阵","强弩令","疾风步","兵书残页","虎符","练兵令"];
+const BONDS = [
+  {name:"桃园结义", members:["刘备","关羽","张飞"], atk:0.10, def:0.10},
+  {name:"五虎上将", members:["关羽","张飞","赵云","马超","黄忠"], atk:0.08, def:0.08},
+  {name:"魏武雄图", members:["曹操","夏侯惇","张辽"], atk:0.09, def:0.06},
+  {name:"江东双璧", members:["周瑜","孙策"], atk:0.10, def:0.05},
+  {name:"龙虎对峙", members:["诸葛亮","司马懿"], atk:0.07, def:0.07},
+  {name:"连环之计", members:["吕布","貂蝉"], atk:0.12, def:0.0},
+  {name:"江东基业", members:["孙权","周瑜","吕蒙"], atk:0.06, def:0.09},
+  {name:"西凉传承", members:["马超","姜维"], atk:0.09, def:0.04}
+];
+const CHAPTERS = ["黄巾之乱","董卓乱政","群雄逐鹿"];
+const EQUIP_TYPES = {wp:{name:"武器",stat:"atk"}, ar:{name:"防具",stat:"def"}, hs:{name:"战马",stat:"spd"}, tr:{name:"宝物",stat:"skill"}};
+function equipName(type, tier){ const base={wp:["铁剑","环首刀","青釭剑","方天画戟"],ar:["布甲","皮甲","鱼鳞甲","明光铠"],hs:["驽马","战马","千里马","赤兔"],tr:["铜符","玉佩","兵书","传国玉玺"]}[type]; return base[Math.min(tier-1,3)]+"·"+tier+"阶"; }
+/* ============ state + 存档层（唯一读写口）+ 账本 ============ */
+const SAVE_KEY = "sanguo_idle_save_v1";
+let _uid = 1;
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+function newState(){
+return { ver:1, yuanbao:CFG.startYuanbao, tickets:0, merit:0, rankIdx:0, arenaPts:0,
+cards:[], skillsOwned:[], equips:[], formation:[], starterGenId:0,
+pool:{ hero:{fac:"蜀",leftSec:0,acc:0}, skill:{leftSec:0,acc:0}},
+gachaPity:0, stageCleared:0,
+tower:{date:todayStr(), layer:0, fails:0, done:false},
+showcase:[], showcaseAcc:0, showcaseTs:Date.now(),
+signDate:"", adUsed:{date:todayStr(),count:0}, claims:{noon:"",evening:""},
+createdAt:Date.now()};
+}
+let state = newState();
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state));}catch(e){}}
+function load(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s){ state=Object.assign(newState(), JSON.parse(s)); return true;}}catch(e){} return false;}
+const RES_FIELD = { yuanbao:"yuanbao", tickets:"tickets", merit:"merit", arenaPts:"arenaPts"};
+function addRes(kind, n){ state[RES_FIELD[kind]] += n; if(state[RES_FIELD[kind]]<0) state[RES_FIELD[kind]]=0; save();}
+function spendRes(kind, n){ if(state[RES_FIELD[kind]] < n) return false; state[RES_FIELD[kind]] -= n; save(); return true;}
+function addCard(genId){
+const g = GEN_BY_ID[genId];
+const c = { uid:_uid++, genId:genId, star:g.star, enh:0, equip:{wp:0,ar:0,hs:0,tr:0}};
+state.cards.push(c); save(); return c;
+}
+function addEquip(type, tier){ const e={uid:_uid++, type:type, tier:tier, name:equipName(type,tier)}; state.equips.push(e); save(); return e;}
+function randPick(arr){ return arr[Math.floor(Math.random()*arr.length)];}
+/* ============ 卡池模块 ============ */
+function openPool(kind){
+const cost = kind==="hero"? CFG.heroPoolCost: CFG.skillPoolCost;
+const p = state.pool[kind];
+if(p.leftSec >= CFG.poolMaxSec) return {ok:false,msg:"已达 6 小时上限"};
+if(!spendRes("yuanbao", cost)) return {ok:false,msg:"元宝不足"};
+p.leftSec = Math.min(CFG.poolMaxSec, p.leftSec + CFG.poolHourSec);
+if(kind==="hero"){ const sel=document.getElementById("heroFac"); if(sel) p.fac=sel.value;}
+save(); return {ok:true,msg:"已开启/延长 1 小时"};
+}
+function poolTick(){
+let changed=false;
+const hp = state.pool.hero;
+if(hp.leftSec>0){ hp.leftSec=Math.max(0,hp.leftSec-CFG.demoTickRate); hp.acc+=1;
+if(hp.acc>=CFG.heroCardEveryRealSec){ hp.acc=0; const cand=GENS.filter(g=>g.fac===hp.fac &&!g.variant); addCard(randPick(cand).id); changed=true;}}
+const sp = state.pool.skill;
+if(sp.leftSec>0){ sp.leftSec=Math.max(0,sp.leftSec-CFG.demoTickRate); sp.acc+=1;
+if(sp.acc>=CFG.skillCardEveryRealSec){ sp.acc=0; state.skillsOwned.push(randPick(SKILL_CARDS)); changed=true;}}
+if(changed) save();
+return changed;
+}
+function drawTicket(){
+if(!spendRes("tickets", CFG.ticketDrawCost)) return null;
+const cand = GENS.filter(g=>!g.variant && g.star<5);
+const g = randPick(cand); addCard(g.id); return g;
+}
+function drawLimited(n){
+const cost = n===10? CFG.limitTen: CFG.limitSingle*n;
+if(!spendRes("yuanbao", cost)) return null;
+const drawn=[];
+for(let i=0;i<n;i++){
+let g;
+const r = Math.random();
+if(r<0.05){ g=randPick(GENS.filter(x=>x.variant));}
+else if(r<0.15){ g=randPick(GENS.filter(x=>x.star===5 &&!x.variant));}
+else if(r<0.45){ g=randPick(GENS.filter(x=>x.star===4));}
+else { g=randPick(GENS.filter(x=>x.star<4));}
+if(g.star>=5 || g.variant){ state.gachaPity=0;} else { state.gachaPity++;}
+drawn.push(g); addCard(g.id);
+}
+if(n===10 &&!drawn.some(g=>g.star>=5 || g.variant)){
+const g = randPick(GENS.filter(x=>x.star===5 &&!x.variant));
+drawn[9]=g; state.cards[state.cards.length-1].genId=g.id; state.cards[state.cards.length-1].star=g.star;
+state.gachaPity=0;
+}
+save(); return drawn;
+}
+/* ============ 战斗模块（纯函数模拟器） ============ */
+function calcDamage(att, def){
+let mul = 1;
+if(BEATS[att.troop]===def.troop) mul = CFG.counterMul;
+const raw = att.atk * mul * (0.9 + Math.random()*0.2);
+return Math.max(1, Math.round(raw - def.def*0.4));
+}
+function battleSim(teamA, teamB){
+const A = teamA.map(u=>Object.assign({},u,{curHp:u.hp,rage:0,alive:true}));
+const B = teamB.map(u=>Object.assign({},u,{curHp:u.hp,rage:0,alive:true}));
+const log=[]; let skillUsed=false;
+for(let round=1; round<=30; round++){
+const order = A.concat(B).filter(u=>u.alive).sort((x,y)=>y.spd-x.spd);
+if(!order.length) break;
+for(const u of order){
+if(!u.alive) continue;
+const foes = (A.indexOf(u)>=0? B: A).filter(f=>f.alive);
+if(!foes.length) break;
+const t = foes.slice().sort((x,y)=>x.curHp-y.curHp)[0];
+let dmg, isSkill=false;
+if(u.rage>=100){ dmg = Math.max(1, Math.round(calcDamage(u,t) * u.skillMul)); u.rage=0; isSkill=true; skillUsed=true;}
+else { dmg = calcDamage(u,t); u.rage = Math.min(100, u.rage+34);}
+t.curHp -= dmg; if(t.curHp<=0){ t.curHp=0; t.alive=false;}
+log.push("第"+round+"回合 "+u.name+(isSkill? " 怒气爆发":"")+" → "+t.name+" 造成 "+dmg+" 伤害"+(t.alive?"":"，"+t.name+" 倒下"));
+}
+if(!A.some(u=>u.alive) ||!B.some(u=>u.alive)) break;
+}
+const aAlive = A.some(u=>u.alive), bAlive = B.some(u=>u.alive);
+let win;
+if(aAlive &&!bAlive) win=true; else if(bAlive &&!aAlive) win=false;
+else { const ah=A.reduce((s,u)=>s+u.curHp/u.hp,0), bh=B.reduce((s,u)=>s+u.curHp/u.hp,0); win = ah>=bh;}
+return { win:win, log:log, skillUsed:skillUsed};
+}
+function resolveUnit(card, teamMul, bondMul){
+const g = GEN_BY_ID[card.genId];
+const starMul = 1 + CFG.starMulPer*(card.star - g.star);
+const enhMul = 1 + CFG.enhMulPer*card.enh;
+const pm = CFG.persMul[g.pers] || {atk:1,def:1};
+let eqAtk=0, eqDef=0, eqSpd=0, eqSkill=0;
+for(const slot of ["wp","ar","hs","tr"]){ const eid=card.equip[slot]; if(!eid) continue;
+const e = state.equips.find(x=>x.uid===eid); if(!e) continue;
+if(slot==="wp") eqAtk+=5*e.tier; if(slot==="ar") eqDef+=5*e.tier; if(slot==="hs") eqSpd+=3*e.tier; if(slot==="tr") eqSkill+=0.05*e.tier;}
+const atk = Math.round((g.wu*0.6 + g.zhi*0.4) * starMul * enhMul * pm.atk * (bondMul?bondMul.atk:1) * (teamMul||1) + eqAtk);
+const def = Math.round((g.tong*0.5 + g.wu*0.2) * starMul * enhMul * pm.def * (bondMul?bondMul.def:1) * (teamMul||1) + eqDef);
+const skillMul = g.skillMul * (1 + CFG.starSkillPer*(card.star - g.star)) * (1 + eqSkill) * (1 + CFG.skillCardTeamBonus*state.skillsOwned.length);
+return { name:g.name+(g.variant?"（限定）":""), hp: 300 + g.tong*10, atk:atk, def:def,
+spd: g.spd + eqSpd, troop:g.troop, skillName:g.skill, skillMul:skillMul, uid:card.uid};
+}
+function activeBonds(cards){
+const names = new Set(cards.map(c=>GEN_BY_ID[c.genId].name));
+const baseNames = new Set(cards.map(c=>{ const g=GEN_BY_ID[c.genId]; return GEN_BY_ID[g.baseId].name;}));
+return BONDS.filter(b=>b.members.every(m=>names.has(m)||baseNames.has(m)));
+}
+function resolveTeam(cards){
+const bonds = activeBonds(cards);
+const teamMul = 1 + CFG.rankMulPer*state.rankIdx;
+return cards.map(c=>{
+let bm = {atk:1, def:1};
+const g = GEN_BY_ID[c.genId]; const baseName = GEN_BY_ID[g.baseId].name;
+bonds.forEach(b=>{ if(b.members.indexOf(g.name)>=0 || b.members.indexOf(baseName)>=0){ bm={atk:bm.atk*(1+b.atk), def:bm.def*(1+b.def)};}});
+return resolveUnit(c, teamMul, bm);
+});
+}
+function enemyTeam(power, n){
+const pool = GENS.filter(g=>!g.variant);
+const team=[];
+for(let i=0;i<(n||5);i++){ const g=randPick(pool);
+team.push({ name:g.name+"（敌）", hp:Math.round((260+g.tong*8)*power), atk:Math.round((g.wu*0.6+g.zhi*0.4)*power),
+def:Math.round((g.tong*0.5+g.wu*0.2)*power), spd:g.spd, troop:g.troop, skillName:g.skill, skillMul:g.skillMul});}
+return team;
+}
+/* ============ 养成模块 ============ */
+function starUp(uid){
+const card = state.cards.find(c=>c.uid===uid); if(!card) return {ok:false,msg:"卡不存在"};
+const dupIdx = state.cards.findIndex(c=>c.uid!==uid && c.genId===card.genId && state.formation.indexOf(c.uid)<0 && state.showcase.indexOf(c.uid)<0);
+if(dupIdx<0) return {ok:false,msg:"需要一张同名卡作材料"};
+state.cards.splice(dupIdx,1); card.star++; save();
+return {ok:true,msg:"升星成功 → "+card.star+" 星"};
+}
+function enhRate(feeds, targetGenId){
+let rate=0;
+feeds.forEach(f=>{ let v = f.star * CFG.enhBasePerStar; if(f.genId===targetGenId) v*=2; rate+=v;});
+return Math.min(CFG.enhRateCap, rate);
+}
+function doEnhance(targetUid, feedUids){
+const card = state.cards.find(c=>c.uid===targetUid); if(!card) return {ok:false,msg:"目标不存在"};
+if(feedUids.length!==5) return {ok:false,msg:"需要正好 5 张饲料"};
+const feeds = feedUids.map(u=>state.cards.find(c=>c.uid===u)).filter(Boolean);
+if(feeds.length!==5) return {ok:false,msg:"饲料不全"};
+const rate = enhRate(feeds, card.genId);
+const success = Math.random()*100 < rate;
+state.cards = state.cards.filter(c=>feedUids.indexOf(c.uid)<0);
+if(success){ card.enh++;} else { card.enh = 0;}
+save();
+return {ok:true, success:success, rate:rate, enh:card.enh};
+}
+/* ============ 玩法模块 ============ */
+function stageEnemyPower(stage){ return 0.35 + stage*0.055;}
+function fightStage(stage){
+const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0));
+if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
+const res = battleSim(team, enemyTeam(stageEnemyPower(stage), Math.min(5, 2+Math.ceil(stage/3))));
+let rewardMsg="";
+if(res.win){
+if(stage>state.stageCleared) state.stageCleared = Math.min(30, stage);
+const yb = CFG.stageYuanbaoBase + stage*CFG.stageYuanbaoPer; addRes("yuanbao", yb); rewardMsg+=" 元宝+"+yb;
+if(Math.random()<0.35){ addRes("tickets",2); rewardMsg+=" 招募券+2";}
+if(Math.random()<0.30){ const g=randPick(GENS.filter(x=>!x.variant && x.star<=3)); addCard(g.id); rewardMsg+=" 掉落武将："+g.name;}
+if((stage%10===0 || stage%10===5) && Math.random()<0.75){ const e=addEquip(randPick(["wp","ar","hs","tr"]), stage%10===0?2:1); rewardMsg+=" 掉落装备："+e.name;}
+if(Math.random()<0.25){ state.skillsOwned.push(randPick(SKILL_CARDS)); rewardMsg+=" 掉落技能卡";}
+save();
+}
+return {ok:true, win:res.win, log:res.log, rewardMsg:rewardMsg};
+}
+function applyTowerResult(win){
+const t = state.tower;
+if(win){ t.layer++; addRes("merit", CFG.towerMeritWin); addRes("tickets", CFG.towerTicketPerLayer);}
+else { t.fails++; addRes("merit", CFG.towerMeritLose); if(t.fails>=CFG.towerMaxFails) t.done=true;}
+updateRank(); save();
+return t;
+}
+function fightTower(){
+const t = state.tower;
+if(t.date!==todayStr()){ state.tower = {date:todayStr(), layer:0, fails:0, done:false};}
+if(state.tower.done || state.tower.layer>=CFG.towerLayers) return {ok:false,msg:"今日爬塔已结束"};
+const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0));
+if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
+const res = battleSim(team, enemyTeam(0.45 + state.tower.layer*0.09, 5));
+const before = {merit:state.merit, tickets:state.tickets};
+applyTowerResult(res.win);
+return {ok:true, win:res.win, log:res.log, meritGain:state.merit-before.merit, ticketGain:state.tickets-before.tickets};
+}
+function updateRank(){
+let idx = state.rankIdx;
+while(idx < RANKS.length-1 && state.merit >= RANKS[idx+1].merit) idx++;
+state.rankIdx = idx;
+}
+function fightArena(){
+const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0));
+if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
+const myPow = team.reduce((s,u)=>s+u.atk+u.def,0);
+const res = battleSim(team, enemyTeam(0.5 + Math.random()*0.5, 5));
+addRes("arenaPts", res.win? CFG.arenaWinPts: CFG.arenaLosePts);
+return {ok:true, win:res.win, log:res.log, pts: res.win?CFG.arenaWinPts:CFG.arenaLosePts, myPow:myPow};
+}
+function showcaseAccrue(){
+const now = Date.now(); const mins = (now - state.showcaseTs)/60000;
+if(state.showcase.length>0 && mins>0){ state.showcaseAcc += mins * CFG.showcasePerMin * state.showcase.length;}
+state.showcaseTs = now;
+}
+/* ============ UI 渲染层 ============ */
+let curTab = "home", enhTarget = 0, enhFeeds = [];
+const STARTERS = [ {pers:"刚胆", name:"夏侯惇"}, {pers:"鲁莽", name:"张飞"}, {pers:"冷静", name:"吕蒙"}, {pers:"胆小", name:"孙权"} ];
+function $(id){ return document.getElementById(id); }
+function genByName(n){ return GENS.find(g=>g.name===n); }
+function teamCards(){ return state.cards.filter(c=>state.formation.indexOf(c.uid)>=0); }
+function teamPower(){ return resolveTeam(teamCards()).reduce((s,u)=>s+u.atk+u.def+Math.round(u.hp/10),0); }
+function fmtPool(sec){ if(sec<=0) return "未开启"; return "约 "+Math.ceil(sec/60)+" 分钟（演示时钟）"; }
+function renderRes(){
+  $("resYuanbao").textContent = Math.floor(state.yuanbao);
+  $("resTickets").textContent = state.tickets;
+  $("resMerit").textContent = state.merit;
+  $("resArena").textContent = state.arenaPts;
+  $("resRank").textContent = RANKS[state.rankIdx].name;
+  $("resCards").textContent = state.cards.length;
+}
+function renderAll(){
+  renderRes();
+  $("homeStarter").textContent = state.starterGenId? GEN_BY_ID[state.starterGenId].name : "—";
+  $("homeStage").textContent = state.stageCleared+" / 30 关";
+  $("homeTower").textContent = "第 "+state.tower.layer+" 层 · 失败 "+state.tower.fails+"/3";
+  $("homePower").textContent = teamPower();
+  const r = RANKS[state.rankIdx], nxt = RANKS[state.rankIdx+1];
+  $("rankBox").innerHTML = "<div class='kv'><span>当前官职</span><b>"+r.name+"（全队攻防 +"+(state.rankIdx*2)+"%）</b></div>"+
+    (nxt? "<div class='kv'><span>下一级 "+nxt.name+"</span><b>功绩 "+state.merit+" / "+nxt.merit+"</b></div><div class='bar'><i style='width:"+Math.min(100, Math.round(state.merit/nxt.merit*100))+"%'></i></div>"
+        : "<p class='note'>已至最高官职。</p>")+
+    "<p class='note' style='margin-top:6px'>官职表："+RANKS.map(x=>x.name+" "+x.merit).join(" · ")+"</p>";
+  $("heroPoolInfo").textContent = fmtPool(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac;
+  $("skillPoolInfo").textContent = fmtPool(state.pool.skill.leftSec);
+  $("skillOwned").textContent = state.skillsOwned.length;
+  $("pityInfo").textContent = "已累计 "+state.gachaPity+" 抽未出五星（10 连必保底）";
+  $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5，战力 "+teamPower()+"。羁绊："+
+    (activeBonds(teamCards()).map(b=>b.name+"（攻+"+Math.round(b.atk*100)+"% 防+"+Math.round(b.def*100)+"%，逐人明示）").join("、") || "无");
+  renderCards(); renderStages();
+  $("towerInfo").textContent = "第 "+state.tower.layer+" 层 · 失败 "+state.tower.fails+"/3"+(state.tower.done?" · 已出局":"")+(state.tower.layer>=10?" · 已通关":"");
+  showcaseAccrue();
+  $("showAcc").textContent = Math.floor(state.showcaseAcc);
+  $("showcaseList").innerHTML = state.showcase.length? state.showcase.map(uid=>{ const c=state.cards.find(x=>x.uid===uid); return c? "<span class='tag hot'>"+GEN_BY_ID[c.genId].name+"</span>" : ""; }).join("") : "<span class='note'>橱窗空着，去武将页把限定卡摆进来。</span>";
+  const ad = state.adUsed.date===todayStr()? state.adUsed.count : 0;
+  $("adInfo").textContent = "今日 "+ad+"/"+CFG.adDailyCap+" 次。demo 用模拟广告代替真实广告。";
+  const rate = enhTarget? enhRate(enhFeeds.map(u=>state.cards.find(c=>c.uid===u)).filter(Boolean), (state.cards.find(c=>c.uid===enhTarget)||{}).genId) : 0;
+  $("enhInfo").textContent = enhTarget? ("强化目标："+GEN_BY_ID[state.cards.find(c=>c.uid===enhTarget).genId].name+"，已选饲料 "+enhFeeds.length+"/5，当前成功率 "+rate+"%") : "尚未选择强化目标。";
+}
+function renderCards(){
+  const f = $("factionFilter").value;
+  const list = state.cards.filter(c=>!f || GEN_BY_ID[c.genId].fac===f).slice().sort((a,b)=>b.star-a.star || b.enh-a.enh);
+  $("cardList").innerHTML = list.length? list.map(c=>{
+    const g = GEN_BY_ID[c.genId]; const u = resolveUnit(c,1,null);
+    const inForm = state.formation.indexOf(c.uid)>=0, inShow = state.showcase.indexOf(c.uid)>=0;
+    const locked = inForm || inShow;
+    let eqHtml = "";
+    for(const slot of ["wp","ar","hs","tr"]){
+      const opts = state.equips.filter(e=>e.type===slot && (c.equip[slot]===e.uid || !state.cards.some(x=>x.uid!==c.uid && Object.values(x.equip).indexOf(e.uid)>=0)));
+      eqHtml += "<div class='stats'>"+EQUIP_TYPES[slot].name+" <select onchange='setEquip("+c.uid+",\""+slot+"\",this.value)'>"+
+        "<option value='0'>无</option>"+opts.map(e=>"<option value='"+e.uid+"'"+(c.equip[slot]===e.uid?" selected":"")+">"+e.name+"</option>").join("")+"</select></div>";
+    }
+    return "<div class='card'><div class='gen'><div class='avatar'>"+g.name[0]+"</div><div style='flex:1'>"+
+      "<span class='nm'>"+g.name+"</span> <span class='star'>"+"★".repeat(Math.min(c.star,8))+(c.star>8?c.star+"星":"")+"</span>"+
+      (g.variant?" <span class='tag hot'>限定·橱窗产元宝</span>":"")+(inForm?" <span class='tag hot'>上阵中</span>":"")+(inShow?" <span class='tag hot'>橱窗中</span>":"")+
+      "<div><span class='tag'>"+g.fac+"</span><span class='tag'>"+g.troop+"兵</span><span class='tag'>"+g.pers+"</span><span class='tag'>强化 +"+c.enh+"</span></div>"+
+      "<div class='stats'>武 "+g.wu+" · 智 "+g.zhi+" · 统 "+g.tong+" · 速 "+g.spd+"｜实战 攻 "+u.atk+" 防 "+u.def+" 血 "+u.hp+" 技「"+g.skill+"」</div>"+
+      eqHtml+
+      "<div style='margin-top:6px;display:flex;gap:6px;flex-wrap:wrap'>"+
+      "<button class='btn sm "+(inForm?"sub":"dark")+"' onclick='toggleForm("+c.uid+")'>"+(inForm?"下阵":"上阵")+"</button>"+
+      "<button class='btn sm sub' onclick='doStarUp("+c.uid+")'>升星</button>"+
+      "<button class='btn sm sub' onclick='setEnhTarget("+c.uid+")'>设为强化目标</button>"+
+      (g.variant? "<button class='btn sm sub' onclick='toggleShowcase("+c.uid+")'>"+(inShow?"撤下橱窗":"摆入橱窗")+"</button>":"")+
+      "</div>"+
+      "<label class='note'><input type='checkbox' "+(enhFeeds.indexOf(c.uid)>=0?"checked":"")+" "+(locked||c.uid===enhTarget?"disabled":"")+" onchange='toggleFeed("+c.uid+",this.checked)'> 作强化饲料</label>"+
+      "</div></div></div>";
+  }).join("") : "<div class='card'>暂无武将，去卡池开启挂机池或抽卡。</div>";
+}
+function renderStages(){
+  let html="";
+  for(let ch=0; ch<3; ch++){
+    html += "<h2 class='sec'>第"+(ch+1)+"章 · "+CHAPTERS[ch]+"</h2>";
+    for(let s=1; s<=10; s++){
+      const stage = ch*10+s; const locked = stage > state.stageCleared+1;
+      const boss = stage%10===0? "章末大 BOSS" : (stage%10===5? "小 BOSS" : "");
+      html += "<div class='card' style='display:flex;justify-content:space-between;align-items:center'><span>第 "+stage+" 关 "+(boss?"<span class='tag hot'>"+boss+"</span>":"")+(stage<=state.stageCleared?" <span class='win'>已通关</span>":"")+"</span>"+
+        "<button class='btn sm' data-stage='"+stage+"' onclick='doStage("+stage+")' "+(locked?"disabled":"")+">出战</button></div>";
+    }
+  }
+  $("stageList").innerHTML = html;
+}
+function switchTab(t){
+  curTab=t;
+  document.querySelectorAll("section.page").forEach(s=>s.classList.remove("on"));
+  $("tab-"+t).classList.add("on");
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on", b.dataset.tab===t));
+  renderAll();
+}
+/* ---- 全局操作 ---- */
+window.toggleForm = function(uid){
+  const i = state.formation.indexOf(uid);
+  if(i>=0) state.formation.splice(i,1);
+  else { if(state.formation.length>=5){ alert("上阵已满 5 人"); return; } state.formation.push(uid); }
+  save(); renderAll();
+};
+window.doStarUp = function(uid){ const r=starUp(uid); alert(r.msg); renderAll(); };
+window.setEnhTarget = function(uid){ enhTarget=uid; enhFeeds=[]; renderAll(); };
+window.toggleFeed = function(uid, on){
+  if(on){ if(enhFeeds.length>=5){ alert("饲料已满 5 张"); renderAll(); return; } enhFeeds.push(uid); }
+  else enhFeeds = enhFeeds.filter(u=>u!==uid);
+  renderAll();
+};
+window.setEquip = function(uid, slot, val){
+  const card = state.cards.find(c=>c.uid===uid); if(!card) return;
+  card.equip[slot] = parseInt(val,10)||0; save(); renderAll();
+};
+window.toggleShowcase = function(uid){
+  const i = state.showcase.indexOf(uid);
+  if(i>=0) state.showcase.splice(i,1); else state.showcase.push(uid);
+  save(); renderAll();
+};
+window.doStage = function(stage){
+  const r = fightStage(stage);
+  if(!r.ok){ alert(r.msg); return; }
+  $("battleLog").innerHTML = "第 "+stage+" 关："+(r.win? "<span class='win'>胜利</span>" : "<span class='lose'>败北</span>")+(r.rewardMsg? "｜奖励："+r.rewardMsg : "")+"\n"+r.log.join("\n");
+  switchTab("stage");
+};
+function doEnhanceUI(){
+  if(!enhTarget){ alert("先选强化目标"); return; }
+  const r = doEnhance(enhTarget, enhFeeds.slice());
+  if(!r.ok){ alert(r.msg); return; }
+  alert(r.success? "强化成功！强化等级 +1（现 +"+r.enh+"）" : "强化失败（成功率 "+r.rate+"%）：强化等级归 0，卡与升星保留");
+  enhFeeds=[]; renderAll();
+}
+function bind(){
+  document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+  $("factionFilter").onchange = renderCards;
+  $("btnAutoForm").onclick = function(){
+    const sorted = state.cards.slice().sort((a,b)=>{ const ga=GEN_BY_ID[a.genId], gb=GEN_BY_ID[b.genId]; return (gb.star-ga.star)||(b.enh-a.enh); }).slice(0,5);
+    state.formation = sorted.map(c=>c.uid); save(); renderAll();
+  };
+  $("btnHeroPool").onclick = function(){ const r=openPool("hero"); alert(r.msg); renderAll(); };
+  $("btnSkillPool").onclick = function(){ const r=openPool("skill"); alert(r.msg); renderAll(); };
+  $("btnTicketDraw").onclick = function(){ const g=drawTicket(); $("gachaLog").textContent = g? "招募到："+g.name+"（"+g.star+"星）" : "招募券不足，去更多页看模拟广告领券"; renderAll(); };
+  $("btnTicketDraw10").onclick = function(){ const got=[]; for(let i=0;i<10;i++){ const g=drawTicket(); if(!g) break; got.push(g.name); } $("gachaLog").textContent = got.length? "招募 10 次："+got.join("、") : "招募券不足"; renderAll(); };
+  $("btnLimit1").onclick = function(){ const d=drawLimited(1); $("gachaLog").textContent = d? "限时单抽："+d[0].name+"（"+d[0].star+"星）" : "元宝不足（单抽 200）"; renderAll(); };
+  $("btnLimit10").onclick = function(){ const d=drawLimited(10); $("gachaLog").textContent = d? "限时 10 连："+d.map(g=>g.name+"("+g.star+"星)").join("、") : "元宝不足（10 连 2000）"; renderAll(); };
+  $("btnTowerFight").onclick = function(){
+    const r = fightTower();
+    if(!r.ok){ alert(r.msg); return; }
+    $("towerLog").innerHTML = "第 "+(state.tower.layer+(r.win?0:1))+" 层挑战："+(r.win? "<span class='win'>成功</span> 功绩+"+r.meritGain+" 招募券+"+r.ticketGain : "<span class='lose'>失败</span> 功绩+"+r.meritGain+"（失败 "+state.tower.fails+"/3）")+"\n"+r.log.join("\n");
+    renderAll();
+  };
+  $("btnTowerReset").onclick = function(){ state.tower={date:todayStr(),layer:0,fails:0,done:false}; save(); renderAll(); };
+  $("btnArena").onclick = function(){
+    const r = fightArena();
+    if(!r.ok){ alert(r.msg); return; }
+    $("arenaLog").innerHTML = (r.win? "<span class='win'>演武胜利</span>" : "<span class='lose'>演武败北</span>")+" 积分+"+r.pts+"\n"+r.log.slice(0,14).join("\n");
+    renderAll();
+  };
+  document.querySelectorAll("[data-exch]").forEach(b=>b.onclick=function(){
+    const k=b.dataset.exch;
+    if(k==="tickets"){ if(spendRes("arenaPts",50)) addRes("tickets",5); else alert("积分不足"); }
+    if(k==="yuanbao"){ if(spendRes("arenaPts",100)) addRes("yuanbao",100); else alert("积分不足"); }
+    if(k==="equip"){ if(spendRes("arenaPts",150)){ const e=addEquip(randPick(["wp","ar","hs","tr"]),2); alert("兑换到装备："+e.name); } else alert("积分不足"); }
+    if(k==="meritless"){ if(spendRes("arenaPts",30)) addRes("tickets",2); else alert("积分不足"); }
+    renderAll();
+  });
+  $("btnClaimShow").onclick = function(){ showcaseAccrue(); const n=Math.floor(state.showcaseAcc); if(n>0){ state.showcaseAcc-=n; addRes("yuanbao",n); alert("领取橱窗元宝 +"+n); } else alert("暂无可领取元宝"); renderAll(); };
+  $("btnSign").onclick = function(){ state.signDate=todayStr(); addRes("yuanbao", CFG.signReward); alert("签到成功，元宝 +"+CFG.signReward+"（demo 可重复点测）"); renderAll(); };
+  $("btnClaimNoon").onclick = function(){ state.claims.noon=todayStr(); addRes("tickets", CFG.claimReward+CFG.claimAdBonus); alert("12 点领取：招募券 +"+CFG.claimReward+"，模拟广告再 +"+CFG.claimAdBonus); renderAll(); };
+  $("btnClaimEvening").onclick = function(){ state.claims.evening=todayStr(); addRes("tickets", CFG.claimReward+CFG.claimAdBonus); alert("18 点领取：招募券 +"+CFG.claimReward+"，模拟广告再 +"+CFG.claimAdBonus); renderAll(); };
+  $("btnAd").onclick = function(){
+    if(state.adUsed.date!==todayStr()) state.adUsed={date:todayStr(),count:0};
+    if(state.adUsed.count>=CFG.adDailyCap){ alert("今日模拟广告次数已达上限 20 次"); return; }
+    state.adUsed.count++; addRes("tickets", CFG.adReward); renderAll();
+  };
+  $("btnReset").onclick = function(){ if(confirm("清空存档并重开？")){ localStorage.removeItem(SAVE_KEY); location.reload(); } };
+  const enhBtn = document.createElement("button");
+  enhBtn.className="btn"; enhBtn.textContent="执行强化（需选满 5 张饲料）"; enhBtn.style.margin="0 12px";
+  enhBtn.onclick = doEnhanceUI;
+  $("tab-cards").appendChild(enhBtn);
+  setInterval(function(){ const changed = poolTick(); showcaseAccrue(); if(changed || state.pool.hero.leftSec>0 || state.pool.skill.leftSec>0){ renderRes(); $("heroPoolInfo").textContent=fmtPool(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac; $("skillPoolInfo").textContent=fmtPool(state.pool.skill.leftSec); if(changed && curTab==="cards") renderCards(); } }, 1000);
+}
+function showStarter(){
+  $("starterScreen").style.display="block"; $("app").style.display="none";
+  $("starterOpts").innerHTML = STARTERS.map(s=>{ const g=genByName(s.name);
+    return "<button class='btn sub starterOpt' data-starter='"+s.pers+"' onclick='pickStarter(\""+s.name+"\")'><b>"+s.pers+" · "+g.name+"</b>（"+g.star+"星 "+g.fac+" "+g.troop+"兵）<br><span class='note'>技能「"+g.skill+"」· 性格修正见下方说明</span></button>"; }).join("");
+}
+window.pickStarter = function(name){
+  const g = genByName(name); const c = addCard(g.id);
+  state.starterGenId = g.id; state.formation=[c.uid]; save();
+  $("starterScreen").style.display="none"; $("app").style.display="block";
+  bind(); switchTab("home");
+};
+function init(){
+  const had = load();
+  let mx = 0; state.cards.forEach(c=>mx=Math.max(mx,c.uid)); state.equips.forEach(e=>mx=Math.max(mx,e.uid)); _uid = mx+1;
+  if(state.tower.date!==todayStr()) state.tower={date:todayStr(),layer:0,fails:0,done:false};
+  updateRank();
+  if(!had || !state.starterGenId){ showStarter(); }
+  else { $("app").style.display="block"; bind(); switchTab("home"); }
+}
+if(typeof document!=="undefined"){ document.addEventListener("DOMContentLoaded", init); }
+if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, BONDS, RANKS, BEATS, newState, battleSim, calcDamage, enhRate, drawTicket, drawLimited, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam,
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard }; }
+</script>
+</body>
+</html>
