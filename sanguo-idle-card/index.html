@@ -77,9 +77,9 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
   <div class="card" id="rankBox"></div>
 </section>
 <section class="page" id="tab-pool">
-  <h2 class="sec">挂机卡池（招牌）</h2>
+  <h2 class="sec">元宝卡池 · 挂机池（招牌）</h2>
   <div class="card">
-    <p class="note">花元宝开启，开启后自动出卡。演示加速：出卡节拍压缩（<b>演示 5 秒/张</b>，正式版 1 分钟/张），池时长按演示时钟折算显示。</p>
+    <p class="note"><b>元宝卡池</b>包含三处：挂机英雄池、技能池与天命入驻卡池（在下方抽卡区），全部花元宝。挂机池花元宝开启，开启后自动出卡。演示加速：出卡节拍压缩（<b>演示 5 秒/张</b>，正式版 1 分钟/张），池时长按演示时钟折算显示。</p>
     <div class="kv"><span>英雄池（选阵营）</span>
       <select id="heroFac"><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select></div>
     <div class="kv"><span>英雄池剩余</span><b id="heroPoolInfo">未开启</b></div>
@@ -94,10 +94,10 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
     <div class="kv"><span>普通招募（招募券）</span><b>1 券 1 抽 · 不出 SSR</b></div>
     <div style="margin:8px 0"><button class="btn dark" id="btnTicketDraw" data-testid="ticket-draw">招募 1 次</button>
     <button class="btn sub" id="btnTicketDraw10">招募 10 次</button></div>
-    <div class="kv"><span>限时池（元宝）</span><b>单抽 200 · 10 连 2000 保底 SSR</b></div>
-    <div style="margin:8px 0"><button class="btn" id="btnLimit1">限时单抽 200 元宝</button>
-    <button class="btn" id="btnLimit10" data-testid="limit10">限时 10 连 2000 元宝</button></div>
-    <p class="note">限时池<b>每抽必带性格卡</b>（构成沿用 SSR 加权、10 连保底 SSR）。稀有度分 R / SR / SSR（SSR 橙底），与升星 ★1–★5 相互独立。性格卡只出自限时池与开局选将；挂机英雄池只出普通卡，招募券抽的是普通卡池（不出 SSR）。<b>天命卡</b>（典藏版）首发 4 张：龙胆赵云 / 无双吕布 / 武圣关羽 / 燕人张飞，约每 100 抽 1 张，挂机英雄池与限时池均可出（限时池出的天命卡同样带性格）。距离保底：<b id="pityInfo">0</b></p>
+    <div class="kv"><span>天命入驻卡池（元宝）</span><b>单抽 200 · 10 连 2000 保底 SSR</b></div>
+    <div style="margin:8px 0"><button class="btn" id="btnLimit1">天命入驻单抽 200 元宝</button>
+    <button class="btn" id="btnLimit10" data-testid="limit10">天命入驻 10 连 2000 元宝</button></div>
+    <p class="note">天命入驻卡池<b>每抽必带性格卡</b>（构成沿用 SSR 加权、10 连保底 SSR）。稀有度分 R / SR / SSR（SSR 橙底），与升星 ★1–★5 相互独立。性格卡只出自天命入驻卡池与开局选将；挂机英雄池只出普通卡，招募券抽的是普通卡池（不出 SSR）。<b>天命卡</b>（典藏版）首发 4 张：龙胆赵云 / 无双吕布 / 武圣关羽 / 燕人张飞，约每 100 抽 1 张，挂机英雄池与天命入驻卡池均可出（天命入驻卡池出的天命卡同样带性格）。距离保底：<b id="pityInfo">0</b></p>
     <div class="log" id="gachaLog" style="max-height:180px">尚无抽卡记录。</div>
     <p class="note" id="tianmingNews" style="display:none;color:#93301f;font-weight:700;margin-top:6px"></p>
   </div>
@@ -108,7 +108,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
     <span>阵营筛选 </span><select id="factionFilter" data-testid="faction-filter"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
     <button class="btn sm dark" id="btnAutoForm" data-testid="auto-form" style="margin-left:8px">一键上阵（战力前 5）</button>
     <p class="note" id="formationInfo" style="margin-top:6px"></p>
-    <p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80 兵力）。强化：先点一张卡「设为强化目标」，再勾选 5 张饲料卡（不能是上阵/橱窗中的卡），成功率实时显示；同名饲料贡献翻倍，封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→防御、睿智→智力、谨慎→攻速。<b>性格卡只出自限时池</b>（每抽必带）与开局选将；挂机英雄池、招募券、推关掉落等只出普通卡。<b>天命卡</b>是典藏版武将（龙胆赵云／无双吕布／武圣关羽／燕人张飞，金边卡面）：基础四维比本体高 8%，成长＝本体成长＋天命增幅（逐维定版写死：本命维 +1.00、最弱维 +0.50），约每 100 抽 1 张，只出自元宝英雄池（挂机＋限时；限时出的天命卡同样带性格）。<b>技能三通道</b>：专属技能只认怒气，满 100 必放（代替普攻，不满绝不放）；学来的主动技能在普攻后按 30% 判定释放；被动技能学会即常驻生效。技能位：10 级解锁主动位、20 级解锁被动位，每位 1 个，在下方卡片技能区从技能卡库存里学（消耗 1 张，换学覆盖且不返还）。「极」版是 SSR 武将专属技能的收藏卡（如「极·天下无双」，专属伤害 ×1.6），只出自元宝技能池。装备两件：武器＝武力（攻）+5/阶、兵书＝专属技能伤害 +8%/阶。布阵前二后三：上阵顺序前两位是前排、后三位是后排，敌方单体攻击先打前排，前排全倒才打后排（全体技能除外）。</p>
+    <p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80 兵力）。强化：先点一张卡「设为强化目标」，再勾选 5 张饲料卡（不能是上阵/橱窗中的卡），成功率实时显示；同名饲料贡献翻倍，封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→防御、睿智→智力、谨慎→攻速。<b>性格卡只出自天命入驻卡池</b>（每抽必带）与开局选将；挂机英雄池、招募券、推关掉落等只出普通卡。<b>天命卡</b>是典藏版武将（龙胆赵云／无双吕布／武圣关羽／燕人张飞，金边卡面）：基础四维比本体高 8%，成长＝本体成长＋天命增幅（逐维定版写死：本命维 +1.00、最弱维 +0.50），约每 100 抽 1 张，只出自元宝英雄池（挂机＋天命入驻；天命入驻出的天命卡同样带性格）。<b>技能三通道</b>：专属技能只认怒气，满 100 必放（代替普攻，不满绝不放）；学来的主动技能在普攻后按 30% 判定释放；被动技能学会即常驻生效。技能位：10 级解锁主动位、20 级解锁被动位，每位 1 个，在下方卡片技能区从技能卡库存里学（消耗 1 张，换学覆盖且不返还）。「极」版是 SSR 武将专属技能的收藏卡（如「极·天下无双」，专属伤害 ×1.6），只出自元宝技能池。装备两件：武器＝武力（攻）+5/阶、兵书＝专属技能伤害 +8%/阶。布阵前二后三：上阵顺序前两位是前排、后三位是后排，敌方单体攻击先打前排，前排全倒才打后排（全体技能除外）。</p>
     <p class="note" id="enhInfo"></p>
   </div>
   <div id="cardList"></div>
@@ -205,7 +205,7 @@ const CFG = {
   levelCap: 30,
   expNeedPerLevel: 135,        // 升下一级所需经验 = 当前等级 ×135（按满级 30 重标，总量约旧 50 级版 6 成）
   expStageWin: 40, expTowerWin: 60, expArenaWin: 30, expLoseRatio: 0.3,
-  tianmingRate: 0.01,          // 天命卡出率 1%（约 100 抽 1 张）：元宝英雄池（挂机四池＋限时池）每次产卡先判定，命中从 TIANMING_IDS 等概率出、覆盖常规出货
+  tianmingRate: 0.01,          // 天命卡出率 1%（约 100 抽 1 张）：元宝英雄池（挂机四池＋天命入驻卡池）每次产卡先判定，命中从 TIANMING_IDS 等概率出、覆盖常规出货
   equipRefundPerTier: 30,      // v1.2 迁移：下线装备（衣甲/马匹）每阶折算返还元宝数
   jiSkillMul: 1.6,             // 技能「极」版倍率：专属技能伤害 ×1.6（相对普通版）
   jiChance: 0.08,              // 元宝技能池产「极」版技能卡概率（其他来源 0）
@@ -401,7 +401,7 @@ function load(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s){ const parse
 const RES_FIELD = { yuanbao:"yuanbao", tickets:"tickets", merit:"merit", arenaPts:"arenaPts"};
 function addRes(kind, n){ state[RES_FIELD[kind]] += n; if(state[RES_FIELD[kind]]<0) state[RES_FIELD[kind]]=0; save();}
 function spendRes(kind, n){ if(state[RES_FIELD[kind]] < n) return false; state[RES_FIELD[kind]] -= n; save(); return true;}
-/* 出处规则（知白守黑定版，v1.2）：性格卡只出自限时池（每抽必带，调用方传 persMode:"always"）与开局选将（传 pers 指定，建档例外）；
+/* 出处规则（知白守黑定版，v1.2）：性格卡只出自天命入驻卡池（每抽必带，调用方传 persMode:"always"）与开局选将（传 pers 指定，建档例外）；
    挂机英雄池/招募券池/推关掉落等一律普通卡。天命卡是独立典藏武将条目（TIANMING_IDS），由卡池产卡前的 1% 覆盖判定产生，本函数不摇任何 trait。 */
 function addCard(genId, opts){
 opts = opts || {};
@@ -482,7 +482,7 @@ if(!spendRes("yuanbao", cost)) return null;
 const drawn=[];
 for(let i=0;i<n;i++){
 let g;
-/* 每抽先做天命覆盖判定（1%）：命中出天命典藏卡；未命中走常规构成（变体不再混入常规构成）。限时池每抽必带性格（含天命张） */
+/* 每抽先做天命覆盖判定（1%）：命中出天命典藏卡；未命中走常规构成（变体不再混入常规构成）。天命入驻卡池每抽必带性格（含天命张） */
 if(Math.random() < CFG.tianmingRate){ g = GEN_BY_ID[randPick(TIANMING_IDS)]; state.tianmingNews = g.name; }
 else { const r = Math.random();
 if(r<0.15){ g=randPick(GENS.filter(x=>x.rar==="SSR" &&!x.variant));}
@@ -893,8 +893,8 @@ function bind(){
   $("btnSkillPool").onclick = function(){ const r=openPool("skill"); alert(r.msg); renderAll(); };
   $("btnTicketDraw").onclick = function(){ const g=drawTicket(); $("gachaLog").textContent = g? "招募到："+g.name+"（"+g.rar+"）" : "招募券不足，去更多页看模拟广告领券"; renderAll(); };
   $("btnTicketDraw10").onclick = function(){ const got=[]; for(let i=0;i<10;i++){ const g=drawTicket(); if(!g) break; got.push(g.name+"("+g.rar+")"); } $("gachaLog").textContent = got.length? "招募 10 次："+got.join("、") : "招募券不足"; renderAll(); };
-  $("btnLimit1").onclick = function(){ const d=drawLimited(1); $("gachaLog").textContent = d? "限时单抽："+d[0].name+"（"+d[0].rar+(d[0].variant?"·天命":"")+"）"+(d[0].variant?" 🎉 天命卡！":"") : "元宝不足（单抽 200）"; renderAll(); };
-  $("btnLimit10").onclick = function(){ const d=drawLimited(10); $("gachaLog").textContent = d? "限时 10 连："+d.map(g=>g.name+"("+g.rar+(g.variant?"·天命":"")+")").join("、")+(d.some(g=>g.variant)?" 🎉 出天命卡！":"") : "元宝不足（10 连 2000）"; renderAll(); };
+  $("btnLimit1").onclick = function(){ const d=drawLimited(1); $("gachaLog").textContent = d? "天命入驻单抽："+d[0].name+"（"+d[0].rar+(d[0].variant?"·天命":"")+"）"+(d[0].variant?" 🎉 天命卡！":"") : "元宝不足（单抽 200）"; renderAll(); };
+  $("btnLimit10").onclick = function(){ const d=drawLimited(10); $("gachaLog").textContent = d? "天命入驻 10 连："+d.map(g=>g.name+"("+g.rar+(g.variant?"·天命":"")+")").join("、")+(d.some(g=>g.variant)?" 🎉 出天命卡！":"") : "元宝不足（10 连 2000）"; renderAll(); };
   $("btnTowerFight").onclick = function(){
     const r = fightTower();
     if(!r.ok){ alert(r.msg); return; }
