@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国挂机卡牌 · v1.2</title>
+<title>三国挂机卡牌 · v1.2.1</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -53,7 +53,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">v1.2 · 设计：知白守黑</span></h1>
+  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">v1.2.1 · 设计：知白守黑</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -174,7 +174,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国挂机卡牌</h1>
-  <p class="sub">设计：知白守黑 · v1.2<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">设计：知白守黑 · v1.2.1<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
   <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 防御成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 攻速成长</p>
 </div>
@@ -281,8 +281,8 @@ const GEN_BY_ID = {}; GENS.forEach(g=>GEN_BY_ID[g.id]=g);
 const ACTIVE_SKILLS = {
   "火计":{scope:"all", mul:0.60, desc:"敌方全体 60% 攻击伤害"},
   "落雷":{scope:"single", mul:1.20, desc:"单体 120% 攻击伤害"},
-  "连环计":{scope:"rage", desc:"削减目标怒气（量见 CFG.lianHuanRageCut）"},
-  "急救":{scope:"heal", desc:"己方兵力最低者回复（比例见 CFG.jiJiuHealRatio）"}
+  "连环计":{scope:"rage", desc:"削减目标怒气（压他的大招）"},
+  "急救":{scope:"heal", desc:"己方兵力最低者回复最大兵力"}
 };
 const PASSIVE_SKILLS = {
   "铁壁阵":{stat:"def", pct:0.10, desc:"防御 +10%（常驻）"},
@@ -291,6 +291,24 @@ const PASSIVE_SKILLS = {
   "练兵令":{stat:"troops", pct:0.12, desc:"兵力 +12%（常驻）"}
 };
 const SKILL_KIND = {}; Object.keys(ACTIVE_SKILLS).forEach(n=>SKILL_KIND[n]="active"); Object.keys(PASSIVE_SKILLS).forEach(n=>SKILL_KIND[n]="passive");
+/* 专属技能描述（文本唯一来源：《技能描述表-待审-20261111.md》，逐字取用；天命版与本体同名自动复用） */
+const SKILL_DESC = {"魏武挥鞭": "挥鞭东指，号令三军压上。","鬼谋连环": "鬼谋暗结连环，敌阵自乱。","刚烈突刺": "拔矢啖睛，怒目突刺。","逍遥突袭": "逍遥津夜袭，敌胆先寒。","神速连射": "三日五百里，箭至人未觉。","长驱直入": "治军严整，长驱破围。","虎痴蛮力": "裸衣斗勇，蛮力碎阵。","江陵铁壁": "江陵固守，坚如铁壁。","火攻之计": "设伏火攻，焚敌粮行。","仁德双剑": "双剑并举，仁德感召三军。","青龙偃月": "青龙刀起，过关斩将。","长坂怒吼": "当阳桥上一声吼，敌胆俱裂。","七进七出": "单骑七进七出，如入无人之境。","八阵图": "八阵排定，乱石困千军。","老当益壮": "老将拉满弓，箭无虚发。","西凉铁骑": "西凉铁骑冲阵，势如破竹。","子午奇袭": "子午谷奇兵，直捣腹心。","麒麟之才": "麒麟之才，文武兼资。","制衡之术": "制衡群臣，稳坐江东。","赤壁火计": "谈笑间火烧赤壁，樯橹灰飞。","白衣渡江": "白衣摇橹，奇袭荆州。","夷陵火营": "火烧连营七百里。","小霸王": "小霸王横枪，江东辟易。","神亭酣战": "神亭岭酣战，酣畅淋漓。","百骑劫营": "百骑夜劫，铃响敌惊。","苦肉诈降": "苦肉诈降，火船先行。","不屈护主": "身被数创，护主不退。","天下无双": "人中吕布，天下无双。","闭月离间": "闭月之姿，离间父子。","暴虐镇压": "暴虐镇压，洛阳震动。","苍天已死": "苍天已死，黄天当立。","汜水斩将": "汜水关前，连斩来将。","四世三公": "四世三公，门生故吏遍天下。","白马义从": "白马义从，边塞扬威。","河北双壁": "河北双壁，勇冠三军。"};
+function fmtMul(m){ return (Math.round(m*100)/100).toFixed(2).replace(/0$/,""); }
+function activeSkillDesc(name){ const s = ACTIVE_SKILLS[name]; if(!s) return "";
+  if(s.scope==="all") return "对敌方全体造成 "+Math.round(s.mul*100)+"% 攻击伤害";
+  if(s.scope==="single") return "对单体造成 "+Math.round(s.mul*100)+"% 攻击伤害";
+  if(s.scope==="rage") return "削减目标 "+CFG.lianHuanRageCut+" 点怒气（压他的大招）";
+  if(s.scope==="heal") return "己方兵力最低者回复 "+Math.round(CFG.jiJiuHealRatio*100)+"% 最大兵力";
+  return s.desc||""; }
+function passiveSkillDesc(name){ const s = PASSIVE_SKILLS[name]; if(!s) return "";
+  const statName = {def:"防御", atk:"攻击", spd:"攻速", troops:"兵力"}[s.stat]||s.stat;
+  return "本将"+statName+" +"+(s.pct? Math.round(s.pct*100)+"%" : s.add); }
+function ownedSkillDesc(x){ if(!x) return "";
+  if(x.grade==="极") return "对应武将专属技能伤害 ×"+fmtMul(CFG.jiSkillMul)+"（收藏加成，拥有即生效）";
+  if(x.kind==="active") return activeSkillDesc(x.name);
+  if(x.kind==="passive") return passiveSkillDesc(x.name);
+  return ""; }
+
 /* 迁移专用：v1 旧技能卡名 → v1.1 技能名（kind 随新名定） */
 const SKILL_CARD_MAP = {"火计":"火计","连环计":"连环计","兵书残页":"落雷","虎符":"急救","铁壁阵":"铁壁阵","强弩令":"强弩令","疾风步":"疾风步","练兵令":"练兵令"};
 const BONDS = [
@@ -755,7 +773,7 @@ function renderAll(){
   $("skillPoolInfo").textContent = fmtPool(state.pool.skill.leftSec);
   $("skillOwned").textContent = state.skillsOwned.length;
   const grpOf = k => state.skillsOwned.filter(x=>x && x.kind===k);
-  const grpHtml = (label, arr, hot) => arr.length? "<div class='stats'>"+label+"："+arr.map(x=>"<span class='tag"+(hot?" hot":"")+"'>"+x.name+"</span>").join("")+"</div>" : "";
+  const grpHtml = (label, arr, hot) => arr.length? "<div class='stats'>"+label+"："+arr.map(x=>"<span class='tag"+(hot?" hot":"")+"'>"+x.name+"</span> "+ownedSkillDesc(x)).join("；")+"</div>" : "";
   $("skillList").innerHTML = state.skillsOwned.length? grpHtml("主动", grpOf("active"))+grpHtml("被动", grpOf("passive"))+grpHtml("极（收藏加成）", grpOf("ji"), true) : "<span class='note'>暂无技能卡。</span>";
   $("pityInfo").textContent = "已累计 "+state.gachaPity+" 抽未出 SSR（10 连必保底 SSR）";
   const tnEl = $("tianmingNews");
@@ -782,17 +800,18 @@ function renderCards(){
     const locked = inForm || inShow;
     let eqHtml = "";
     const lvNow = c.level||1;
-    const invOpts = slot => state.skillsOwned.map((x,i)=>({x:x,i:i})).filter(o=>o.x && o.x.kind===slot && o.x.grade!=="极").map(o=>"<option value='"+o.i+"'>"+o.x.name+"</option>").join("");
+    const invOpts = slot => state.skillsOwned.map((x,i)=>({x:x,i:i})).filter(o=>o.x && o.x.kind===slot && o.x.grade!=="极").map(o=>"<option value='"+o.i+"'>"+o.x.name+"（"+ownedSkillDesc(o.x)+"）</option>").join("");
     const slotHtml = (slot, learned, unlockLv, label) => {
       if(lvNow < unlockLv) return "<div class='stats'>"+label+"："+unlockLv+" 级解锁（当前 "+lvNow+" 级）</div>";
-      let h = "<div class='stats'>"+label+"："+(learned? "「"+learned+"」" : "未学");
+      let h = "<div class='stats'>"+label+"："+(learned? "「"+learned+"」"+(slot==="active"? activeSkillDesc(learned) : passiveSkillDesc(learned)) : "未学");
       const opts = invOpts(slot);
       if(opts) h += " <select id='learn-"+slot+"-"+c.uid+"'>"+opts+"</select> <button class='btn sm sub' onclick='doLearn("+c.uid+",\""+slot+"\")'>"+(learned? "换学":"学习")+"</button>"+(learned? "（换学覆盖，旧技能不返还）":"");
       else if(!learned) h += "（库存暂无此类技能卡）";
       return h+"</div>";
     };
     const hasJiCard = state.skillsOwned.some(x=>x && x.grade==="极" && x.name==="极·"+g.skill);
-    const skillHtml = "<div class='stats'>专属技能「"+g.skill+"」：怒气满 100 必定释放（代替普攻）"+(hasJiCard? " · 已持「极·"+g.skill+"」专属伤害 ×"+CFG.jiSkillMul : "")+"</div>"+
+    const skillHtml = "<div class='stats'>专属技能「"+g.skill+"」："+(SKILL_DESC[g.skill]||"")+"（怒气满释放 · 攻击×"+fmtMul(g.skillMul)+"）</div>"+
+      (hasJiCard? "<div class='stats'>「极·"+g.skill+"」：专属伤害 ×"+fmtMul(CFG.jiSkillMul)+"（已持收藏卡，生效中）</div>" : "")+
       slotHtml("active", c.learnedActive, CFG.activeUnlockLevel, "主动位（普攻后 "+CFG.activeBaseRate+"% 释放）")+
       slotHtml("passive", c.learnedPassive, CFG.passiveUnlockLevel, "被动位（常驻生效）");
     for(const slot of ["wp","bs"]){
