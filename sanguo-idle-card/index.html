@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国挂机卡牌 · v1</title>
+<title>三国挂机卡牌 · v1.1</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -52,7 +52,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">v1 · 设计：知白守黑</span></h1>
+  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">v1.1 · 设计：知白守黑</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -85,7 +85,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
     <div style="margin:8px 0"><button class="btn" id="btnHeroPool" data-testid="open-hero-pool">开启/延长 1 小时 · 100 元宝</button></div>
     <div class="kv"><span>技能池剩余</span><b id="skillPoolInfo">未开启</b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSkillPool">开启/延长 1 小时 · 80 元宝</button></div>
-    <p class="note">开启时长可叠加，上限 6 小时。已拥有技能卡：<b id="skillOwned">0</b> 张（每张技能卡使全队技能伤害 +2%，在战斗结算中生效）。</p>
+    <p class="note">开启时长可叠加，上限 6 小时。已拥有技能卡：<b id="skillOwned">0</b> 张。技能卡是学习库存：武将 10 级解锁主动位、20 级解锁被动位，在武将页卡片技能区选学、每学一个消耗 1 张；「极」版是收藏加成卡，拥有即对对应武将的专属技能生效、不消耗、不占学习位。</p>
     <div id="skillList" style="margin-top:4px"></div>
   </div>
   <h2 class="sec">抽卡</h2>
@@ -106,14 +106,14 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
     <span>阵营筛选 </span><select id="factionFilter" data-testid="faction-filter"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
     <button class="btn sm dark" id="btnAutoForm" data-testid="auto-form" style="margin-left:8px">一键上阵（战力前 5）</button>
     <p class="note" id="formationInfo" style="margin-top:6px"></p>
-    <p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80 兵力）。强化：先点一张卡「设为强化目标」，再勾选 5 张饲料卡（不能是上阵/橱窗中的卡），成功率实时显示；同名饲料贡献翻倍，封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→防御、睿智→智力、谨慎→攻速。<b>性格卡只出自元宝卡池</b>（挂机英雄池＋限时池，约 25%）；招募券、推关掉落等其他来源只出普通卡。元宝卡池还小概率（5%）出「天命」卡：抽到时逐维随机定死 0.5–1.0 的成长增幅，升级时四维成长各加该维增幅（卡面明示），与性格 +0.5 独立叠加。技能卡分普通与「极」版：极版是 SSR 武将专属技能（如「极·天下无双」，伤害 ×1.6），只出自元宝技能池，掉落只出普通版。</p>
+    <p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80 兵力）。强化：先点一张卡「设为强化目标」，再勾选 5 张饲料卡（不能是上阵/橱窗中的卡），成功率实时显示；同名饲料贡献翻倍，封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→防御、睿智→智力、谨慎→攻速。<b>性格卡只出自元宝卡池</b>（挂机英雄池＋限时池，约 25%）；招募券、推关掉落等其他来源只出普通卡。天命（元宝卡池 5%）：增幅按武将定版——每将四维增幅固定写死（最强维 +1.00、最弱维 +0.50、中间维按成长形状插值，卡面明示），同名天命卡数值恒同、不随机；与性格 +0.5 独立叠加。<b>技能三通道</b>：专属技能只认怒气，满 100 必放（代替普攻，不满绝不放）；学来的主动技能在普攻后按 30% 判定释放；被动技能学会即常驻生效。技能位：10 级解锁主动位、20 级解锁被动位，每位 1 个，在下方卡片技能区从技能卡库存里学（消耗 1 张，换学覆盖且不返还）。「极」版是 SSR 武将专属技能的收藏卡（如「极·天下无双」，专属伤害 ×1.6），只出自元宝技能池。装备四件：武器＝武力（攻）+5/阶、防具＝防御 +5/阶、战马＝兵力 +60/阶、宝物＝专属技能伤害 +8%/阶。布阵前二后三：上阵顺序前两位是前排、后三位是后排，敌方单体攻击先打前排，前排全倒才打后排（全体技能除外）。</p>
     <p class="note" id="enhInfo"></p>
   </div>
   <div id="cardList"></div>
 </section>
 <section class="page" id="tab-stage">
   <h2 class="sec">推关副本（3 章 × 10 关 · 无剧情，纯关卡）</h2>
-  <div class="card"><p class="note">每章第 5 关小 BOSS、第 10 关章末大 BOSS（有概率掉装备与好卡）。战斗全自动：攻速定出手、枪克骑/骑克弓/弓克枪 ×1.25；技能混合触发——出手按发动率（宝物可加）概率放技能，怒气满 100 必定爆发。上阵武将打仗得经验升级，按各自成长系数涨四维。</p></div>
+  <div class="card"><p class="note">每章第 5 关小 BOSS、第 10 关章末大 BOSS（有概率掉装备与好卡）。战斗全自动：攻速定出手、枪克骑/骑克弓/弓克枪 ×1.25。触发三通道：专属技能怒气满 100 必放（代替普攻，不满绝不放）；主动技能在普攻后按 30% 判定释放；被动技能常驻生效。布阵前二后三：单体攻击先打前排，前排全灭才及后排，全体技能除外。上阵武将打仗得经验升级（满级 30 级），按各自成长系数涨四维。</p></div>
   <div id="stageList"></div>
   <h2 class="sec">战报</h2>
   <div class="log" id="battleLog">尚未出战。</div>
@@ -172,7 +172,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国挂机卡牌</h1>
-  <p class="sub">设计：知白守黑 · v1<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">设计：知白守黑 · v1.1<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
   <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 防御成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 攻速成长</p>
 </div>
@@ -200,20 +200,24 @@ const CFG = {
   troopsPerEnh: 80,            // 强化只加兵力：每强化级 +80 兵力
   enhBasePerStar: 3,           // 强化：每张饲料按星级 ×3% 计成功率
   enhRateCap: 95,
-  levelCap: 50,
-  expNeedPerLevel: 80,         // 升下一级所需经验 = 当前等级 ×80
+  levelCap: 30,
+  expNeedPerLevel: 135,        // 升下一级所需经验 = 当前等级 ×135（按满级 30 重标，总量约旧 50 级版 6 成）
   expStageWin: 40, expTowerWin: 60, expArenaWin: 30, expLoseRatio: 0.3,
   persChance: 0.25,            // 性格卡概率 25%（仅元宝卡池产卡时 roll：挂机英雄池＋限时池；其余来源 0）
-  tianmingChance: 0.05,        // 天命概率 5%（仅元宝卡池）：抽到时逐维随机定死 0.5–1.0 增幅，升级时各维成长 +该维增幅
-  tianmingMin: 0.5, tianmingMax: 1.0,
+  tianmingChance: 0.05,        // 天命概率 5%（仅元宝卡池）：增幅取 DESTINY 定版表（按武将成长形状写死 0.5–1.0），同名天命卡恒同
   jiSkillMul: 1.6,             // 技能「极」版倍率：专属技能伤害 ×1.6（相对普通版）
   jiChance: 0.08,              // 元宝技能池产「极」版技能卡概率（其他来源 0）
   persGrowthBonus: 0.5,        // 性格卡对应维成长 +0.5
-  skillBaseRate: 30,           // 技能基础发动率 %（混合触发）
-  trRatePerTier: 5,            // 宝物每阶 +5% 发动率
-  skillRateCap: 90,
+  activeBaseRate: 30,          // 学习主动技能释放概率 %（每回合普攻后判定一次）
+  activeUnlockLevel: 10,       // 主动技能位解锁等级
+  passiveUnlockLevel: 20,      // 被动技能位解锁等级
+  lianHuanRageCut: 30,         // 主动技能「连环计」削减目标怒气量
+  jiJiuHealRatio: 0.15,        // 主动技能「急救」回复量 = 目标最大兵力 ×此比例
+  eqAtkPerTier: 5,             // 武器每阶 攻击（武力）+
+  eqDefPerTier: 5,             // 防具每阶 防御 +
+  eqTroopsPerTier: 60,         // 战马每阶 兵力 +（原攻速效废止）
+  eqTrSkillMulPer: 0.08,       // 宝物每阶 专属技能伤害 +8%
   rankMulPer: 0.02,            // 官职每级全队攻防 +2%
-  skillCardTeamBonus: 0.02,    // 每张技能卡全队技能伤害 +2%
   towerLayers: 10, towerMaxFails: 3, towerTicketPerLayer: 5, towerMeritWin: 50, towerMeritLose: 20,
   arenaWinPts: 10, arenaLosePts: 3,
   showcaseSlots: 5,
@@ -264,10 +268,27 @@ GENS.push({id:101,name:"龙胆赵云",fac:"蜀",rar:"SSR",wu:96,zhi:74,tong:88,s
 GENS.push({id:102,name:"无双吕布",fac:"群",rar:"SSR",wu:100,zhi:38,tong:84,spd:80,troop:"骑",skill:"无双乱舞",skillMul:2.1,variant:true,baseId:28});
 /* 逐人成长系数表（每级成长，两位小数；锚点：张飞武力 1.95、吕布武力 2.30，系数按稀有度档编：SSR 2.32%/SR 2.05%/R 1.68% × 基础值） */
 const GROWTH = {1:{wu:1.90,zhi:2.18,tong:2.23,spd:1.28},2:{wu:1.58,zhi:2.25,tong:2.09,spd:1.11},3:{wu:1.85,zhi:1.07,tong:1.60,spd:1.27},4:{wu:1.80,zhi:1.35,tong:1.72,spd:1.44},5:{wu:1.41,zhi:0.81,tong:1.18,spd:1.31},6:{wu:1.38,zhi:0.92,tong:1.21,spd:0.97},7:{wu:1.56,zhi:0.50,tong:1.08,spd:0.84},8:{wu:1.28,zhi:0.84,tong:1.34,spd:0.76},9:{wu:0.76,zhi:1.38,tong:1.11,spd:0.71},10:{wu:1.48,zhi:1.44,tong:1.68,spd:1.07},11:{wu:2.23,zhi:1.67,tong:2.04,spd:1.39},12:{wu:1.95,zhi:0.78,tong:1.52,spd:1.19},13:{wu:2.16,zhi:1.62,tong:2.00,spd:1.90},14:{wu:1.16,zhi:2.30,tong:2.18,spd:1.02},15:{wu:1.80,zhi:1.13,tong:1.56,spd:1.15},16:{wu:1.89,zhi:0.92,tong:1.60,spd:1.56},17:{wu:1.41,zhi:0.84,tong:1.18,spd:1.08},18:{wu:1.38,zhi:1.31,tong:1.28,spd:1.11},19:{wu:1.39,zhi:1.52,tong:1.72,spd:1.03},20:{wu:1.67,zhi:2.20,tong:2.13,spd:1.35},21:{wu:1.60,zhi:1.64,tong:1.68,spd:1.11},22:{wu:1.35,zhi:1.89,tong:1.72,spd:1.07},23:{wu:1.85,zhi:1.19,tong:1.64,spd:1.48},24:{wu:1.44,zhi:0.87,tong:1.21,spd:1.14},25:{wu:1.43,zhi:0.77,tong:1.14,spd:1.24},26:{wu:1.24,zhi:0.74,tong:1.11,spd:0.77},27:{wu:1.41,zhi:0.64,tong:1.18,spd:0.87},28:{wu:2.30,zhi:0.81,tong:1.90,spd:1.81},29:{wu:1.23,zhi:1.76,tong:1.39,spd:1.27},30:{wu:1.64,zhi:0.86,tong:1.60,spd:0.82},31:{wu:1.13,zhi:1.80,tong:1.52,spd:0.94},32:{wu:1.48,zhi:0.54,tong:1.11,spd:0.94},33:{wu:1.04,zhi:1.01,tong:1.34,spd:0.74},34:{wu:1.34,zhi:0.84,tong:1.18,spd:1.18},35:{wu:1.44,zhi:0.50,tong:1.04,spd:0.91},36:{wu:1.43,zhi:0.47,tong:1.01,spd:0.97},101:{wu:2.27,zhi:1.70,tong:2.10,spd:2.00},102:{wu:2.42,zhi:0.85,tong:2.00,spd:1.90}};
+/* 天命定版表（知白守黑定版）：按每将 GROWTH 形状写死字面量——成长最高维增幅 1.00、最低维 0.50、中间维线性插值（两位小数）；运行时不随机 */
+const DESTINY = {1:{wu:0.83,zhi:0.97,tong:1.00,spd:0.50},2:{wu:0.71,zhi:1.00,tong:0.93,spd:0.50},3:{wu:1.00,zhi:0.50,tong:0.84,spd:0.63},4:{wu:1.00,zhi:0.50,tong:0.91,spd:0.60},5:{wu:1.00,zhi:0.50,tong:0.81,spd:0.92},6:{wu:1.00,zhi:0.50,tong:0.82,spd:0.55},7:{wu:1.00,zhi:0.50,tong:0.77,spd:0.66},8:{wu:0.95,zhi:0.57,tong:1.00,spd:0.50},9:{wu:0.54,zhi:1.00,tong:0.80,spd:0.50},10:{wu:0.84,zhi:0.80,tong:1.00,spd:0.50},11:{wu:1.00,zhi:0.67,tong:0.89,spd:0.50},12:{wu:1.00,zhi:0.50,tong:0.82,spd:0.68},13:{wu:1.00,zhi:0.50,tong:0.85,spd:0.76},14:{wu:0.55,zhi:1.00,tong:0.95,spd:0.50},15:{wu:1.00,zhi:0.50,tong:0.82,spd:0.51},16:{wu:1.00,zhi:0.50,tong:0.85,spd:0.83},17:{wu:1.00,zhi:0.50,tong:0.80,spd:0.71},18:{wu:1.00,zhi:0.87,tong:0.81,spd:0.50},19:{wu:0.76,zhi:0.86,tong:1.00,spd:0.50},20:{wu:0.69,zhi:1.00,tong:0.96,spd:0.50},21:{wu:0.93,zhi:0.96,tong:1.00,spd:0.50},22:{wu:0.67,zhi:1.00,tong:0.90,spd:0.50},23:{wu:1.00,zhi:0.50,tong:0.84,spd:0.72},24:{wu:1.00,zhi:0.50,tong:0.80,spd:0.74},25:{wu:1.00,zhi:0.50,tong:0.78,spd:0.86},26:{wu:1.00,zhi:0.50,tong:0.87,spd:0.53},27:{wu:1.00,zhi:0.50,tong:0.85,spd:0.65},28:{wu:1.00,zhi:0.50,tong:0.87,spd:0.84},29:{wu:0.50,zhi:1.00,tong:0.65,spd:0.54},30:{wu:1.00,zhi:0.52,tong:0.98,spd:0.50},31:{wu:0.61,zhi:1.00,tong:0.84,spd:0.50},32:{wu:1.00,zhi:0.50,tong:0.80,spd:0.71},33:{wu:0.75,zhi:0.73,tong:1.00,spd:0.50},34:{wu:1.00,zhi:0.50,tong:0.84,spd:0.84},35:{wu:1.00,zhi:0.50,tong:0.79,spd:0.72},36:{wu:1.00,zhi:0.50,tong:0.78,spd:0.76},101:{wu:1.00,zhi:0.50,tong:0.85,spd:0.76},102:{wu:1.00,zhi:0.50,tong:0.87,spd:0.83}};
 /* 迁移专用：v0 时代每名武将的固定旧性格名（老卡据此补实例性格，再经 PERS_MIGRATE 改名）；旧名仅许出现在本表与 PERS_MIGRATE */
 const V0_PERS_OLD = {1:"冷静",2:"冷静",3:"刚胆",4:"刚胆",5:"鲁莽",6:"刚胆",7:"鲁莽",8:"胆小",9:"冷静",10:"刚胆",11:"刚胆",12:"鲁莽",13:"刚胆",14:"冷静",15:"冷静",16:"鲁莽",17:"鲁莽",18:"冷静",19:"胆小",20:"冷静",21:"冷静",22:"冷静",23:"刚胆",24:"刚胆",25:"鲁莽",26:"刚胆",27:"胆小",28:"鲁莽",29:"冷静",30:"胆小",31:"冷静",32:"鲁莽",33:"胆小",34:"刚胆",35:"鲁莽",36:"鲁莽",101:"刚胆",102:"鲁莽"};
 const GEN_BY_ID = {}; GENS.forEach(g=>GEN_BY_ID[g.id]=g);
-const SKILL_CARDS = ["火计","连环计","铁壁阵","强弩令","疾风步","兵书残页","虎符","练兵令"];
+/* 学习技能表：主动＝普攻后概率释放；被动＝常驻本将。效果数值只许在此表/CFG */
+const ACTIVE_SKILLS = {
+  "火计":{scope:"all", mul:0.60, desc:"敌方全体 60% 攻击伤害"},
+  "落雷":{scope:"single", mul:1.20, desc:"单体 120% 攻击伤害"},
+  "连环计":{scope:"rage", desc:"削减目标怒气（量见 CFG.lianHuanRageCut）"},
+  "急救":{scope:"heal", desc:"己方兵力最低者回复（比例见 CFG.jiJiuHealRatio）"}
+};
+const PASSIVE_SKILLS = {
+  "铁壁阵":{stat:"def", pct:0.10, desc:"防御 +10%（常驻）"},
+  "强弩令":{stat:"atk", pct:0.10, desc:"攻击 +10%（常驻）"},
+  "疾风步":{stat:"spd", add:8, desc:"攻速 +8（常驻）"},
+  "练兵令":{stat:"troops", pct:0.12, desc:"兵力 +12%（常驻）"}
+};
+const SKILL_KIND = {}; Object.keys(ACTIVE_SKILLS).forEach(n=>SKILL_KIND[n]="active"); Object.keys(PASSIVE_SKILLS).forEach(n=>SKILL_KIND[n]="passive");
+/* 迁移专用：v1 旧技能卡名 → v1.1 技能名（kind 随新名定） */
+const SKILL_CARD_MAP = {"火计":"火计","连环计":"连环计","兵书残页":"落雷","虎符":"急救","铁壁阵":"铁壁阵","强弩令":"强弩令","疾风步":"疾风步","练兵令":"练兵令"};
 const BONDS = [
   {name:"桃园结义", members:["刘备","关羽","张飞"], atk:0.10, def:0.10},
   {name:"五虎上将", members:["关羽","张飞","赵云","马超","黄忠"], atk:0.08, def:0.08},
@@ -279,14 +300,14 @@ const BONDS = [
   {name:"西凉传承", members:["马超","姜维"], atk:0.09, def:0.04}
 ];
 const CHAPTERS = ["黄巾之乱","董卓乱政","群雄逐鹿"];
-const EQUIP_TYPES = {wp:{name:"武器",stat:"atk"}, ar:{name:"防具",stat:"def"}, hs:{name:"战马",stat:"spd"}, tr:{name:"宝物",stat:"skill"}};
+const EQUIP_TYPES = {wp:{name:"武器",stat:"atk"}, ar:{name:"防具",stat:"def"}, hs:{name:"战马",stat:"troops"}, tr:{name:"宝物",stat:"skill"}};
 function equipName(type, tier){ const base={wp:["铁剑","环首刀","青釭剑","方天画戟"],ar:["布甲","皮甲","鱼鳞甲","明光铠"],hs:["驽马","战马","千里马","赤兔"],tr:["铜符","玉佩","兵书","传国玉玺"]}[type]; return base[Math.min(tier-1,3)]+"·"+tier+"阶"; }
 /* ============ state + 存档层（唯一读写口）+ 账本 ============ */
 const SAVE_KEY = "sanguo_idle_save_v1";
 let _uid = 1;
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
 function newState(){
-return { ver:2, yuanbao:CFG.startYuanbao, tickets:0, merit:0, rankIdx:0, arenaPts:0,
+return { ver:3, yuanbao:CFG.startYuanbao, tickets:0, merit:0, rankIdx:0, arenaPts:0,
 cards:[], skillsOwned:[], equips:[], formation:[], starterGenId:0,
 pool:{ hero:{fac:"蜀",leftSec:0,acc:0}, skill:{leftSec:0,acc:0}},
 gachaPity:0, stageCleared:0,
@@ -314,15 +335,37 @@ function migrateV1toV2(old){
   s.ver = 2;
   return s;
 }
-function load(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s){ const parsed=JSON.parse(s); state=Object.assign(newState(), parsed); if(parsed.ver<2){ state=migrateV1toV2(state); save(); } state.cards.forEach(c=>{ if(c.tianming===undefined || c.tianming===false) c.tianming=null; else if(c.tianming===true) c.tianming=rollTianming(); }); state.skillsOwned = (state.skillsOwned||[]).map(x=> typeof x==="string"? {name:x, grade:"普通"} : x); return true;}}catch(e){} return false;}
+/* 技能卡条目规范化：补 kind；旧名按 SKILL_CARD_MAP 改名；极版 kind=ji */
+function normalizeSkillEntry(x){
+  if(typeof x==="string") x = {name:x, grade:"普通"};
+  const e = Object.assign({}, x);
+  if(e.grade==="极"){ e.kind = "ji"; return e; }
+  e.name = SKILL_CARD_MAP[e.name] || e.name;
+  e.kind = SKILL_KIND[e.name] || "active";
+  return e;
+}
+/* v1(ver2) → v1.1(ver3) 存档迁移：等级钳 30、卡补学习技能字段、技能卡补 kind 并改名、天命换 DESTINY 定版值，其余原样；迁移后立刻回写 */
+function migrateV2toV3(old){
+  if(!old || old.ver>=3) return old;
+  const s = Object.assign(newState(), old);
+  s.cards = (old.cards||[]).map(c=>{
+    const nc = Object.assign({}, c);
+    nc.level = Math.min(nc.level||1, CFG.levelCap);
+    if(nc.level>=CFG.levelCap) nc.exp = 0;
+    if(nc.learnedActive===undefined) nc.learnedActive = null;
+    if(nc.learnedPassive===undefined) nc.learnedPassive = null;
+    if(nc.tianming) nc.tianming = DESTINY[nc.genId]? Object.assign({}, DESTINY[nc.genId]) : null;
+    return nc;
+  });
+  s.skillsOwned = (old.skillsOwned||[]).map(normalizeSkillEntry);
+  s.ver = 3;
+  return s;
+}
+function load(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s){ const parsed=JSON.parse(s); state=Object.assign(newState(), parsed); let migrated=false; if(state.ver<2){ state=migrateV1toV2(state); migrated=true; } if(state.ver<3){ state=migrateV2toV3(state); migrated=true; } if(migrated) save(); state.cards.forEach(c=>{ if(c.tianming===undefined || c.tianming===false) c.tianming=null; else if(c.tianming===true) c.tianming = DESTINY[c.genId]? Object.assign({}, DESTINY[c.genId]) : null; if(c.learnedActive===undefined) c.learnedActive=null; if(c.learnedPassive===undefined) c.learnedPassive=null; }); state.skillsOwned = (state.skillsOwned||[]).map(normalizeSkillEntry); return true;}}catch(e){} return false;}
 const RES_FIELD = { yuanbao:"yuanbao", tickets:"tickets", merit:"merit", arenaPts:"arenaPts"};
 function addRes(kind, n){ state[RES_FIELD[kind]] += n; if(state[RES_FIELD[kind]]<0) state[RES_FIELD[kind]]=0; save();}
 function spendRes(kind, n){ if(state[RES_FIELD[kind]] < n) return false; state[RES_FIELD[kind]] -= n; save(); return true;}
 function rollPers(){ return Math.random() < CFG.persChance? randPick(PERS_LIST) : null; }
-function rollTianming(){
-const r = ()=> Math.round((CFG.tianmingMin + Math.random()*(CFG.tianmingMax-CFG.tianmingMin))*100)/100;
-return {wu:r(), zhi:r(), tong:r(), spd:r()};
-}
 /* 出处规则（知白守黑定版）：性格卡与天命只出自元宝卡池——调用方须传 rollPers:true（挂机英雄池/限时池）；
    招募券池、推关掉落等其他来源不传，一律普通卡、无天命。开局选将传 pers 指定性格（建档例外）。 */
 function addCard(genId, opts){
@@ -330,7 +373,8 @@ opts = opts || {};
 const fromYuanbaoPool = !!opts.rollPers;
 const c = { uid:_uid++, genId:genId, star:1, enh:0, equip:{wp:0,ar:0,hs:0,tr:0}, level:1, exp:0,
   pers: ("pers" in opts)? opts.pers : (fromYuanbaoPool? rollPers() : null),
-  tianming: (fromYuanbaoPool && Math.random() < CFG.tianmingChance)? rollTianming() : null };
+  tianming: (fromYuanbaoPool && Math.random() < CFG.tianmingChance)? Object.assign({}, DESTINY[genId]) : null,
+  learnedActive:null, learnedPassive:null };
 state.cards.push(c); save(); return c;
 }
 function growthOf(card){
@@ -368,14 +412,16 @@ p.leftSec = Math.min(CFG.poolMaxSec, p.leftSec + CFG.poolHourSec);
 if(kind==="hero"){ const sel=document.getElementById("heroFac"); if(sel) p.fac=sel.value;}
 save(); return {ok:true,msg:"已开启/延长 1 小时"};
 }
-/* 技能卡产出：grade 分普通/极。极版＝SSR 武将专属技能的「极·<技能名>」，只出自元宝技能池（jiChance），推关掉落等其他来源只出普通 */
+/* 技能卡产出：普通版从主动/被动技能表出（带 kind，是学习库存）；「极·<专属>」为收藏加成卡，只出自元宝技能池（jiChance），其他来源不出 */
 function produceSkillCard(source){
 if(source==="yuanbao" && Math.random() < CFG.jiChance){
 const ownedJi = new Set(state.skillsOwned.filter(x=>x.grade==="极").map(x=>x.name));
 const cand = GENS.filter(g=>g.rar==="SSR" && !ownedJi.has("极·"+g.skill));
-if(cand.length){ const g = randPick(cand); return {name:"极·"+g.skill, grade:"极", genId:g.id}; }
+if(cand.length){ const g = randPick(cand); return {name:"极·"+g.skill, grade:"极", kind:"ji", genId:g.id}; }
 }
-return {name: randPick(SKILL_CARDS), grade:"普通"};
+const pool = Object.keys(ACTIVE_SKILLS).map(n=>({name:n, kind:"active"})).concat(Object.keys(PASSIVE_SKILLS).map(n=>({name:n, kind:"passive"})));
+const p = randPick(pool);
+return {name:p.name, grade:"普通", kind:p.kind};
 }
 function poolTick(){
 let changed=false;
@@ -421,31 +467,61 @@ if(BEATS[att.troop]===def.troop) mul = CFG.counterMul;
 const raw = att.atk * mul * (0.9 + Math.random()*0.2);
 return Math.max(1, Math.round(raw - def.def*0.4));
 }
-/* 混合触发判定：怒气满必发（burst）；否则按发动率概率触发（rate）；都不中为普攻（null） */
-function decideSkill(u){
-if(u.rage>=100) return "burst";
-const rate = (typeof u.skillRate==="number")? u.skillRate : CFG.skillBaseRate;
-if(Math.random()*100 < rate) return "rate";
-return null;
+/* 减怒结算（连环计）：不低于 0 */
+function applyRageCut(u, n){ u.rage = Math.max(0, (u.rage||0) - n); return u.rage; }
+/* 索敌（前二后三）：单体目标优先对方前排（站位 0、1）存活者、同排取站位靠前者；前排全灭才及后排 */
+function pickTarget(foes){
+const alive = foes.filter(f=>f.alive);
+if(!alive.length) return null;
+const front = alive.filter(f=>f.pos<2);
+const row = front.length? front : alive;
+return row.slice().sort((x,y)=>x.pos-y.pos)[0];
 }
+/* 触发三通道：①专属技能只认怒气（满 100 必放、消耗怒气、代替普攻；不满绝不放）②学习主动技能在普攻后按 CFG.activeBaseRate 判定 ③被动技能在 resolveUnit 常驻生效 */
 function battleSim(teamA, teamB){
-const A = teamA.map(u=>Object.assign({},u,{curHp:u.hp,rage:u.rage||0,alive:true}));
-const B = teamB.map(u=>Object.assign({},u,{curHp:u.hp,rage:u.rage||0,alive:true}));
+const A = teamA.map((u,i)=>Object.assign({},u,{curHp:u.hp,rage:u.rage||0,alive:true,pos:(typeof u.pos==="number"? u.pos : i)}));
+const B = teamB.map((u,i)=>Object.assign({},u,{curHp:u.hp,rage:u.rage||0,alive:true,pos:(typeof u.pos==="number"? u.pos : i)}));
 const log=[]; let skillUsed=false;
+A.concat(B).forEach(u=>{ if(u.passiveSkill) log.push(u.name+" 被动·"+u.passiveSkill+"（常驻）"); });
+function dealDamage(att, t, mul){
+const dmg = Math.max(1, Math.round(calcDamage(att,t) * (mul||1)));
+t.curHp -= dmg; t.rage = Math.min(100, (t.rage||0)+10); if(t.curHp<=0){ t.curHp=0; t.alive=false; }
+return dmg;
+}
 for(let round=1; round<=30; round++){
 const order = A.concat(B).filter(u=>u.alive).sort((x,y)=>y.spd-x.spd);
 if(!order.length) break;
 for(const u of order){
 if(!u.alive) continue;
-const foes = (A.indexOf(u)>=0? B: A).filter(f=>f.alive);
-if(!foes.length) break;
-const t = foes.slice().sort((x,y)=>x.curHp-y.curHp)[0];
-let dmg; const mode = decideSkill(u); const isSkill = !!mode;
-if(mode==="burst"){ dmg = Math.max(1, Math.round(calcDamage(u,t) * u.skillMul)); u.rage=0; skillUsed=true;}
-else if(mode==="rate"){ dmg = Math.max(1, Math.round(calcDamage(u,t) * u.skillMul)); u.rage = Math.min(100, u.rage+17); skillUsed=true;}
-else { dmg = calcDamage(u,t); u.rage = Math.min(100, u.rage+34);}
-t.curHp -= dmg; t.rage = Math.min(100, (t.rage||0)+10); if(t.curHp<=0){ t.curHp=0; t.alive=false;}
-log.push("第"+round+"回合 "+u.name+(mode==="burst"? " 怒气爆发·技能": mode==="rate"? " 技能（概率触发）":"")+" → "+t.name+" 造成 "+dmg+" 伤害"+(t.alive?"":"，"+t.name+" 倒下"));
+const myTeam = A.indexOf(u)>=0? A : B;
+const foes = (myTeam===A? B : A);
+if(!foes.some(f=>f.alive)) break;
+if(u.rage>=100){
+const t = pickTarget(foes); if(!t) break;
+const dmg = dealDamage(u, t, u.skillMul); u.rage = 0; skillUsed = true;
+log.push("第"+round+"回合 "+u.name+" 怒气爆发·"+(u.skillName||"专属技能")+" → "+t.name+" 造成 "+dmg+" 伤害"+(t.alive?"":"，"+t.name+" 倒下"));
+continue;
+}
+const t = pickTarget(foes); if(!t) break;
+const dmg = dealDamage(u, t, 1);
+u.rage = Math.min(100, u.rage+34);
+log.push("第"+round+"回合 "+u.name+" → "+t.name+" 造成 "+dmg+" 伤害"+(t.alive?"":"，"+t.name+" 倒下"));
+if(u.activeSkill && ACTIVE_SKILLS[u.activeSkill] && foes.some(f=>f.alive) && Math.random()*100 < CFG.activeBaseRate){
+skillUsed = true;
+const sk = ACTIVE_SKILLS[u.activeSkill];
+if(sk.scope==="all"){
+foes.filter(f=>f.alive).forEach(f=>{ const d2 = dealDamage(u, f, sk.mul); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+f.name+" 造成 "+d2+" 伤害"+(f.alive?"":"，"+f.name+" 倒下")); });
+} else if(sk.scope==="rage"){
+const t2 = pickTarget(foes);
+if(t2){ const before = t2.rage||0; applyRageCut(t2, CFG.lianHuanRageCut); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+t2.name+" 怒气被削减 "+(before - t2.rage)+"（现 "+t2.rage+"）"); }
+} else if(sk.scope==="heal"){
+const low = myTeam.filter(f=>f.alive).slice().sort((x,y)=>(x.curHp/x.hp)-(y.curHp/y.hp))[0];
+if(low){ const heal = Math.min(low.hp - low.curHp, Math.round(low.hp * CFG.jiJiuHealRatio)); low.curHp += heal; log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+low.name+" 回复 "+heal+" 兵力"); }
+} else {
+const t2 = pickTarget(foes);
+if(t2){ const d2 = dealDamage(u, t2, sk.mul); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+t2.name+" 造成 "+d2+" 伤害"+(t2.alive?"":"，"+t2.name+" 倒下")); }
+}
+}
 }
 if(!A.some(u=>u.alive) ||!B.some(u=>u.alive)) break;
 }
@@ -453,23 +529,34 @@ const aAlive = A.some(u=>u.alive), bAlive = B.some(u=>u.alive);
 let win;
 if(aAlive &&!bAlive) win=true; else if(bAlive &&!aAlive) win=false;
 else { const ah=A.reduce((s,u)=>s+u.curHp/u.hp,0), bh=B.reduce((s,u)=>s+u.curHp/u.hp,0); win = ah>=bh;}
-return { win:win, log:log, skillUsed:skillUsed};
+return { win:win, log:log, skillUsed:skillUsed, A:A, B:B };
 }
 function resolveUnit(card, teamMul, bondMul){
 const g = GEN_BY_ID[card.genId];
 const starMul = 1 + CFG.starMulPer*(card.star - 1);
 const wu = statAt(card,"wu"), zhi = statAt(card,"zhi"), tong = statAt(card,"tong"), spdBase = statAt(card,"spd");
-let eqAtk=0, eqDef=0, eqSpd=0, eqRate=0;
+/* 装备简化映射：武器=攻击（武力）/防具=防御/战马=兵力/宝物=专属技能伤害倍率 */
+let eqAtk=0, eqDef=0, eqTroops=0, eqSkillMul=1;
 for(const slot of ["wp","ar","hs","tr"]){ const eid=card.equip[slot]; if(!eid) continue;
 const e = state.equips.find(x=>x.uid===eid); if(!e) continue;
-if(slot==="wp") eqAtk+=5*e.tier; if(slot==="ar") eqDef+=5*e.tier; if(slot==="hs") eqSpd+=3*e.tier; if(slot==="tr") eqRate+=CFG.trRatePerTier*e.tier;}
-const atk = Math.round((wu*0.6 + zhi*0.4) * starMul * (bondMul?bondMul.atk:1) * (teamMul||1) + eqAtk);
-const def = Math.round((tong*0.5 + wu*0.2) * starMul * (bondMul?bondMul.def:1) * (teamMul||1) + eqDef);
+if(slot==="wp") eqAtk+=CFG.eqAtkPerTier*e.tier; if(slot==="ar") eqDef+=CFG.eqDefPerTier*e.tier; if(slot==="hs") eqTroops+=CFG.eqTroopsPerTier*e.tier; if(slot==="tr") eqSkillMul*=(1 + CFG.eqTrSkillMulPer*e.tier);}
+let atk = Math.round((wu*0.6 + zhi*0.4) * starMul * (bondMul?bondMul.atk:1) * (teamMul||1) + eqAtk);
+let def = Math.round((tong*0.5 + wu*0.2) * starMul * (bondMul?bondMul.def:1) * (teamMul||1) + eqDef);
+let spd = Math.round(spdBase * starMul);
+let hp = troopsOf(card) + eqTroops;
+/* 被动学习技能：常驻修正，百分百生效、不进判定 */
+const pas = card.learnedPassive;
+if(pas && PASSIVE_SKILLS[pas]){
+if(PASSIVE_SKILLS[pas].stat==="atk") atk = Math.round(atk * (1 + PASSIVE_SKILLS[pas].pct));
+if(PASSIVE_SKILLS[pas].stat==="def") def = Math.round(def * (1 + PASSIVE_SKILLS[pas].pct));
+if(PASSIVE_SKILLS[pas].stat==="spd") spd += PASSIVE_SKILLS[pas].add;
+if(PASSIVE_SKILLS[pas].stat==="troops") hp = Math.round(hp * (1 + PASSIVE_SKILLS[pas].pct));
+}
 const hasJi = state.skillsOwned.some(x=>x && x.grade==="极" && x.name==="极·"+g.skill);
-const skillMul = g.skillMul * (1 + CFG.starSkillPer*(card.star - 1)) * (1 + CFG.skillCardTeamBonus*state.skillsOwned.length) * (hasJi? CFG.jiSkillMul : 1);
-return { name:g.name+(g.variant?"（限定）":""), hp: troopsOf(card), troops: troopsOf(card), atk:atk, def:def,
-spd: Math.round(spdBase * starMul) + eqSpd, troop:g.troop, skillName:g.skill, skillMul:skillMul,
-skillRate: Math.min(CFG.skillRateCap, CFG.skillBaseRate + eqRate), uid:card.uid};
+const skillMul = g.skillMul * (1 + CFG.starSkillPer*(card.star - 1)) * (hasJi? CFG.jiSkillMul : 1) * eqSkillMul;
+return { name:g.name+(g.variant?"（限定）":""), hp: hp, troops: hp, atk:atk, def:def,
+spd: spd, troop:g.troop, skillName:g.skill, skillMul:skillMul,
+activeSkill: card.learnedActive||null, passiveSkill: card.learnedPassive||null, uid:card.uid};
 }
 function activeBonds(cards){
 const names = new Set(cards.map(c=>GEN_BY_ID[c.genId].name));
@@ -491,10 +578,22 @@ const pool = GENS.filter(g=>!g.variant);
 const team=[];
 for(let i=0;i<(n||5);i++){ const g=randPick(pool);
 team.push({ name:g.name+"（敌）", hp:Math.round((260+g.tong*8)*power), atk:Math.round((g.wu*0.6+g.zhi*0.4)*power),
-def:Math.round((g.tong*0.5+g.wu*0.2)*power), spd:g.spd, troop:g.troop, skillName:g.skill, skillMul:g.skillMul, skillRate:CFG.skillBaseRate});}
+def:Math.round((g.tong*0.5+g.wu*0.2)*power), spd:g.spd, troop:g.troop, skillName:g.skill, skillMul:g.skillMul, activeSkill:null, passiveSkill:null});}
 return team;
 }
 /* ============ 养成模块 ============ */
+/* 技能学习：主动位 CFG.activeUnlockLevel 级、被动位 CFG.passiveUnlockLevel 级解锁，每位 1 个；学习消耗库存技能卡 1 张，换学覆盖且旧技能不返还 */
+function learnSkill(uid, slot, invIdx){
+const card = state.cards.find(c=>c.uid===uid); if(!card) return {ok:false,msg:"卡不存在"};
+const need = slot==="active"? CFG.activeUnlockLevel : CFG.passiveUnlockLevel;
+if((card.level||1) < need) return {ok:false,msg:(slot==="active"? "主动位":"被动位")+" "+need+" 级解锁（当前 "+(card.level||1)+" 级）"};
+const entry = state.skillsOwned[invIdx];
+if(!entry || entry.kind!==slot || entry.grade==="极") return {ok:false,msg:"请选择对应类别的技能卡"};
+state.skillsOwned.splice(invIdx,1);
+if(slot==="active") card.learnedActive = entry.name; else card.learnedPassive = entry.name;
+save();
+return {ok:true,msg:"已学会「"+entry.name+"」（消耗技能卡 1 张；换学覆盖，旧技能不返还）"};
+}
 function starUp(uid){
 const card = state.cards.find(c=>c.uid===uid); if(!card) return {ok:false,msg:"卡不存在"};
 if(card.star>=CFG.starCap) return {ok:false,msg:"已达升星上限 ★5"};
@@ -617,9 +716,11 @@ function renderAll(){
   $("heroPoolInfo").textContent = fmtPool(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac;
   $("skillPoolInfo").textContent = fmtPool(state.pool.skill.leftSec);
   $("skillOwned").textContent = state.skillsOwned.length;
-  $("skillList").innerHTML = state.skillsOwned.length? state.skillsOwned.map(x=>{ const nm = typeof x==="string"? x : x.name; const ji = x && x.grade==="极"; return "<span class='tag"+(ji?" hot":"")+"'>"+nm+(ji?"（极）":"")+"</span>"; }).join("") : "<span class='note'>暂无技能卡。</span>";
+  const grpOf = k => state.skillsOwned.filter(x=>x && x.kind===k);
+  const grpHtml = (label, arr, hot) => arr.length? "<div class='stats'>"+label+"："+arr.map(x=>"<span class='tag"+(hot?" hot":"")+"'>"+x.name+"</span>").join("")+"</div>" : "";
+  $("skillList").innerHTML = state.skillsOwned.length? grpHtml("主动", grpOf("active"))+grpHtml("被动", grpOf("passive"))+grpHtml("极（收藏加成）", grpOf("ji"), true) : "<span class='note'>暂无技能卡。</span>";
   $("pityInfo").textContent = "已累计 "+state.gachaPity+" 抽未出 SSR（10 连必保底 SSR）";
-  $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5，战力 "+teamPower()+"。羁绊："+
+  $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5，战力 "+teamPower()+"（站位前二后三：前两位＝前排、后三位＝后排）。羁绊："+
     (activeBonds(teamCards()).map(b=>b.name+"（攻+"+Math.round(b.atk*100)+"% 防+"+Math.round(b.def*100)+"%，逐人明示）").join("、") || "无");
   renderCards(); renderStages();
   $("towerInfo").textContent = "第 "+state.tower.layer+" 层 · 失败 "+state.tower.fails+"/3"+(state.tower.done?" · 已出局":"")+(state.tower.layer>=10?" · 已通关":"");
@@ -640,6 +741,20 @@ function renderCards(){
     const inForm = state.formation.indexOf(c.uid)>=0, inShow = state.showcase.indexOf(c.uid)>=0;
     const locked = inForm || inShow;
     let eqHtml = "";
+    const lvNow = c.level||1;
+    const invOpts = slot => state.skillsOwned.map((x,i)=>({x:x,i:i})).filter(o=>o.x && o.x.kind===slot && o.x.grade!=="极").map(o=>"<option value='"+o.i+"'>"+o.x.name+"</option>").join("");
+    const slotHtml = (slot, learned, unlockLv, label) => {
+      if(lvNow < unlockLv) return "<div class='stats'>"+label+"："+unlockLv+" 级解锁（当前 "+lvNow+" 级）</div>";
+      let h = "<div class='stats'>"+label+"："+(learned? "「"+learned+"」" : "未学");
+      const opts = invOpts(slot);
+      if(opts) h += " <select id='learn-"+slot+"-"+c.uid+"'>"+opts+"</select> <button class='btn sm sub' onclick='doLearn("+c.uid+",\""+slot+"\")'>"+(learned? "换学":"学习")+"</button>"+(learned? "（换学覆盖，旧技能不返还）":"");
+      else if(!learned) h += "（库存暂无此类技能卡）";
+      return h+"</div>";
+    };
+    const hasJiCard = state.skillsOwned.some(x=>x && x.grade==="极" && x.name==="极·"+g.skill);
+    const skillHtml = "<div class='stats'>专属技能「"+g.skill+"」：怒气满 100 必定释放（代替普攻）"+(hasJiCard? " · 已持「极·"+g.skill+"」专属伤害 ×"+CFG.jiSkillMul : "")+"</div>"+
+      slotHtml("active", c.learnedActive, CFG.activeUnlockLevel, "主动位（普攻后 "+CFG.activeBaseRate+"% 释放）")+
+      slotHtml("passive", c.learnedPassive, CFG.passiveUnlockLevel, "被动位（常驻生效）");
     for(const slot of ["wp","ar","hs","tr"]){
       const opts = state.equips.filter(e=>e.type===slot && (c.equip[slot]===e.uid || !state.cards.some(x=>x.uid!==c.uid && Object.values(x.equip).indexOf(e.uid)>=0)));
       eqHtml += "<div class='stats'>"+EQUIP_TYPES[slot].name+" <select onchange='setEquip("+c.uid+",\""+slot+"\",this.value)'>"+
@@ -648,11 +763,11 @@ function renderCards(){
     return "<div class='card'><div class='gen'><div class='avatar rar-"+g.rar+"'>"+g.name[0]+"</div><div style='flex:1'>"+
       "<span class='nm'>"+g.name+"</span> <span class='star'>"+"★".repeat(c.star)+"</span>"+
       (g.variant?" <span class='tag hot'>限定</span>":"")+(inForm?" <span class='tag hot'>上阵中</span>":"")+(inShow?" <span class='tag hot'>橱窗中</span>":"")+
-      "<div><span class='tag rar-"+g.rar+"'>"+g.rar+"</span><span class='tag'>"+g.fac+"</span><span class='tag'>"+g.troop+"兵</span><span class='tag'>Lv"+(c.level||1)+"</span>"+
+      "<div><span class='tag rar-"+g.rar+"'>"+g.rar+"</span><span class='tag'>"+g.fac+"</span><span class='tag'>"+g.troop+"兵</span><span class='tag'>Lv"+(c.level||1)+((c.level||1)>=CFG.levelCap? " MAX":"")+"</span>"+
       (c.pers? "<span class='tag hot'>性格·"+c.pers+"（"+PERS_LABEL[c.pers]+" +0.5）</span>" : "<span class='tag'>普通卡</span>")+(c.tianming? "<span class='tag hot'>天命：武+"+c.tianming.wu.toFixed(2)+" 智+"+c.tianming.zhi.toFixed(2)+" 统+"+c.tianming.tong.toFixed(2)+" 速+"+c.tianming.spd.toFixed(2)+"</span>":"")+
       "<span class='tag'>强化 +"+c.enh+"（兵力）</span></div>"+
       "<div class='stats'>武 "+Math.round(statAt(c,'wu'))+"（成长 "+gr.wu.toFixed(2)+"）· 智 "+Math.round(statAt(c,'zhi'))+"（"+gr.zhi.toFixed(2)+"）· 统 "+Math.round(statAt(c,'tong'))+"（"+gr.tong.toFixed(2)+"）· 速 "+Math.round(statAt(c,'spd'))+"（"+gr.spd.toFixed(2)+"）</div>"+
-      "<div class='stats'>实战 攻 "+u.atk+" 防 "+u.def+" 兵力 "+u.hp+" 技「"+g.skill+"」发动率 "+u.skillRate+"%</div>"+
+      "<div class='stats'>实战 攻 "+u.atk+" 防 "+u.def+" 兵力 "+u.hp+"</div>"+skillHtml+
       eqHtml+
       "<div style='margin-top:6px;display:flex;gap:6px;flex-wrap:wrap'>"+
       "<button class='btn sm "+(inForm?"sub":"dark")+"' onclick='toggleForm("+c.uid+")'>"+(inForm?"下阵":"上阵")+"</button>"+
@@ -697,6 +812,12 @@ window.toggleFeed = function(uid, on){
   if(on){ if(enhFeeds.length>=5){ alert("饲料已满 5 张"); renderAll(); return; } enhFeeds.push(uid); }
   else enhFeeds = enhFeeds.filter(u=>u!==uid);
   renderAll();
+};
+window.doLearn = function(uid, slot){
+  const sel = document.getElementById("learn-"+slot+"-"+uid);
+  if(!sel){ alert("库存里没有可学的技能卡"); return; }
+  const r = learnSkill(uid, slot, parseInt(sel.value,10));
+  alert(r.msg); renderAll();
 };
 window.setEquip = function(uid, slot, val){
   const card = state.cards.find(c=>c.uid===uid); if(!card) return;
@@ -792,8 +913,8 @@ function init(){
   else { $("app").style.display="block"; bind(); switchTab("home"); }
 }
 if(typeof document!=="undefined"){ document.addEventListener("DOMContentLoaded", init); }
-if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GROWTH, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, load, battleSim, calcDamage, decideSkill, enhRate, drawTicket, drawLimited, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, growthOf, statAt, troopsOf, gainExp, showcaseRate, showcaseTotalRate,
-  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, rollTianming:rollTianming }; }
+if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GROWTH, DESTINY, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawTicket, drawLimited, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, growthOf, statAt, troopsOf, gainExp, showcaseRate, showcaseTotalRate,
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard }; }
 </script>
 </body>
 </html>
