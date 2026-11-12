@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国天命录 · v2.1.6</title>
+<title>三国天命录 · v2.1.7</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -53,7 +53,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v2.1.6</span></h1>
+  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v2.1.7</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -79,6 +79,19 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
   <div class="card" id="rankBox"></div>
 </section>
 <section class="page" id="tab-pool">
+  <h2 class="sec">挂机明牌（离线也照算）</h2>
+  <div class="card" id="idleCard">
+    <div class="kv"><span>英雄池产卡速率</span><b id="idleHeroRate">—</b></div>
+    <div class="kv"><span>技能池产卡速率</span><b id="idleSkillRate">—</b></div>
+    <div class="kv"><span>英雄池剩余时长（仓储）</span><b id="idleHeroLeft">未开启</b></div>
+    <div class="kv"><span>技能池剩余时长（仓储）</span><b id="idleSkillLeft">未开启</b></div>
+    <div class="kv"><span>叠时上限</span><b>6 小时（开满不再叠加）</b></div>
+    <div class="kv"><span>上次离线产出</span><b id="idleLastOffline">—</b></div>
+    <div style="margin-top:8px"><button class="btn sub sm" id="btnIdleRules">离线结算规则说明</button></div>
+    <div id="idleRules" style="display:none;margin-top:8px">
+      <p class="note">离线结算口径：关掉页面期间，已开启的池子按剩余开启时长继续产卡，产出不超过剩余时长，回来时一次性结算进卡册/技能卡。产卡节拍与在线一致（演示加速：池时钟每真实秒走 12 秒；正式版英雄池 60 秒/张）。在线期间每秒同步结算点，同一段时间不会重复结算。池子到期自动停产，回来花元宝延长即可继续；叠时最多 6 小时。</p>
+    </div>
+  </div>
   <h2 class="sec">挂机材料池（元宝开启 · 每分钟 1 张）</h2>
   <div class="card">
     <p class="note">挂机池即<b>材料池</b>：100 元宝/小时开启（可叠加至 6 小时），开启后每分钟自动出 1 张（演示加速：<b>演示 5 秒/张</b>，正式版 1 分钟/张）。构成 N/R/SR＝55/35/10，只出普通卡（喂强化/升星的材料主力）。英雄池与技能池同一入口、各开各的。</p>
@@ -257,7 +270,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
   </div>
   <h2 class="sec">设置</h2>
   <div class="card" id="settingsCard">
-    <div class="kv"><span>当前版本</span><b>v2.1.6</b></div>
+    <div class="kv"><span>当前版本</span><b>v2.1.7</b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档管理（短码 / 长码 / 导入 / 删档）</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button></div>
     <p class="note">重置说明：删档重开在存档页底部，需两步确认；只删当前槽，其他 4 个槽不受影响。删档不可恢复，删前请先在存档页生成短码或长码收好（存有短码 / 长码 / 导入前备份的仍可找回）。回选档界面也在存档页底部。</p>
@@ -277,13 +290,13 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 </div>
 <div id="slotScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v2.1.6<br>选择存档槽进入游戏：共 5 个槽，各槽的存档、导入前备份与挂机进度互相独立</p>
+  <p class="sub">v2.1.7<br>选择存档槽进入游戏：共 5 个槽，各槽的存档、导入前备份与挂机进度互相独立</p>
   <div id="slotCards"></div>
   <p class="note" style="text-align:center">有档的槽点卡进入继续；空槽点卡开新档（开局选将）。<br>换设备：先在旧设备进档、到「存档」页生成短码；新设备选一个槽进入后在「存档」页导入，或在空槽的开局页直接输码取回。</p>
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v2.1.6<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">v2.1.7<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
   <div class="card" style="max-width:520px;margin:14px auto;text-align:left">
     <p class="note">已有存档？输入短码（SG-XXXXXXXX）或粘贴长码，直接取回整档，不用重新开局。</p>
@@ -1520,6 +1533,12 @@ function renderAll(){
   $("heroPoolInfo").textContent = fmtPool(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac+(state.lastOffline? " · 离线产出 ×"+state.lastOffline : "");
   $("skillPoolInfo").textContent = fmtPool(state.pool.skill.leftSec);
   $("skillOwned").textContent = state.skillsOwned.length;
+  /* v2.1.7 挂机明牌：速率从 CFG 读（与结算同源）、剩余时长与离线产出直读 state */
+  const _ih = $("idleHeroLeft"); if(_ih) _ih.textContent = fmtPool(state.pool.hero.leftSec);
+  const _is = $("idleSkillLeft"); if(_is) _is.textContent = fmtPool(state.pool.skill.leftSec);
+  const _io = $("idleLastOffline"); if(_io) _io.textContent = state.lastOffline? ("×"+state.lastOffline+" 张") : "—";
+  const _ihr = $("idleHeroRate"); if(_ihr) _ihr.textContent = "演示 "+CFG.heroCardEveryRealSec+" 秒/张（正式版 60 秒/张）";
+  const _isr = $("idleSkillRate"); if(_isr) _isr.textContent = "演示 "+CFG.skillCardEveryRealSec+" 秒/张";
   const grpOf = k => state.skillsOwned.filter(x=>x && x.kind===k);
   const grpHtml = (label, arr, hot) => arr.length? "<div class='stats'>"+label+"："+arr.map(x=>"<span class='tag"+(hot?" hot":"")+"'>"+x.name+"</span> "+ownedSkillDesc(x)).join("；")+"</div>" : "";
   $("skillList").innerHTML = state.skillsOwned.length? grpHtml("主动", grpOf("active"))+grpHtml("被动", grpOf("passive"))+grpHtml("极（收藏加成）", grpOf("ji"), true) : "<span class='note'>暂无技能卡。</span>";
@@ -1857,6 +1876,7 @@ function bind(){
     if(k==="meritless"){ if(spendRes("arenaPts",30)) addRes("tickets",2); else alert("积分不足"); }
     renderAll();
   });
+  { const _br = $("btnIdleRules"); if(_br) _br.onclick = function(){ const r = $("idleRules"); if(r) r.style.display = (r.style.display==="none")? "" : "none"; }; }
   $("btnClaimShow").onclick = function(){ showcaseAccrue(); const n=Math.floor(state.showcaseAcc); if(n>0){ state.showcaseAcc-=n; addRes("yuanbao",n); alert("领取橱窗元宝 +"+n); } else alert("暂无可领取元宝"); renderAll(); };
   $("btnSign").onclick = function(){ state.signDate=todayStr(); addRes("yuanbao", CFG.signReward); alert("签到成功，元宝 +"+CFG.signReward+"（demo 可重复点测）"); renderAll(); };
   $("btnClaimNoon").onclick = function(){ state.claims.noon=todayStr(); addRes("tickets", CFG.claimReward+CFG.claimAdBonus); alert("12 点领取：招募券 +"+CFG.claimReward+"，模拟广告再 +"+CFG.claimAdBonus); renderAll(); };
