@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国天命录 · v3.2</title>
+<title>三国天命录 · v3.3</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -64,7 +64,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.2</span></h1>
+  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.3</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -87,6 +87,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <p class="note" style="margin-top:8px">玩法：挂机/抽卡拿卡 → 组 5 人上阵 → 全自动推关 → 升星强化升官 → 饭点爬塔。纯系统挂机，无剧情线。各池的产出节拍都在卡池页明示。</p>
   </div>
   <div class="card" id="v7Notice" style="display:none"></div>
+  <div class="card" id="sysNotice" style="display:none"></div>
   <div class="card" id="questCard"></div>
   <h2 class="sec">官职（功绩只来自全民爬塔）</h2>
   <div class="card" id="rankBox"></div>
@@ -181,14 +182,14 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <div class="log" id="battleLog">尚未出战。</div>
 </section>
 <section class="page" id="tab-dex">
-  <h2 class="sec">名册图鉴（175 人）</h2>
+  <h2 class="sec">名册图鉴（160 人）</h2>
   <div class="card"><p class="note">按阵营 / 稀有度筛选；「已拥有」是你包里该武将的卡数。天命典藏单列于下方。</p>
   <div style="margin:6px 0">阵营 <select id="dexFac" onchange="renderDex()"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
   稀有度 <select id="dexRar" onchange="renderDex()"><option value="">全部</option><option>SSR</option><option>SR</option><option>R</option><option>N</option></select></div>
   <div id="dexList"></div></div>
   <h2 class="sec">天命图鉴（9 张 · 抽中解锁专属副本）</h2>
   <div class="card"><div id="dexTm"></div></div>
-  <h2 class="sec">羁绊图鉴（74 条 ＋ 兵种羁绊先行版）</h2>
+  <h2 class="sec">羁绊图鉴（57 条 ＋ 兵种羁绊）</h2>
   <div class="card"><p class="note">武将羁绊：集齐成员并同时上阵触发，全队生效。兵种羁绊为我方先行版（设计方原标「待讨论」）：上阵同兵种 ≥3 人触发，与武将羁绊叠加。</p><div id="dexBonds"></div></div>
 </section>
 <section class="page" id="tab-tower">
@@ -204,50 +205,22 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 <section class="page" id="tab-save">
   <h2 class="sec">存档信息</h2>
   <div class="card" id="saveInfo"></div>
-  <h2 class="sec">云端短码（换设备 / 防丢档）</h2>
-  <div class="card">
-    <p class="note">把当前槽的存档上传云端，生成 8 位短码。短码永久有效，换设备或删档后在开局页 / 本页输入短码即可取回整档。重复生成会出新码，旧码照样能用。短码就是凭证，别发给别人。</p>
-    <div style="margin:8px 0"><button class="btn" id="btnGenCode">生成短码</button></div>
-    <div id="sgCodeBox" style="display:none;margin:8px 0">
-      <div class="kv"><span>你的短码</span><input id="sgCodeText" readonly style="font-size:22px;font-weight:bold;letter-spacing:2px;width:210px;text-align:center"></div>
-      <div style="margin-top:6px"><button class="btn sub sm" id="btnCopyCode">复制短码</button></div>
-    </div>
-    <p class="note" id="sgMsg"></p>
-  </div>
-  <h2 class="sec">长码（离线兜底）</h2>
-  <div class="card">
-    <p class="note">没网生成不了短码时用长码：整档编码成一串文本，自己收好，导入框也认。</p>
-    <div style="margin:8px 0"><button class="btn sub" id="btnGenLong">生成长码</button>
-    <button class="btn sub" id="btnCopyLong">复制长码</button></div>
-    <textarea id="longCodeOut" readonly rows="4" style="width:100%" placeholder="点「生成长码」后显示"></textarea>
-  </div>
-  <h2 class="sec">导入存档</h2>
-  <div class="card">
-    <p class="note">粘贴短码（SG-XXXXXXXX）或长码（SG1-…）。导入会覆盖当前存档，覆盖前会自动把当前存档备份到本机（下方可恢复）。</p>
-    <textarea id="importBox" rows="3" style="width:100%" placeholder="粘贴短码或长码"></textarea>
-    <div style="margin:8px 0"><button class="btn dark" id="btnImport">导入</button></div>
-    <p class="note" id="importMsg"></p>
-  </div>
-  <h2 class="sec">恢复备份</h2>
-  <div class="card" id="backupCard">
-    <p class="note" id="backupInfo">暂无备份（导入存档时会自动备份被覆盖的当前档）。</p>
-    <div style="margin:8px 0"><button class="btn sub" id="btnRestoreBackup" style="display:none">恢复上次导入前的存档</button></div>
+  <h2 class="sec">存档说明</h2>
+  <div class="card" id="saveNoteCard">
+    <p class="note">本作只有一个存档，进度自动保存，不用手动存，也没有存档码。</p>
+    <p class="note">在虎扑里玩：存档和你的虎扑账号绑定（一人一档），换手机、换设备登录同一个账号，打开就是你的进度。</p>
+    <p class="note">在网页版玩：存档保存在这台设备的浏览器里，清除浏览器数据会丢失进度。</p>
+    <div class="kv"><span>当前存档状态</span><b id="saveStatusLine">—</b></div>
   </div>
   <h2 class="sec">删档重开</h2>
   <div class="card">
-    <p class="note">删掉当前槽的存档，回到开局选将重新开档。<b>删档不可恢复</b>，删前请先生成短码或长码收好。本机备份（上方）不会被删，导错了还能恢复备份。</p>
+    <p class="note">删掉当前存档，回到开局选将重新开档。<b>删档不可恢复</b>：在虎扑里玩会同时清掉账号云端的存档，删了就是真没了。</p>
     <div style="margin:8px 0"><button class="btn sub" id="btnWipe1">删档重开</button></div>
     <div id="wipeBox" style="display:none">
-      <p class="note" style="color:#b03a2e">确认要删掉当前存档吗？删了就没了（短码 / 长码 / 备份里存的除外）。</p>
+      <p class="note" style="color:#b03a2e">确认要删掉当前存档吗？删了就没了。</p>
       <button class="btn" id="btnWipe2" style="background:#b03a2e;color:#fff">确认删档重开</button>
       <button class="btn sub" id="btnWipeCancel">取消</button>
     </div>
-  </div>
-  <h2 class="sec">档位槽（共 5 槽）</h2>
-  <div id="slotList"></div>
-  <div class="card">
-    <p class="note">每个槽的存档、导入前备份、挂机与材料池进度都互相独立，切换不串档。在上方「导入存档」框粘贴短码 / 长码后，可用各槽卡上的「导入到此槽」把存档放进指定槽（覆盖前自动备份该槽）。切换进入其他槽前，当前槽会自动落盘。</p>
-    <div style="margin:8px 0"><button class="btn sub" id="btnBackSlots">回选档界面</button></div>
   </div>
 </section>
 <section class="page" id="tab-more">
@@ -280,15 +253,15 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <span class="note">午间、晚间各可领一次，每日重置。</span></div>
     <div style="margin:6px 0"><button class="btn dark" id="btnAd" data-testid="ad-btn">模拟广告 · 招募券 +5</button>
     <span class="note" id="adInfo">今日 0/20 次。</span></div>
-    <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档管理（短码 / 长码 / 导入 / 删档）</button></div>
+    <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档说明与删档重开</button></div>
   </div>
   <h2 class="sec">设置</h2>
   <div class="card" id="settingsCard">
-    <div class="kv"><span>当前版本</span><b>v3.2</b></div>
-    <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档管理（短码 / 长码 / 导入 / 删档）</button>
+    <div class="kv"><span>当前版本</span><b>v3.3</b></div>
+    <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button></div>
-    <p class="note">重置说明：删档重开在存档页底部，需两步确认；只删当前槽，其他 4 个槽不受影响。删档不可恢复，删前请先在存档页生成短码或长码收好（存有短码 / 长码 / 导入前备份的仍可找回）。回选档界面也在存档页底部。</p>
+    <p class="note">重置说明：本作只有一个存档；删档重开在存档页底部、两步确认，在虎扑里玩会同时清掉账号云端存档，删档不可恢复。</p>
   </div>
 </section>
 </main>
@@ -305,20 +278,14 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 </div>
 <div id="slotScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.2<br>选择存档槽进入游戏：共 5 个槽，各槽的存档、导入前备份与挂机进度互相独立</p>
-  <div id="slotCards"></div>
-  <p class="note" style="text-align:center">有档的槽点卡进入继续；空槽点卡开新档（开局选将）。<br>换设备：先在旧设备进档、到「存档」页生成短码；新设备选一个槽进入后在「存档」页导入，或在空槽的开局页直接输码取回。</p>
+  <p class="sub">v3.3<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
+  <p class="note" style="text-align:center" id="bootStatus">正在进入游戏…</p>
+  <div style="text-align:center;margin:10px 0"><button class="btn" id="btnBootRetry" style="display:none">重新进入</button></div>
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.2<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">v3.3<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
-  <div class="card" style="max-width:520px;margin:14px auto;text-align:left">
-    <p class="note">已有存档？输入短码（SG-XXXXXXXX）或粘贴长码，直接取回整档，不用重新开局。</p>
-    <textarea id="starterImportBox" rows="2" style="width:100%" placeholder="短码或长码"></textarea>
-    <div style="margin:8px 0"><button class="btn dark" id="btnStarterImport">导入存档</button></div>
-    <p class="note" id="starterImportMsg"></p>
-  </div>
 
   <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 统率成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 速度成长</p>
 </div>
@@ -447,30 +414,56 @@ const EXCL_EQUIPS = [
 function exclDef(key){ return EXCL_EQUIPS.find(x=>x.key===key) || null; }
 function exclBaseId(def){ const g = GENS.find(x=>x.name===def.baseName && !x.variant); return g? g.id : 0; }
 /* ============ state + 存档层（唯一读写口）+ 账本 ============ */
-const SAVE_KEY = "sanguo_idle_save_v1"; /* 旧单档键：v2.1.4 起仅作首次迁移来源（迁入槽 1 后保留防回滚），现行读写走 curSaveKey() */
-/* ---- 存档槽层（v2.1.4）：5 槽独立存储，全游戏只许经本层读写 ----
- * 槽键 sanguo_idle_save_slot1..5；meta 键 sanguo_idle_save_meta 记当前槽；
- * 备份键按槽分 sanguo_idle_save_backup_<n>（导入覆盖前自动备份该槽现档）。 */
+/* ---- 存档层（v3.3 账号绑定单档）：全游戏只许经本层读写 ----
+ * 主键 sanguo_idle_save_main 为本机镜像（永远先落本机）；虎扑壳内（window.ColorboxAI 在场）
+ * 同一份档经 /api/acctsave 同步到账号云存（一人一档，契约见 acctsave契约-v1.md）。
+ * 旧键（v1 单档、五槽 slot1..5、meta）仅作首次迁移来源，迁后保留不删，删档重开时一并清。 */
+const SAVE_KEY = "sanguo_idle_save_v1"; /* v1 旧单档键：仅作迁移来源 */
+const MAIN_KEY = "sanguo_idle_save_main";
 const SLOT_COUNT = 5;
 const SAVE_META_KEY = "sanguo_idle_save_meta";
 let _curSlot = null;
 function slotKey(n){ return "sanguo_idle_save_slot" + n; }
 function slotBackupKey(n){ return "sanguo_idle_save_backup_" + n; }
 function readMetaSlot(){ try{ const m = JSON.parse(localStorage.getItem(SAVE_META_KEY) || "null"); if(m && typeof m.slot === "number" && m.slot >= 1 && m.slot <= SLOT_COUNT) return m.slot; }catch(e){} return 1; }
-function curSlot(){ if(_curSlot == null) _curSlot = readMetaSlot(); return _curSlot; }
-function setCurSlot(n){ _curSlot = n; try{ localStorage.setItem(SAVE_META_KEY, JSON.stringify({ slot: n })); }catch(e){} }
-function curSaveKey(){ return slotKey(curSlot()); }
-/* 首次启动迁移（无 meta 时）：旧单档 → 槽 1（原键保留）、旧单备份 → 槽 1 备份（原键保留），当前槽默认 1；已有 meta 只认 meta，不重复迁移。 */
+function curSlot(){ return 1; } /* v3.3 起恒单档，保留旧签名兼容 */
+function setCurSlot(n){ /* 单档：无操作 */ }
+function curSaveKey(){ return MAIN_KEY; }
+/* 首次迁移：主档不存在时从旧档挑一份迁入——meta 所指槽 > v1 单档 > savedAt 最新的槽；原键保留。 */
 function initSlots(){
   try{
-    if(localStorage.getItem(SAVE_META_KEY)){ _curSlot = readMetaSlot(); return; }
-    const legacy = localStorage.getItem(SAVE_KEY);
-    if(legacy && !localStorage.getItem(slotKey(1))){ try{ localStorage.setItem(slotKey(1), legacy); }catch(e){} }
-    const bak = localStorage.getItem("sanguo_idle_save_backup");
-    if(bak && !localStorage.getItem(slotBackupKey(1))){ try{ localStorage.setItem(slotBackupKey(1), bak); }catch(e){} }
-    setCurSlot(1);
+    if(localStorage.getItem(MAIN_KEY)) return;
+    let raw = localStorage.getItem(slotKey(readMetaSlot()));
+    if(!raw) raw = localStorage.getItem(SAVE_KEY);
+    if(!raw){ let best = -1; for(let n = 1; n <= SLOT_COUNT; n++){ const r = localStorage.getItem(slotKey(n)); if(!r) continue; let t = 0; try{ t = JSON.parse(r).savedAt || 0; }catch(e){} if(t >= best){ raw = r; best = t; } } }
+    if(raw) localStorage.setItem(MAIN_KEY, raw);
   }catch(e){}
 }
+/* ---- 账号云存（acctsave 契约 v1）：身份只认平台注入，客户端不传任何身份字段 ---- */
+const SG_API = "https://app-6577eaef3c-d1gmtlqu9702c7de1-1252166086.ap-shanghai.app.tcloudbase.com/api";
+const ACCT_MODE = (typeof window !== "undefined" && window.ColorboxAI && window.ColorboxAI.cloud && typeof window.ColorboxAI.cloud.request === "function")? "shell" : "local";
+async function acctGet(){
+  try{
+    const res = await fetch(SG_API + "/acctsave/get", { method:"POST", headers:{ "Content-Type":"application/json" }, body:"{}" });
+    const j = await res.json().catch(()=>null);
+    if(!res.ok || !j || j.code !== 0) return { ok:false };
+    return { ok:true, payload: (j.data && typeof j.data.payload === "string")? j.data.payload : null };
+  }catch(e){ return { ok:false }; }
+}
+async function acctPut(payload){
+  try{
+    const res = await fetch(SG_API + "/acctsave/put", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ payload }) });
+    const j = await res.json().catch(()=>null);
+    return !!(res.ok && j && j.code === 0);
+  }catch(e){ return false; }
+}
+let _acctTimer = null;
+function scheduleAcctPush(){
+  if(ACCT_MODE !== "shell") return;
+  if(_acctTimer) return;
+  _acctTimer = setTimeout(async function(){ _acctTimer = null; try{ await acctPut(JSON.stringify(state)); }catch(e){} }, 600);
+}
+
 let _uid = 1;
 function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+(d.getDate());}
 /* 迁移专用：v1.2.1 旧名册（genId → {n:人名, f:阵营, tm:是否天命典藏}）与旧 v0 星级、旧专属技能名（构建期由旧 GEN_ROWS 生成） */
@@ -491,7 +484,7 @@ signDate:"", sign:null, quests:null, tour:{step:0, done:false}, adUsed:{date:tod
 createdAt:Date.now(), tianmingNews:"", migLog:[]};
 }
 let state = newState();
-function save(){ try{ state.savedAt = Date.now(); localStorage.setItem(curSaveKey(), JSON.stringify(state)); }catch(e){} }
+function save(){ try{ state.savedAt = Date.now(); localStorage.setItem(curSaveKey(), JSON.stringify(state)); }catch(e){} scheduleAcctPush(); }
 /* v0(ver1) → v1(ver2)：老卡补 level/exp/实例性格，并打上 migName/migFac/migVariant 标记（v5 换代表时按名映射）；其余原样 */
 function migrateV1toV2(old){
   if(!old || old.ver>=2) return old;
@@ -1640,10 +1633,9 @@ function renderRes(){
   $("resCards").textContent = state.cards.length;
 }
 
-/* ============ v3.2 新手引导（底部讲解台；联赛 v58 口径移植） ============ */
+/* ============ v3.3 新手引导（底部讲解台；联赛 v58 口径，步骤随账号绑定版调整） ============ */
 const TOUR_STEPS = [
- {screen:"slot", target:"slotCards", text:"欢迎来到天命录。先选一个存档槽开始——共 5 个槽，进度互不影响。", action:"slot"},
- {screen:"starter", target:"starterOpts", text:"开局四将按性格分工：刚胆看统率、鲁莽看武力、睿智看智谋、谨慎看速度。选一位领他出道。", action:"starter"},
+ {screen:"starter", target:"starterOpts", text:"欢迎来到天命录。先按性格选一位开局将：刚胆看统率、鲁莽看武力、睿智看智谋、谨慎看速度。你的进度只有一个存档、自动保存——在虎扑里和你的账号绑定，换设备打开就能接着打。", action:"starter"},
  {screen:"main", tab:"pool", target:"idleCard", text:"这是挂机明牌卡，在卡池页最上面：离线也产出，产出速率、仓储上限、还能领多少，都写得明明白白。回来先看它。"},
  {screen:"main", tab:"home", target:"questCard", text:"今日任务和新手任务都在这张卡上，照着做就有元宝和招募令，完成了点领取。"},
  {screen:"main", tab:"cards", target:"cardList", text:"你的开局将已经自动上阵。以后抽到新武将，点卡上的「上阵/下阵」调整阵容，最多上 5 人。"},
@@ -1651,9 +1643,10 @@ const TOUR_STEPS = [
  {screen:"main", tab:"pool", target:"rateDisclosure", text:"卡池有普通、元宝、天命、材料四个池。每个池的出率和保底都公示在这一节，抽之前先看清。"},
  {screen:"main", tab:"stage", target:"stageList", text:"推关是主要的成长线：赢了给元宝，还会掉武将、装备和技能卡。副本页里还有日常、天命副本和一骑当先。"},
  {screen:"main", tab:"dex", target:"dexList", text:"图鉴记录 160 名武将的收集进度，57 条羁绊的条件也在这——组队凑羁绊有额外加成。"},
- {screen:"main", tab:"save", target:"btnGenCode", text:"存档页能生成短码：换手机、换浏览器时导入短码就能接回进度。每个槽的短码互相独立。"},
+ {screen:"main", tab:"save", target:"saveNoteCard", text:"存档就一句话：自动保存、和账号绑定，不用你操心。这一页能看存档状态；真要重开，删档也在这一页（两步确认，防手滑）。"},
  {screen:"main", tab:"home", target:"questCard", text:"门道就这些，剩下的靠你自己闯。点「完成」领一份开局礼：元宝 +100。", final:true}
 ];
+
 function tourNormalize(s){
   if(!s.tour || typeof s.tour !== "object") s.tour = {step:0, done:true};
   if(typeof s.tour.step !== "number") s.tour.step = 0;
@@ -1688,18 +1681,13 @@ function tourRingUpdate(){
 function tourSync(){
   if(typeof document === "undefined") return;
   tourEnsure();
-  const slotVis = $("slotScreen") && $("slotScreen").style.display !== "none";
-  if(!state){ /* 未进槽：只在选档屏展示第 1 步（无存档可写，进槽后由新档 tour 接管） */
-    if(slotVis){ tourRender(0, true); } else tourHide();
-    return;
-  }
+  if(!_booted){ tourHide(); return; }
   const t = tourNormalize(state);
   if(t.done){ tourHide(); return; }
-  /* 屏间自动推进（选档/选将是一次性门；上阵动作步看真实状态） */
+  /* 屏间自动推进（选将是一次性门；上阵动作步看真实状态） */
   let moved = false;
   while(t.step < TOUR_STEPS.length){
     const s = TOUR_STEPS[t.step];
-    if(s.screen === "slot" && !slotVis){ t.step++; moved = true; continue; }
     if(s.screen === "starter" && $("starterScreen").style.display === "none" && state.starterGenId){ t.step++; moved = true; continue; }
     if(s.action === "form" && (state.formation || []).length >= 1){ t.step++; moved = true; continue; }
     break;
@@ -1708,6 +1696,7 @@ function tourSync(){
   if(moved) save();
   tourRender(t.step, false);
 }
+
 function tourRender(idx, preState){
   const s = TOUR_STEPS[idx]; const deck = $("tourDeck"); if(!deck) return;
   document.body.classList.add("touring");
@@ -1752,7 +1741,7 @@ function tourSkip(){
 }
 function tourFinish(){
   const t = tourNormalize(state); if(t.done) return;
-  t.done = true; addRes("yuanbao", 100); save(); tourSync();
+  t.done = true; addRes("yuanbao", 100); save(); tourSync(); renderAll();
   alert("新手引导完成，元宝 +100 已到账。祝主公天命所归！");
 }
 
@@ -1764,6 +1753,10 @@ function renderAll(){
     if(n7){ const t1 = document.createElement("b"); t1.textContent = "v3.0 名册换血迁移完成"; n7el.appendChild(t1); n7el.appendChild(document.createElement("br"));
       const tx = document.createElement("span"); tx.textContent = "下架武将卡 "+n7.removed+" 张已按稀有度折算：元宝 +"+n7.yb+"、经验池 +"+n7.exp+"；无对应新技能的旧技能卡与已学技能已折算计入元宝。"; n7el.appendChild(tx); n7el.appendChild(document.createElement("br"));
       const ok = document.createElement("button"); ok.className = "btn sm"; ok.textContent = "知道了"; ok.style.marginTop = "6px"; ok.onclick = function(){ state.flags.v7Notice = null; save(); renderAll(); }; n7el.appendChild(ok); } }
+  const syel = $("sysNotice");
+  if(syel){ const syn = state.flags && state.flags.sysNotice; syel.textContent = ""; syel.style.display = syn? "block" : "none";
+    if(syn){ const syt = document.createElement("span"); syt.textContent = syn; syel.appendChild(syt); syel.appendChild(document.createElement("br"));
+      const ok2 = document.createElement("button"); ok2.className = "btn sm"; ok2.textContent = "知道了"; ok2.style.marginTop = "6px"; ok2.onclick = function(){ state.flags.sysNotice = null; save(); renderAll(); }; syel.appendChild(ok2); } }
   const qel = $("questCard");
   if(qel){ const q = questState(); qel.textContent = "";
     const qh = document.createElement("b"); qh.textContent = "今日任务"; qel.appendChild(qh);
@@ -1938,20 +1931,7 @@ function switchTab(t){
   document.querySelectorAll("nav.tabs button").forEach(b=>b.classList.toggle("on", b.dataset.tab===t));
   renderAll();
 }
-/* ---- 存档页（v2.1.3）：云端短码（主通道）+ 长码兜底 + 本地备份/恢复 + 删档重开 ----
- * 后端：拼将系列 CloudBase env 的公开路由 /api/sgvault/put|get（表 sg_save_vault，
- * RPC sg_vault_put/get，短码即凭证、无平台登录态）。读写一律走现行存档层
- * （SAVE_KEY + load() 迁移阶梯）：导入只负责校验与落盘，迁移由 load() 完成。 */
-const SAVE_BACKUP_KEY = "sanguo_idle_save_backup";
-const SG_API = "https://app-6577eaef3c-d1gmtlqu9702c7de1-1252166086.ap-shanghai.app.tcloudbase.com/api";
-function b64EncodeUnicode(str){ return btoa(unescape(encodeURIComponent(str))); }
-function b64DecodeUnicode(b64){ return decodeURIComponent(escape(atob(b64))); }
-function buildLongCode(){ return "SG1-" + b64EncodeUnicode(JSON.stringify(state)); }
-function decodeLongCode(code){
-  const s = String(code || "").trim();
-  if(!s.startsWith("SG1-")) return null;
-  try{ return b64DecodeUnicode(s.slice(4).replace(/\s+/g, "")); }catch(e){ return null; }
-}
+/* ---- 存档校验：账号云存拉档时复用（口径与旧导入校验一致） ---- */
 function validateImportedState(o){
   if(!o || typeof o !== "object" || Array.isArray(o)) return "存档内容不是有效的存档数据";
   if(typeof o.ver !== "number" || !(o.ver >= 1) || o.ver > 7) return "存档版本不支持（ver=" + (o.ver === undefined ? "缺失" : o.ver) + "，本版只认 1–7）";
@@ -1961,68 +1941,6 @@ function validateImportedState(o){
   if(o.formation !== undefined && !Array.isArray(o.formation)) return "存档阵容数据不对（formation）";
   return null;
 }
-/* 导入落地（v2.1.4 按槽）：校验 → 目标槽现档自动备份到该槽备份键 → 覆盖该槽 → 目标是当前槽才刷新（迁移走 load() 现行阶梯）。任何失败都不动任何槽。 */
-function applyImportPayload(payloadStr, targetSlot){
-  const n = (typeof targetSlot === "number" && targetSlot >= 1 && targetSlot <= SLOT_COUNT)? targetSlot : curSlot();
-  let o = null;
-  try{ o = JSON.parse(payloadStr); }catch(e){ return { ok:false, msg:"存档内容解析失败，不是有效的存档" }; }
-  const err = validateImportedState(o);
-  if(err) return { ok:false, msg:err };
-  try{
-    const key = slotKey(n);
-    const cur = localStorage.getItem(key);
-    if(cur) localStorage.setItem(slotBackupKey(n), cur);
-    localStorage.setItem(key, JSON.stringify(o));
-  }catch(e){ return { ok:false, msg:"写入存档失败（浏览器存储不可用）" }; }
-  if(n === curSlot() && typeof location !== "undefined" && location.reload) location.reload();
-  return { ok:true, msg:"导入成功" };
-}
-async function sgVaultPut(payload){
-  const res = await fetch(SG_API + "/sgvault/put", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ payload }) });
-  const j = await res.json().catch(()=>null);
-  if(!res.ok || !j || j.code !== 0 || !j.data || !j.data.shortCode) throw new Error((j && j.message) || ("HTTP " + res.status));
-  return j.data.shortCode;
-}
-async function sgVaultGet(code){
-  const res = await fetch(SG_API + "/sgvault/get", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ code }) });
-  const j = await res.json().catch(()=>null);
-  if(!res.ok || !j || j.code !== 0 || !j.data || typeof j.data.payload !== "string") throw new Error((j && j.message) || ("HTTP " + res.status));
-  return j.data.payload;
-}
-/* 解析导入文本 → payload 字符串：长码本地解码，短码走云端取档。失败只报错、不动任何槽。 */
-async function resolveImportPayload(text){
-  const s = String(text || "").trim();
-  if(!s) return { ok:false, msg:"先粘贴短码或长码" };
-  if(s.startsWith("SG1-")){
-    const payload = decodeLongCode(s);
-    if(payload === null) return { ok:false, msg:"长码解码失败，检查是否复制完整" };
-    return { ok:true, payload };
-  }
-  const code = s.toUpperCase().replace(/^SG-/, "").replace(/\s+/g, "");
-  if(!/^[A-Z0-9]{8}$/.test(code)) return { ok:false, msg:"短码是 8 位字母数字（可带 SG- 前缀），或粘贴 SG1- 开头的长码" };
-  let payload = null;
-  try{ payload = await sgVaultGet(code); }
-  catch(e){ return { ok:false, msg:"取档失败：" + (e.message || "网络错误") }; }
-  return { ok:true, payload };
-}
-/* 统一导入入口：认长码 SG1- 与短码（带不带 SG- 前缀都行）。targetSlot 省略＝当前槽。 */
-async function importFromText(text, targetSlot){
-  const r = await resolveImportPayload(text);
-  if(!r.ok) return r;
-  return applyImportPayload(r.payload, targetSlot);
-}
-function copyText(text, btn){
-  const done = ()=>{ if(btn){ const t = btn.textContent; btn.textContent = "已复制"; setTimeout(()=>{ btn.textContent = t; }, 1500); } };
-  if(typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(text).then(done).catch(()=>{ fallbackCopy(text); done(); }); }
-  else { fallbackCopy(text); done(); }
-}
-function fallbackCopy(text){
-  const ta = document.createElement("textarea");
-  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
-  document.body.appendChild(ta); ta.select();
-  try{ document.execCommand("copy"); }catch(e){}
-  document.body.removeChild(ta);
-}
 function renderSave(){
   const el = $("saveInfo"); if(!el) return;
   const r = RANKS[state.rankIdx];
@@ -2030,7 +1948,7 @@ function renderSave(){
     ? "—（旧档无记录，已于 " + new Date(state.createdAt).toLocaleString() + " 补记）"
     : new Date(state.createdAt).toLocaleString();
   el.innerHTML =
-    "<div class='kv'><span>当前槽位</span><b>" + curSlot() + " 号槽</b></div>" +
+    "<div class='kv'><span>存档方式</span><b>" + (ACCT_MODE === "shell"? "虎扑账号绑定（一人一档）" : "本机存档（网页版）") + "</b></div>" +
     "<div class='kv'><span>存档版本</span><b>ver " + state.ver + "</b></div>" +
     "<div class='kv'><span>武将卡</span><b>" + state.cards.length + " 张</b></div>" +
     "<div class='kv'><span>元宝</span><b>" + state.yuanbao + "</b></div>" +
@@ -2039,26 +1957,11 @@ function renderSave(){
     "<div class='kv'><span>信物</span><b>" + state.tokens + "</b></div>" +
     "<div class='kv'><span>推关进度</span><b>" + state.stageCleared + " / 30 关</b></div>" +
     "<div class='kv'><span>官职</span><b>" + (r ? r.name : "—") + "</b></div>" +
-    "<div class='kv'><span>创建时间</span><b>" + created + "</b></div>";
-  let hasBackup = false;
-  try{ hasBackup = !!localStorage.getItem(slotBackupKey(curSlot())); }catch(e){}
-  $("btnRestoreBackup").style.display = hasBackup ? "" : "none";
-  $("backupInfo").textContent = hasBackup ? "有一份导入前自动备份的存档（仅存本机），可一键恢复。" : "暂无备份（导入存档时会自动备份被覆盖的当前档）。";
+    "<div class='kv'><span>创建时间</span><b>" + created + "</b></div>" +
+    "<div class='kv'><span>最近保存</span><b>" + (state.savedAt? new Date(state.savedAt).toLocaleString() : "—") + "</b></div>";
+  const sl = $("saveStatusLine"); if(sl) sl.textContent = ACCT_MODE === "shell"? "已与账号同步（自动保存）" : "保存在本机浏览器（自动保存）";
   const wb = $("wipeBox"); if(wb) wb.style.display = "none";
-  renderSlotList();
 }
-/* 开局页（含无档新设备）导入入口接线 */
-if(typeof document !== "undefined"){ document.addEventListener("DOMContentLoaded", function(){
-  const b = $("btnStarterImport");
-  if(b) b.onclick = async function(){
-    const text = $("starterImportBox").value;
-    if(!String(text || "").trim()){ $("starterImportMsg").textContent = "先粘贴短码或长码"; return; }
-    b.disabled = true; $("starterImportMsg").textContent = "导入中…";
-    const r = await importFromText(text);
-    b.disabled = false;
-    if(!r.ok) $("starterImportMsg").textContent = "导入失败：" + r.msg;
-  };
-}); }
 
 /* ---- 全局操作 ---- */
 window.toggleForm = function(uid){
@@ -2155,49 +2058,26 @@ function bind(){
   $("btnSettingsSave").onclick = function(){ switchTab("save"); };
   $("btnSettingsRates").onclick = function(){ switchTab("pool"); const el=$("rateDisclosure"); if(el) el.scrollIntoView(); };
   $("btnTourReplay").onclick = function(){ state.tour = {step:0, done:false}; save(); tourLastStep = -1; switchTab("home"); renderAll(); };
-  $("btnBackSlots").onclick = function(){ save(); location.reload(); };
-  /* ---- 存档页接线（v2.1.3） ---- */
-  $("btnGenCode").onclick = async function(){
-    const btn = this; btn.disabled = true; $("sgMsg").textContent = "正在上传存档生成短码…";
-    try{
-      const code = await sgVaultPut(JSON.stringify(state));
-      $("sgCodeText").value = "SG-" + code;
-      $("sgCodeBox").style.display = "";
-      $("sgMsg").textContent = "短码已生成，收好了。换设备或删档后输码即可取回这份存档。";
-    }catch(e){
-      $("sgCodeBox").style.display = "none";
-      $("longCodeOut").value = buildLongCode();
-      $("sgMsg").textContent = "短码生成失败（" + (e.message || "网络错误") + "），已改出长码兜底（见下方长码框），复制收好一样能导入。";
-    }
-    btn.disabled = false;
-  };
-  $("btnCopyCode").onclick = function(){ copyText($("sgCodeText").value, this); };
-  $("btnGenLong").onclick = function(){ $("longCodeOut").value = buildLongCode(); };
-  $("btnCopyLong").onclick = function(){ if(!$("longCodeOut").value) $("longCodeOut").value = buildLongCode(); copyText($("longCodeOut").value, this); };
-  $("btnImport").onclick = async function(){
-    const text = $("importBox").value;
-    if(!String(text || "").trim()){ $("importMsg").textContent = "先粘贴短码或长码"; return; }
-    if(!confirm("导入会覆盖当前存档（覆盖前会自动备份当前档），确定导入？")) return;
-    const btn = this; btn.disabled = true; $("importMsg").textContent = "导入中…";
-    const r = await importFromText(text);
-    btn.disabled = false;
-    if(!r.ok) $("importMsg").textContent = "导入失败：" + r.msg + "（当前存档未动）";
-    /* 成功时 applyImportPayload 已刷新页面 */
-  };
-  $("btnRestoreBackup").onclick = function(){
-    let bak = null;
-    try{ bak = localStorage.getItem(slotBackupKey(curSlot())); }catch(e){}
-    if(!bak){ alert("没有可恢复的备份"); return; }
-    if(!confirm("恢复到导入前的备份存档？当前存档会被覆盖（不再另行备份）。")) return;
-    try{ localStorage.setItem(curSaveKey(), bak); }catch(e){ alert("写入存档失败"); return; }
-    location.reload();
-  };
+  /* ---- 存档页接线（v3.3：只剩删档重开） ---- */
   $("btnWipe1").onclick = function(){ $("wipeBox").style.display = ""; };
   $("btnWipeCancel").onclick = function(){ $("wipeBox").style.display = "none"; };
-  $("btnWipe2").onclick = function(){
-    try{ localStorage.removeItem(curSaveKey()); }catch(e){}
+  $("btnWipe2").onclick = async function(){
+    const btn = this; btn.disabled = true;
+    if(ACCT_MODE === "shell"){
+      const ok = await acctPut(JSON.stringify(newState()));
+      if(!ok){ btn.disabled = false; alert("云端存档清除失败（网络问题），为防旧档被恢复，这次删档没有执行。联网后重试一次。"); return; }
+    }
+    try{
+      localStorage.removeItem(MAIN_KEY);
+      localStorage.removeItem(MAIN_KEY + "_v6bak");
+      localStorage.removeItem(SAVE_KEY);
+      localStorage.removeItem(SAVE_META_KEY);
+      localStorage.removeItem("sanguo_idle_save_backup");
+      for(let n = 1; n <= SLOT_COUNT; n++){ localStorage.removeItem(slotKey(n)); localStorage.removeItem(slotBackupKey(n)); localStorage.removeItem(slotKey(n) + "_v6bak"); }
+    }catch(e){}
     location.reload();
   };
+
   const enhBtn = document.createElement("button");
   enhBtn.className="btn"; enhBtn.textContent="执行强化（需选满 5 张饲料）"; enhBtn.style.margin="0 12px";
   enhBtn.onclick = doEnhanceUI;
@@ -2218,124 +2098,67 @@ window.pickStarter = function(name){
   $("starterScreen").style.display="none"; $("app").style.display="block";
   _inGame214 = true; bindOnce(); switchTab("home");
 };
-/* ---- 五档位槽（v2.1.4）：选档屏 + 存档页按槽管理 ----
- * 存储层在文件前部（slotKey/slotBackupKey/curSlot/initSlots）：save()/load() 只读写当前槽键，
- * 切槽＝换键＋整档重载，各槽的池计时/离线计时都在各自 state 内，天然隔离。 */
-let _inGame214 = false;   /* 是否已进过游戏（决定切槽前要不要先把当前 state 落盘；选档屏冷启动时 state 是空壳，落盘会覆盖真档） */
+/* ---- 启动（v3.3 单档）：本机镜像先行，壳内再与账号云存对账 ---- */
+let _inGame214 = false;   /* 是否已进过游戏（pickStarter 等沿用） */
 let _bound214 = false;
+let _booted = false;
+let _pendingNotice = "";
 function bindOnce(){ if(_bound214) return; _bound214 = true; bind(); }
-function slotSummary(n){
-  let raw = null;
-  try{ raw = localStorage.getItem(slotKey(n)); }catch(e){}
-  if(!raw) return null;
-  let o = null;
-  try{ o = JSON.parse(raw); }catch(e){ return { corrupt:true }; }
-  if(!o || typeof o !== "object" || Array.isArray(o)) return { corrupt:true };
-  return { cards: Array.isArray(o.cards)? o.cards.length : 0,
-    yuanbao: typeof o.yuanbao === "number"? o.yuanbao : 0,
-    stageCleared: o.stageCleared || 0,
-    rankIdx: o.rankIdx || 0,
-    savedAt: o.savedAt || o.createdAt || 0 };
-}
-function slotTimeText(t){ return t? new Date(t).toLocaleString() : "—"; }
-function renderSlotScreen(){
-  const cur = curSlot();
-  $("slotCards").innerHTML = [1,2,3,4,5].map(function(n){
-    const s = slotSummary(n);
-    const curTag = n === cur? " · <b>当前槽</b>" : "";
-    if(!s) return "<button class='btn sub starterOpt' onclick='enterSlot(" + n + ")'><b>" + n + " 号槽 · 空档</b>" + curTag + "<br><span class='note'>点此开新档（开局选将）</span></button>";
-    if(s.corrupt) return "<button class='btn sub starterOpt' onclick='enterSlot(" + n + ")'><b>" + n + " 号槽 · 数据损坏</b>" + curTag + "<br><span class='note'>点此进入后可在存档页导入覆盖，或删档重开</span></button>";
-    const rk = RANKS[s.rankIdx];
-    return "<button class='btn sub starterOpt' onclick='enterSlot(" + n + ")'><b>" + n + " 号槽</b>" + curTag + "<br><span class='note'>武将 " + s.cards + " 张 · 元宝 " + s.yuanbao + " · 推关 " + s.stageCleared + " / 30 关 · 官职 " + (rk? rk.name : "—") + "<br>保存时间：" + slotTimeText(s.savedAt) + "</span></button>";
-  }).join("");
-}
-function showSlotScreen(){
-  $("slotScreen").style.display = "block";
-  $("app").style.display = "none";
-  $("starterScreen").style.display = "none";
-  renderSlotScreen();
-  tourSync();
-}
 function afterLoad214(had){
   if(had) settleOffline();
   let mx = 0; state.cards.forEach(c=>mx=Math.max(mx,c.uid)); state.equips.forEach(e=>mx=Math.max(mx,e.uid)); _uid = mx+1;
   if(state.tower.date!==todayStr()) state.tower={date:todayStr(),layer:0,fails:0,done:false};
   updateRank();
 }
-window.enterSlot = function(n){
-  if(_inGame214 && n !== curSlot()){ try{ save(); }catch(e){} }  /* 切槽前当前槽落盘 */
-  setCurSlot(n);
-  enhTarget = 0; enhFeeds = [];
+function setBootStatus(t){ const el = $("bootStatus"); if(el) el.textContent = t; }
+function enterGame(){
   state = newState();
   const had = load();
   afterLoad214(had);
-  _inGame214 = true;
-  $("slotScreen").style.display = "none";
+  if(!state.flags) state.flags = {};
+  if(state.tour && !state.tour.done && state.flags.tourVer !== 33){ state.tour.step = 0; state.flags.tourVer = 33; }
+  _inGame214 = true; _booted = true;
+  const bs = $("slotScreen"); if(bs) bs.style.display = "none";
   if(!had || !state.starterGenId){ showStarter(); }
   else { $("app").style.display = "block"; bindOnce(); switchTab("home"); }
-};
-function renderSlotList(){
-  const el = $("slotList"); if(!el) return;
-  const cur = curSlot();
-  el.innerHTML = [1,2,3,4,5].filter(n=>n!==cur).map(function(n){
-    const s = slotSummary(n);
-    const head = !s? "<b>" + n + " 号槽</b> · 空档"
-      : s.corrupt? "<b>" + n + " 号槽</b> · 数据损坏"
-      : "<b>" + n + " 号槽</b>：武将 " + s.cards + " 张 · 元宝 " + s.yuanbao + " · 推关 " + s.stageCleared + " / 30 关 · 官职 " + ((RANKS[s.rankIdx]||{}).name || "—") + " · 保存 " + slotTimeText(s.savedAt);
-    return "<div class='card'><div class='kv'><span>" + head + "</span></div>"
-      + "<div style='margin:8px 0'>"
-      + "<button class='btn sub sm' onclick='enterSlot(" + n + ")'>切换进入</button> "
-      + (s && !s.corrupt? "<button class='btn sub sm' onclick='genSlotCode(" + n + ")'>生成短码</button> " : "")
-      + "<button class='btn sub sm' onclick='importToSlot(" + n + ")'>导入到此槽</button> "
-      + (s? "<button class='btn sub sm' onclick='wipeSlotAsk(" + n + ")'>删此槽</button>" : "")
-      + "</div>"
-      + "<p class='note' id='slotMsg" + n + "'></p>"
-      + "<div id='slotWipeBox" + n + "' style='display:none'><p class='note' style='color:#b03a2e'>确认删除 " + n + " 号槽的存档吗？删了就没了（该槽的导入前备份、已生成的短码里存的除外）。</p>"
-      + "<button class='btn sm' style='background:#b03a2e;color:#fff' onclick='wipeSlot(" + n + ")'>确认删除 " + n + " 号槽</button> "
-      + "<button class='btn sub sm' onclick='wipeSlotCancel(" + n + ")'>取消</button></div>"
-      + "</div>";
-  }).join("");
+  if(_pendingNotice){ state.flags.sysNotice = _pendingNotice; _pendingNotice = ""; save(); if(state.starterGenId) renderAll(); }
 }
-window.genSlotCode = async function(n){
-  const msg = $("slotMsg" + n);
-  let raw = null;
-  try{ raw = localStorage.getItem(slotKey(n)); }catch(e){}
-  if(!raw){ if(msg) msg.textContent = "空槽没有存档可生成短码"; return; }
-  if(msg) msg.textContent = "正在上传 " + n + " 号槽存档生成短码…";
-  try{
-    const code = await sgVaultPut(raw);
-    if(msg) msg.innerHTML = n + " 号槽短码：<b style='font-size:16px;letter-spacing:1px'>SG-" + code + "</b>（收好别发给别人；导入时粘到上方导入框，再点目标槽的「导入到此槽」）";
-  }catch(e){
-    if(msg) msg.textContent = "短码生成失败（" + (e.message || "网络错误") + "），可切换进该槽后用长码兜底。";
+async function bootEnter(){
+  const bs = $("slotScreen"); if(bs) bs.style.display = "block";
+  if(ACCT_MODE === "shell"){
+    setBootStatus("正在读取账号存档…");
+    const r = await acctGet();
+    if(r.ok){
+      let cloudObj = null;
+      if(r.payload){ try{ cloudObj = JSON.parse(r.payload); }catch(e){} if(cloudObj && validateImportedState(cloudObj)) cloudObj = null; }
+      let localRaw = null, localObj = null;
+      try{ localRaw = localStorage.getItem(MAIN_KEY); }catch(e){}
+      if(localRaw){ try{ localObj = JSON.parse(localRaw); }catch(e){} if(localObj && validateImportedState(localObj)) localObj = null; }
+      if(cloudObj && (!localObj || (cloudObj.savedAt || 0) >= (localObj.savedAt || 0))){
+        try{ localStorage.setItem(MAIN_KEY, r.payload); }catch(e){}
+      } else if(localObj){
+        await acctPut(localRaw);
+        if(localObj.starterGenId) _pendingNotice = "已把这台设备上的进度绑定到你的虎扑账号：之后换设备登录同一账号，打开就能接着打。";
+      }
+      enterGame(); return;
+    }
+    let hasLocal = false;
+    try{ hasLocal = !!localStorage.getItem(MAIN_KEY); }catch(e){}
+    if(hasLocal){ _pendingNotice = "账号存档暂时连不上，这次先用本机进度游玩；联网恢复后会自动同步到账号。"; enterGame(); return; }
+    setBootStatus("账号存档连不上，本机也没有存档。检查网络后点「重新进入」。");
+    const rb = $("btnBootRetry"); if(rb) rb.style.display = "";
+    return;
   }
-};
-window.importToSlot = async function(n){
-  const msg = $("slotMsg" + n);
-  const text = $("importBox").value;
-  if(!String(text || "").trim()){ if(msg) msg.textContent = "先在上方「导入存档」框粘贴短码或长码，再点这里"; return; }
-  if(!confirm("导入到 " + n + " 号槽会覆盖该槽存档（覆盖前会自动备份该槽当前档），确定导入？")) return;
-  if(msg) msg.textContent = "导入中…";
-  const r = await importFromText(text, n);
-  if(!r.ok){ if(msg) msg.textContent = "导入失败：" + r.msg + "（该槽存档未动）"; return; }
-  renderSave();
-  const m2 = $("slotMsg" + n);
-  if(m2) m2.textContent = "已导入到 " + n + " 号槽，点「切换进入」即可游玩。";
-};
-window.wipeSlotAsk = function(n){ const b = $("slotWipeBox" + n); if(b) b.style.display = ""; };
-window.wipeSlotCancel = function(n){ const b = $("slotWipeBox" + n); if(b) b.style.display = "none"; };
-window.wipeSlot = function(n){
-  try{ localStorage.removeItem(slotKey(n)); }catch(e){}
-  renderSave();
-  const m = $("slotMsg" + n);
-  if(m) m.textContent = n + " 号槽存档已删除（该槽的导入前备份未删）。";
-};
+  enterGame();
+}
 function init(){
   initSlots();
-  showSlotScreen();
+  const rb = $("btnBootRetry"); if(rb) rb.onclick = function(){ location.reload(); };
+  bootEnter();
 }
 if(typeof document!=="undefined"){ document.addEventListener("DOMContentLoaded", init); }
 if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
-  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, buildLongCode:buildLongCode, decodeLongCode:decodeLongCode, validateImportedState:validateImportedState, applyImportPayload:applyImportPayload, importFromText:importFromText, SAVE_BACKUP_KEY:slotBackupKey(curSlot()), SG_API:SG_API, SAVE_KEY:slotKey(curSlot()), SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, slotSummary:slotSummary, resolveImportPayload:resolveImportPayload }; }
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut:acctPut }; }
 </script>
 </body>
 </html>
