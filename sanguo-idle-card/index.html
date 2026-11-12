@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国天命录 · v3.5</title>
+<title>三国天命录 · v3.6</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -16,6 +16,9 @@ header h1 .seal{background:var(--red);color:#fff;padding:1px 6px;border-radius:3
 nav.tabs{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;background:var(--ink)}
 nav.tabs button{flex:1;background:var(--ink);color:#f4eedb;border:none;padding:12px 0;font-size:14px;cursor:pointer}
 nav.tabs button.on{background:var(--red);color:#fff}
+.subtabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 2px}
+.subtabs button{flex:1 1 30%;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 0;font-size:13px;cursor:pointer}
+.subtabs button.on{background:var(--red);color:#fff;border-color:var(--red)}
 main{max-width:560px;margin:0 auto;padding:12px}
 section.page{display:none}section.page.on{display:block}
 h2.sec{font-size:16px;border-left:5px solid var(--red);padding-left:8px;margin:14px 0 8px}
@@ -64,7 +67,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.5</span></h1>
+  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.6</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -89,10 +92,12 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <div class="card" id="v7Notice" style="display:none"></div>
   <div class="card" id="sysNotice" style="display:none"></div>
   <div class="card" id="questCard"></div>
-  <h2 class="sec">官职（功绩只来自全民爬塔）</h2>
-  <div class="card" id="rankBox"></div>
+  <h2 class="sec" style="cursor:pointer" onclick="toggleRank()">官职（功绩只来自全民爬塔）<span class="note" id="rankToggleHint"> · 已收起，点开查看</span></h2>
+  <div class="card" id="rankBox" style="display:none"></div>
 </section>
 <section class="page" id="tab-pool">
+  <div class="subtabs" data-subtabs="pool"><button data-sub="idle" class="on" onclick="setSub('pool','idle')">挂机明牌</button><button data-sub="mat" onclick="setSub('pool','mat')">材料池</button><button data-sub="norm" onclick="setSub('pool','norm')">普通池</button><button data-sub="yb" onclick="setSub('pool','yb')">元宝池</button><button data-sub="tm" onclick="setSub('pool','tm')">天命入驻</button><button data-sub="rates" onclick="setSub('pool','rates')">概率公示</button></div>
+  <div class="subpane" data-pane="pool-idle">
   <h2 class="sec">挂机明牌（离线也照算）</h2>
   <div class="card" id="idleCard">
     <div class="kv"><span>英雄池产卡速率</span><b id="idleHeroRate">—</b></div>
@@ -106,6 +111,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
       <p class="note">离线结算口径：关掉页面期间，已开启的池子按剩余开启时长继续产卡，产出不超过剩余时长，回来时一次性结算进卡册/技能卡。产卡节拍与在线一致（池时钟每真实秒走 12 秒）。在线期间每秒同步结算点，同一段时间不会重复结算。池子到期自动停产，回来花元宝延长即可继续；叠时最多 6 小时。</p>
     </div>
   </div>
+  </div>
+  <div class="subpane" data-pane="pool-mat">
   <h2 class="sec">挂机材料池（元宝开启 · 自动出卡）</h2>
   <div class="card">
     <p class="note">挂机池即<b>材料池</b>：100 元宝/小时开启（可叠加至 6 小时），开启后自动出卡（池时钟每真实秒走 12 秒，约每 5 个真实秒出 1 张）。构成 N/R/SR＝55/35/10，只出普通卡（喂强化/升星的材料主力）。英雄池与技能池同一入口、各开各的。</p>
@@ -118,6 +125,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <p class="note">技能池只出学习技能卡（主动/被动）：武将 10 级解锁主动位、20 级解锁被动位，在武将页选学、每学消耗 1 张。「极」版技能卡自 v2 起停产——极＝天命卡自带（天命版怒技即极级）。已拥有技能卡：<b id="skillOwned">0</b> 张。</p>
     <div id="skillList" style="margin-top:4px"></div>
   </div>
+  </div>
+  <div class="subpane" data-pane="pool-norm">
   <h2 class="sec">普通卡池（招募令）</h2>
   <div class="card">
     <div class="kv"><span>构成 N/R/SR/SSR＝40/42/15/3</span><b>普卡 only · 永不带性格</b></div>
@@ -125,6 +134,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <button class="btn sub" id="btnNorm10">招募 10 次 · 10 令</button></div>
     <p class="note">保底：10 连必出 SR 及以上、100 抽必出 SSR（本池独立计数）。<b id="normPityInfo"></b></p>
   </div>
+  </div>
+  <div class="subpane" data-pane="pool-yb">
   <h2 class="sec">元宝卡池（100 元宝/抽）</h2>
   <div class="card">
     <div class="kv"><span>性格卡 3.5% · 普卡 SSR 6%</span><b>10 连必 SSR · 100 抽必性格</b></div>
@@ -132,6 +143,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <button class="btn" id="btnYb10">10 连 1000 元宝</button></div>
     <p class="note">每抽先摇性格 3.5%：命中出 SR/SSR 带性格版；未命中走普卡 R/SR/SSR＝70/24/6。保底独立计数。<b id="ybPityInfo"></b></p>
   </div>
+  </div>
+  <div class="subpane" data-pane="pool-tm">
   <h2 class="sec">限时卡池 · 天命入驻（天命珠）</h2>
   <div class="card">
     <div class="kv"><span>1 天命珠/抽 · 当前天命珠</span><b id="beadsInfo">0</b></div>
@@ -143,6 +156,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div class="log" id="gachaLog" style="max-height:180px">尚无抽卡记录。</div>
     <p class="note" id="tianmingNews" style="display:none;color:#93301f;font-weight:700;margin-top:6px"></p>
   </div>
+  </div>
+  <div class="subpane" data-pane="pool-rates">
   <h2 class="sec">概率公示（全部卡池）</h2>
   <div class="card" id="rateDisclosure">
     <p class="note">以下概率与游戏内实际抽取逻辑一致；各池保底计数互相独立、不共享。同池同稀有度内，每名符合条件的武将等概率随机出。</p>
@@ -155,6 +170,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div class="kv"><span>天命入驻池（1 天命珠/抽）<span id="tmRateState"></span></span><b>天命武将 1%</b></div>
     <p class="note">天命武将共 9 名、等概率随机（每名约 0.11%），只出此池；未命中天命时出性格版武将 SR 70% / SSR 30%（每抽必带性格）。保底：10 抽必出 SSR、100 抽必出天命。</p>
   </div>
+  </div>
 </section>
 <section class="page" id="tab-cards">
   <h2 class="sec">武将（收集 / 升星 / 强化 / 装备 / 上阵）</h2>
@@ -162,7 +178,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <span>阵营筛选 </span><select id="factionFilter" data-testid="faction-filter"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
     <button class="btn sm dark" id="btnAutoForm" data-testid="auto-form" style="margin-left:8px">一键上阵（战力前 5）</button>
     <p class="note" id="formationInfo" style="margin-top:6px"></p>
-    <p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80）。强化：先点一张卡「设为强化目标」，再勾 5 张饲料卡（不能是上阵/橱窗中的卡），同名饲料贡献翻倍、成功率封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→统率、睿智→智力、谨慎→速度。<b>性格卡出处</b>：元宝卡池 3.5%、限时卡池（天命入驻）每抽必带、开局选将；挂机材料池/普通卡池/推关掉落只出普通卡。<b>天命卡</b>是典藏版武将（龙胆赵云／无双吕布／武圣关羽／燕人张飞，金边卡面）：基础四维比本体高 8%，成长＝本体成长＋天命增幅，怒技即极级（伤害倍率已含 ×1.6），<b>只出自限时卡池</b>（1%＋100 抽保底），抽到即解锁其天命副本。<b>技能三通道</b>：怒技（专属技能）只认怒气，满 100 必放、代替普攻，效果按数据结算（眩晕/灼烧/中毒/持续回复/护盾/嘲讽/分担/净化/出手提前等，见卡面描述）；学来的主动技能在普攻后按各自概率判定释放（每技能自带概率与冷却）；被动技能按各自条件自动判定（每回合/受击时/兵力过半等）。技能位：10 级解锁主动位、20 级解锁被动位，每位 1 个（消耗 1 张技能卡，换学不返还）。装备两件（武器＋兵书）按品阶加属性（白 +10、绿 +20、蓝 +35、紫 +55、橙 +80）：武器加武力、兵书加智力；红色专属装备另加技能伤害 +10%，专属兵书另加兵力 +300（只有兵书带兵，武器不带兵）。布阵前二后三：单体攻击先打前排，前排全倒才打后排（全体/后排目标技能除外）。</p>
+    <button class="btn sm sub" onclick="toggleCardsGuide()">养成说明（升星 / 强化 / 性格 / 天命 / 技能 / 装备）</button><div id="cardsGuide" style="display:none"><p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80）。强化：先点一张卡「设为强化目标」，再勾 5 张饲料卡（不能是上阵/橱窗中的卡），同名饲料贡献翻倍、成功率封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→统率、睿智→智力、谨慎→速度。<b>性格卡出处</b>：元宝卡池 3.5%、限时卡池（天命入驻）每抽必带、开局选将；挂机材料池/普通卡池/推关掉落只出普通卡。<b>天命卡</b>是典藏版武将（龙胆赵云／无双吕布／武圣关羽／燕人张飞，金边卡面）：基础四维比本体高 8%，成长＝本体成长＋天命增幅，怒技即极级（伤害倍率已含 ×1.6），<b>只出自限时卡池</b>（1%＋100 抽保底），抽到即解锁其天命副本。<b>技能三通道</b>：怒技（专属技能）只认怒气，满 100 必放、代替普攻，效果按数据结算（眩晕/灼烧/中毒/持续回复/护盾/嘲讽/分担/净化/出手提前等，见卡面描述）；学来的主动技能在普攻后按各自概率判定释放（每技能自带概率与冷却）；被动技能按各自条件自动判定（每回合/受击时/兵力过半等）。技能位：10 级解锁主动位、20 级解锁被动位，每位 1 个（消耗 1 张技能卡，换学不返还）。装备两件（武器＋兵书）按品阶加属性（白 +10、绿 +20、蓝 +35、紫 +55、橙 +80）：武器加武力、兵书加智力；红色专属装备另加技能伤害 +10%，专属兵书另加兵力 +300（只有兵书带兵，武器不带兵）。布阵前二后三：单体攻击先打前排，前排全倒才打后排（全体/后排目标技能除外）。</p></div>
 <p class="note" id="enhInfo"></p>
   </div>
   <div class="card"><div class="kv"><span>经验池（全来源经验汇入，手动升级）</span><b id="expPoolInfo">0</b></div>
@@ -170,28 +186,44 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <div id="cardList"></div>
 </section>
 <section class="page" id="tab-stage">
+  <div class="subtabs" data-subtabs="stage"><button data-sub="main" class="on" onclick="setSub('stage','main')">推关</button><button data-sub="daily" onclick="setSub('stage','daily')">日常</button><button data-sub="tm" onclick="setSub('stage','tm')">天命副本</button><button data-sub="yq" onclick="setSub('stage','yq')">一骑当先</button></div>
+  <div class="subpane" data-pane="stage-main">
   <h2 class="sec">推关副本（3 章 × 10 关 · 无剧情，纯关卡）</h2>
   <div class="card"><p class="note">每章第 5 关小 BOSS、第 10 关章末大 BOSS（有概率掉装备与好卡）。战斗全自动：速度定出手、枪克骑/骑克弓/弓克枪 ×1.25。触发三通道：专属技能怒气满 100 必放（代替普攻，不满绝不放）；主动技能在普攻后按各自概率/冷却判定释放；被动技能按各自条件（每回合/受击时/兵力≤50%）自动判定。布阵前二后三：单体攻击先打前排，前排全灭才及后排，全体技能除外。全来源经验汇入经验池，在武将页手动升级（满级 30 级），按各自成长系数涨四维。</p></div>
   <div id="stageList"></div>
-  <h2 class="sec">日常副本（复刷场 · 10 关）</h2>
-  <div class="card"><p class="note">掉落经验（入经验池）＋招募令＋元宝，可重复攻打；已通关的关复刷经验减半，其余掉落按 50% 概率。</p><div id="dailyList"></div></div>
-  <h2 class="sec">天命副本（抽到天命将解锁其专属 10 关）</h2>
-  <div class="card"><p class="note">每关首通得 5 天命珠，全通 50 珠（回抽限时卡池）。打不过可看广告（模拟）重打 1 次（敌方强度 ×0.8）；活动期间每天可看广告重置 1 个已通副本，重刷收益减半（全通 25 珠）。</p><div id="tmList"></div></div>
-  <h2 class="sec">一骑当先（装备副本 · 10 关）</h2>
-  <div class="card"><p class="note">敌队是你当前上阵阵容的镜像（同将同养成、按关缩放），无阵容时预置队兜底。打不过可看广告（模拟）强行闯关——人人可过。每关得信物，首通掉随机品阶装备（第 10 关必得紫色或以上）；复刷已通关卡信物减半、不再掉装备。每通 3 关或全通后神秘商人到访：专属装备整件或碎片 5–7 折（元宝购买）。信物商城常驻：通用装备与专属碎片（不打折），碎片 10 个合成整件。</p><div id="yqList"></div><div id="merchantBox" style="margin-top:8px"></div><div id="tokenShop" style="margin-top:8px"></div></div>
   <h2 class="sec">战报</h2>
   <div class="log" id="battleLog">尚未出战。</div>
+  </div>
+  <div class="subpane" data-pane="stage-daily">
+  <h2 class="sec">日常副本（复刷场 · 10 关）</h2>
+  <div class="card"><p class="note">掉落经验（入经验池）＋招募令＋元宝，可重复攻打；已通关的关复刷经验减半，其余掉落按 50% 概率。</p><div id="dailyList"></div></div>
+  </div>
+  <div class="subpane" data-pane="stage-tm">
+  <h2 class="sec">天命副本（抽到天命将解锁其专属 10 关）</h2>
+  <div class="card"><p class="note">每关首通得 5 天命珠，全通 50 珠（回抽限时卡池）。打不过可看广告（模拟）重打 1 次（敌方强度 ×0.8）；活动期间每天可看广告重置 1 个已通副本，重刷收益减半（全通 25 珠）。</p><div id="tmList"></div></div>
+  </div>
+  <div class="subpane" data-pane="stage-yq">
+  <h2 class="sec">一骑当先（装备副本 · 10 关）</h2>
+  <div class="card"><p class="note">敌队是你当前上阵阵容的镜像（同将同养成、按关缩放），无阵容时预置队兜底。打不过可看广告（模拟）强行闯关——人人可过。每关得信物，首通掉随机品阶装备（第 10 关必得紫色或以上）；复刷已通关卡信物减半、不再掉装备。每通 3 关或全通后神秘商人到访：专属装备整件或碎片 5–7 折（元宝购买）。信物商城常驻：通用装备与专属碎片（不打折），碎片 10 个合成整件。</p><div id="yqList"></div><div id="merchantBox" style="margin-top:8px"></div><div id="tokenShop" style="margin-top:8px"></div></div>
+  </div>
 </section>
 <section class="page" id="tab-dex">
+  <div class="subtabs" data-subtabs="dex"><button data-sub="roster" class="on" onclick="setSub('dex','roster')">名册</button><button data-sub="tm" onclick="setSub('dex','tm')">天命</button><button data-sub="bonds" onclick="setSub('dex','bonds')">羁绊</button></div>
+  <div class="subpane" data-pane="dex-roster">
   <h2 class="sec">名册图鉴（160 人）</h2>
   <div class="card"><p class="note">按阵营 / 稀有度筛选；「已拥有」是你包里该武将的卡数。天命典藏单列于下方。</p>
   <div style="margin:6px 0">阵营 <select id="dexFac" onchange="renderDex()"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
   稀有度 <select id="dexRar" onchange="renderDex()"><option value="">全部</option><option>SSR</option><option>SR</option><option>R</option><option>N</option></select></div>
   <div id="dexList"></div></div>
+  </div>
+  <div class="subpane" data-pane="dex-tm">
   <h2 class="sec">天命图鉴（9 张 · 抽中解锁专属副本）</h2>
   <div class="card"><div id="dexTm"></div></div>
+  </div>
+  <div class="subpane" data-pane="dex-bonds">
   <h2 class="sec">羁绊图鉴（57 条 ＋ 兵种羁绊）</h2>
   <div class="card"><p class="note">武将羁绊：集齐成员并同时上阵触发，全队生效。兵种羁绊为我方先行版（设计方原标「待讨论」）：上阵同兵种 ≥3 人触发，与武将羁绊叠加。</p><div id="dexBonds"></div></div>
+  </div>
 </section>
 <section class="page" id="tab-tower">
   <h2 class="sec">全民爬塔（10 层）</h2>
@@ -225,6 +257,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   </div>
 </section>
 <section class="page" id="tab-more">
+  <div class="subtabs" data-subtabs="more"><button data-sub="arena" class="on" onclick="setSub('more','arena')">演武</button><button data-sub="show" onclick="setSub('more','show')">橱窗</button><button data-sub="sign" onclick="setSub('more','sign')">签到</button><button data-sub="settings" onclick="setSub('more','settings')">设置</button></div>
+  <div class="subpane" data-pane="more-arena">
   <h2 class="sec">演武台（简化版）</h2>
   <div class="card">
     <p class="note">打 AI 对手赢积分，定向兑换。胜 +10 分，败 +3 分。</p>
@@ -237,6 +271,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     </div>
     <div class="log" id="arenaLog" style="max-height:140px;margin-top:8px">尚未挑战。</div>
   </div>
+  </div>
+  <div class="subpane" data-pane="more-show">
   <h2 class="sec">橱窗（任意卡展示 · 5 个展位）</h2>
   <div class="card">
     <p class="note">任意卡可摆入橱窗（固定 5 个展位），按所摆卡的价值产元宝：价值由稀有度（SSR＞SR＞R）、星级、天命（典藏）、性格卡共同决定，SSR 与天命最高。点任意卡片上的「摆入橱窗/撤下」切换（橱窗页/武将页均可），产出速率在下方逐卡明示。</p>
@@ -244,6 +280,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div style="margin-top:8px"><button class="btn" id="btnClaimShow">领取橱窗元宝</button></div>
     <div id="showcaseList" style="margin-top:8px"></div>
   </div>
+  </div>
+  <div class="subpane" data-pane="more-sign">
   <h2 class="sec">签到与领取</h2>
   <div class="card">
     <div style="margin:6px 0"><button class="btn sub" id="btnSign">每日签到（7 日循环）</button>
@@ -256,13 +294,16 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <span class="note" id="adInfo">今日 0/20 次。</span></div>
     <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档说明与删档重开</button></div>
   </div>
+  </div>
+  <div class="subpane" data-pane="more-settings">
   <h2 class="sec">设置</h2>
   <div class="card" id="settingsCard">
-    <div class="kv"><span>当前版本</span><b>v3.5</b></div>
+    <div class="kv"><span>当前版本</span><b>v3.6</b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button></div>
     <p class="note">重置说明：本作只有一个存档；删档重开在存档页底部、两步确认，在虎扑里玩会同时清掉账号云端存档，删档不可恢复。</p>
+  </div>
   </div>
 </section>
 </main>
@@ -279,13 +320,13 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 </div>
 <div id="slotScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.5<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
+  <p class="sub">v3.6<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
   <p class="note" style="text-align:center" id="bootStatus">正在进入游戏…</p>
   <div style="text-align:center;margin:10px 0"><button class="btn" id="btnBootRetry" style="display:none">重新进入</button></div>
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.5<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">v3.6<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
 
   <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 统率成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 速度成长</p>
@@ -1619,7 +1660,18 @@ if(state.showcase.length>0 && mins>0){ state.showcaseAcc += mins * showcaseTotal
 state.showcaseTs = now;
 }
 /* ============ UI 渲染层 ============ */
-let curTab = "home", enhTarget = 0, enhFeeds = [];
+let curTab = "home", enhTarget = 0, enhFeeds = [], expandedCards = new Set();
+const SUB_STATE = { pool:"idle", stage:"main", dex:"roster", more:"arena" };
+function applySubs(page){
+  document.querySelectorAll('[data-subtabs="'+page+'"] button').forEach(b=>b.classList.toggle("on", b.dataset.sub===SUB_STATE[page]));
+  const sec = document.getElementById("tab-"+page); if(!sec) return;
+  sec.querySelectorAll(".subpane").forEach(p=>{ p.style.display = (p.dataset.pane===page+"-"+SUB_STATE[page])? "" : "none"; });
+}
+function applySubsAll(){ Object.keys(SUB_STATE).forEach(applySubs); }
+window.setSub = function(page, sub){ if(SUB_STATE[page]===sub){ applySubs(page); return; } SUB_STATE[page]=sub; applySubs(page); };
+window.toggleRank = function(){ const el=$("rankBox"); const open = el.style.display==="none"; el.style.display = open? "" : "none"; const h=$("rankToggleHint"); if(h) h.textContent = open? " · 点收起" : " · 已收起，点开查看"; };
+window.toggleCardsGuide = function(){ const el=$("cardsGuide"); if(el) el.style.display = (el.style.display==="none")? "" : "none"; };
+window.toggleCardDetail = function(uid){ if(expandedCards.has(uid)) expandedCards.delete(uid); else expandedCards.add(uid); renderCards(); };
 const STARTERS = [ {pers:"刚胆", name:"向宠"}, {pers:"鲁莽", name:"张苞"}, {pers:"睿智", name:"马谡"}, {pers:"谨慎", name:"简雍"} ]; /* v3.0：按数据书新对位（全蜀 SR、性格属性对位；旧四将书中为 SSR） */
 function $(id){ return document.getElementById(id); }
 function genByName(n){ return GENS.find(g=>g.name===n); }
@@ -1644,7 +1696,7 @@ const TOUR_STEPS = [
  {screen:"main", tab:"home", target:"questCard", text:"今日任务和新手任务都在这张卡上，照着做就有元宝和招募令，完成了点领取。"},
  {screen:"main", tab:"cards", target:"cardList", text:"你的开局将已经自动上阵。以后抽到新武将，点卡上的「上阵/下阵」调整阵容，最多上 5 人。"},
  {screen:"main", tab:"cards", target:"cardList", text:function(){ const hasMat = state && ((state.skillsOwned||[]).length>0 || (state.cards||[]).some((c,i,arr)=>arr.some((o,j)=>j!==i && o.genId===c.genId))); return hasMat? "升星靠重复卡当材料，星越高四维涨得越多；抽到的技能卡在武将详情里学，注意兵种要对位。" : "看到武将名旁边的 ★ 了吗？那是星级。你现在只有一张卡，等抽到同一张卡就能在这里升星；抽到技能卡，也是在这张卡上学。"; }},
- {screen:"main", tab:"pool", target:"rateDisclosure", text:"卡池有普通、元宝、天命、材料四个池。每个池的出率和保底都公示在这一节，抽之前先看清。"},
+ {screen:"main", tab:"pool", target:"rateDisclosure", sub:["pool","rates"], text:"卡池有普通、元宝、天命、材料四个池。每个池的出率和保底都公示在这一节，抽之前先看清。"},
  {screen:"main", tab:"stage", target:"stageList", text:"推关是主要的成长线：赢了给元宝，还会掉武将、装备和技能卡。副本页里还有日常、天命副本和一骑当先。"},
  {screen:"main", tab:"dex", target:"dexList", text:"图鉴记录 160 名武将的收集进度，57 条羁绊的条件也在这——组队凑羁绊有额外加成。"},
  {screen:"main", tab:"save", target:"saveNoteCard", text:"存档就一句话：自动保存、和账号绑定，不用你操心。这一页能看存档状态；真要重开，删档也在这一页（两步确认，防手滑）。"},
@@ -1730,6 +1782,7 @@ function tourRender(idx, preState){
   if(tourLastStep !== idx){
     tourLastStep = idx;
     if(s.tab && typeof curTab !== "undefined" && curTab !== s.tab) switchTab(s.tab);
+    if(s.sub && typeof setSub === "function") setSub(s.sub[0], s.sub[1]);
     const el = s.target? document.getElementById(s.target) : null;
     if(el) setTimeout(function(){ el.scrollIntoView({block:"center"}); tourRingUpdate(); }, 60);
   }
@@ -1865,16 +1918,20 @@ function renderCards(){
       (c.pers? "<span class='tag hot'>性格·"+c.pers+"（"+PERS_LABEL[c.pers]+" +0.5）</span>" : "<span class='tag'>普通卡</span>")+
       "<span class='tag'>强化 +"+c.enh+"（兵力）</span></div>"+
       "<div class='stats'>武 "+Math.round(statAt(c,'wu'))+"（成长 "+gr.wu.toFixed(2)+"）· 智 "+Math.round(statAt(c,'zhi'))+"（"+gr.zhi.toFixed(2)+"）· 统 "+Math.round(statAt(c,'tong'))+"（"+gr.tong.toFixed(2)+"）· 速 "+Math.round(statAt(c,'spd'))+"（"+gr.spd.toFixed(2)+"）</div>"+
-      "<div class='stats'>实战 攻 "+u.atk+"（武面 "+u.atkW+" / 智面 "+u.atkZ+"）防 "+u.def+" 兵力 "+u.hp+"</div>"+skillHtml+
-      eqHtml+
       "<div style='margin-top:6px;display:flex;gap:6px;flex-wrap:wrap'>"+
       "<button class='btn sm "+(inForm?"sub":"dark")+"' onclick='toggleForm("+c.uid+")'>"+(inForm?"下阵":"上阵")+"</button>"+
       "<button class='btn sm sub' onclick='doStarUp("+c.uid+")' "+(c.star>=CFG.starCap?"disabled":"")+">升星（加四维）</button>"+
+      "<button class='btn sm sub' onclick='setEnhTarget("+c.uid+")'>设为强化目标</button>"+
+      "<button class='btn sm sub' onclick='toggleCardDetail("+c.uid+")'>"+(expandedCards.has(c.uid)? "收起详情":"展开详情")+"</button>"+
+      "</div>"+
+      "<div id='cdt-"+c.uid+"' style='display:"+(expandedCards.has(c.uid)? "block":"none")+";margin-top:6px'>"+
+      "<div class='stats'>实战 攻 "+u.atk+"（武面 "+u.atkW+" / 智面 "+u.atkZ+"）防 "+u.def+" 兵力 "+u.hp+"</div>"+skillHtml+
+      eqHtml+
+      "<div style='margin-top:6px;display:flex;gap:6px;flex-wrap:wrap'>"+
       "<button class='btn sm sub' onclick='doLevelUp("+c.uid+",1)' "+(lvNow>=CFG.levelCap?"disabled":"")+">升级（经验池 "+(lvNow>=CFG.levelCap? "MAX" : levelUpCost(lvNow))+")</button>"+
       "<button class='btn sm sub' onclick='doLevelUp("+c.uid+",99)' "+(lvNow>=CFG.levelCap?"disabled":"")+">连升</button>"+
-      "<button class='btn sm sub' onclick='setEnhTarget("+c.uid+")'>设为强化目标</button>"+
       "<button class='btn sm sub' onclick='toggleShowcase("+c.uid+")'>"+(inShow?"撤下橱窗":"摆入橱窗")+"</button>"+
-      "</div>"+
+      "</div></div>"+
       "<label class='note'><input type='checkbox' "+(enhFeeds.indexOf(c.uid)>=0?"checked":"")+" "+(locked||c.uid===enhTarget?"disabled":"")+" onchange='toggleFeed("+c.uid+",this.checked)'> 作强化饲料</label>"+
       "</div></div></div>";
   }).join("") : "<div class='card'>暂无武将，去卡池开启挂机池或抽卡。</div>";
@@ -2015,6 +2072,7 @@ function doEnhanceUI(){
   enhFeeds=[]; renderAll();
 }
 function bind(){
+  applySubsAll();
   document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
   $("factionFilter").onchange = renderCards;
   $("btnAutoForm").onclick = function(){
@@ -2064,7 +2122,7 @@ function bind(){
   };
   $("btnReset").onclick = function(){ switchTab("save"); };
   $("btnSettingsSave").onclick = function(){ switchTab("save"); };
-  $("btnSettingsRates").onclick = function(){ switchTab("pool"); const el=$("rateDisclosure"); if(el) el.scrollIntoView(); };
+  $("btnSettingsRates").onclick = function(){ switchTab("pool"); setSub("pool","rates"); const el=$("rateDisclosure"); if(el) el.scrollIntoView(); };
   $("btnTourReplay").onclick = function(){ state.tour = {step:0, done:false}; save(); tourLastStep = -1; switchTab("home"); renderAll(); };
   /* ---- 存档页接线（v3.3：只剩删档重开） ---- */
   $("btnWipe1").onclick = function(){ $("wipeBox").style.display = ""; };
