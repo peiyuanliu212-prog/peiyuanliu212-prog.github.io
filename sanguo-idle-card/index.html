@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国天命录 · v3.4</title>
+<title>三国天命录 · v3.5</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -64,7 +64,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.4</span></h1>
+  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.5</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -258,7 +258,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   </div>
   <h2 class="sec">设置</h2>
   <div class="card" id="settingsCard">
-    <div class="kv"><span>当前版本</span><b>v3.4</b></div>
+    <div class="kv"><span>当前版本</span><b>v3.5</b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button></div>
@@ -279,13 +279,13 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 </div>
 <div id="slotScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.4<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
+  <p class="sub">v3.5<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
   <p class="note" style="text-align:center" id="bootStatus">正在进入游戏…</p>
   <div style="text-align:center;margin:10px 0"><button class="btn" id="btnBootRetry" style="display:none">重新进入</button></div>
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.4<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">v3.5<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
 
   <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 统率成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 速度成长</p>
@@ -312,7 +312,7 @@ const CFG = {
   starCap: 5,                  // 升星上限统一 ★5
   troopsBase: {SSR:1100, SR:1050, R:1000}, // 兵力基础值：全员近似一致，±小幅按稀有度浮动
   troopsPerEnh: 80,            // 强化只加兵力：每强化级 +80 兵力
-  enhBasePerStar: 3,           // 强化：每张饲料按星级 ×3% 计成功率
+  enhBasePerStar: 6,           // 强化：每张饲料按星级 ×6% 计成功率（★1 饲料一试 30%、同名翻倍 60%，封顶 95%）
   enhRateCap: 95,
   levelCap: 30,
   expNeedPerLevel: 135,        // 升下一级所需经验 = 当前等级 ×135（按满级 30 重标，总量约旧 50 级版 6 成）
@@ -774,7 +774,8 @@ return eff;
 }
 function statAt(card, stat){
 const g = GEN_BY_ID[card.genId];
-return g[stat] + growthOf(card)[stat] * ((card.level||1)-1);
+/* 四维单一事实源：基础＋成长×(等级-1)，再乘升星系数（每星 +25%，只加四维不碰兵力）；战斗侧不得再外挂星级系数 */
+return (g[stat] + growthOf(card)[stat] * ((card.level||1)-1)) * (1 + CFG.starMulPer * ((card.star||1)-1));
 }
 function troopsOf(card){
 const g = GEN_BY_ID[card.genId];
@@ -1233,7 +1234,6 @@ return { win:win, log:log, skillUsed:skillUsed, A:A, B:B };
 function resolveUnit(card, teamMul, agg){
 const g = GEN_BY_ID[card.genId];
 agg = agg || {};
-const starMul = 1 + CFG.starMulPer*(card.star - 1);
 const wu = statAt(card,"wu"), zhi = statAt(card,"zhi"), tong = statAt(card,"tong"), spdBase = statAt(card,"spd");
 /* v2.1 品阶数值层：武器按品阶加武力、兵书按品阶加智力；红品专属另加技能伤害 +eqExclSkillPct%，专属兵书再加兵力（定版：只有兵书带兵，武器不带兵） */
 let eqWu=0, eqZhi=0, eqTroops=0, eqSkillMul=1;
@@ -1243,11 +1243,11 @@ const qv = CFG.eqQualityVal[qualityOf(e)] || 10;
 if(slot==="wp") eqWu += qv; else eqZhi += qv;
 if(e.excl){ eqSkillMul *= 1 + CFG.eqExclSkillPct/100; if(slot==="bs") eqTroops += CFG.eqExclBookTroops; } }
 const tm = (teamMul||1);
-const atkW = Math.round(wu * starMul * (agg.wuM||1) * tm) + eqWu;
-const atkZ = Math.round(zhi * starMul * (agg.zhiM||1) * tm) + eqZhi;
-let atk = Math.round((wu*0.6 + zhi*0.4) * starMul * (agg.wuM||1) * tm) + Math.round(eqWu*0.6 + eqZhi*0.4);
-let def = Math.round((tong*0.5 + wu*0.2) * starMul * (agg.tongM||1) * tm);
-let spd = Math.round(spdBase * starMul * (agg.spdM||1));
+const atkW = Math.round(wu * (agg.wuM||1) * tm) + eqWu;
+const atkZ = Math.round(zhi * (agg.zhiM||1) * tm) + eqZhi;
+let atk = Math.round((wu*0.6 + zhi*0.4) * (agg.wuM||1) * tm) + Math.round(eqWu*0.6 + eqZhi*0.4);
+let def = Math.round((tong*0.5 + wu*0.2) * (agg.tongM||1) * tm);
+let spd = Math.round(spdBase * (agg.spdM||1));
 let hp = troopsOf(card) + eqTroops;
 const pas = card.learnedPassive;
 if(pas && PASSIVE_SKILLS[pas] && (PASSIVE_SKILLS[pas].pct || PASSIVE_SKILLS[pas].add)){
@@ -1260,7 +1260,7 @@ if(PASSIVE_SKILLS[pas].stat==="troops") hp = Math.round(hp * (1 + PASSIVE_SKILLS
 const hasJi = state.skillsOwned.some(x=>x && x.grade==="极" && x.name==="极·"+g.skill);
 const dmgScale = (1 + CFG.starSkillPer*(card.star - 1)) * (hasJi? CFG.jiSkillMul : 1) * eqSkillMul;
 const fx = (g.fx||[]).map(e=>{ const ne = Object.assign({}, e); if(ne.k==="dmg") ne.m = Math.round(ne.m * dmgScale * 100)/100; return ne; });
-return { name:g.name+(g.variant?"（天命）":""), hp:hp, troops:hp, atk:atk, atkW:atkW, atkZ:atkZ, tongV:Math.round(tong*starMul),
+return { name:g.name+(g.variant?"（天命）":""), hp:hp, troops:hp, atk:atk, atkW:atkW, atkZ:atkZ, tongV:Math.round(tong),
 def:def, spd:spd, troop:g.troop, skillName:g.skill, fx:fx,
 physM:agg.physM||1, magM:agg.magM||1, dInM:agg.dInM||1, healM:agg.healM||1, rageM:agg.rageM||1,
 firstHealAmt:agg.firstHealAmt||0, roundHealAmt:agg.roundHealAmt||0,
@@ -1291,7 +1291,7 @@ const bonds = activeBonds(cards).concat(troopBonds(cards));
 const teamMul = 1 + CFG.rankMulPer*state.rankIdx;
 /* 队内最高统率（羁绊回血基数） */
 let maxTong = 0;
-cards.forEach(c=>{ maxTong = Math.max(maxTong, statAt(c,"tong") * (1 + CFG.starMulPer*(c.star-1))); });
+cards.forEach(c=>{ maxTong = Math.max(maxTong, statAt(c,"tong")); });
 return cards.map(c=>{
 const g = GEN_BY_ID[c.genId];
 const agg = { wuM:1, tongM:1, zhiM:1, spdM:1, physM:1, magM:1, dInM:1, healM:1, rageM:1, firstHealAmt:0, roundHealAmt:0 };
