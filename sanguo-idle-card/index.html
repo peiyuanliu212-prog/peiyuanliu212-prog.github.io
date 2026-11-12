@@ -442,7 +442,7 @@ function initSlots(){
   }catch(e){}
 }
 /* ---- 账号云存（acctsave 契约 v1）：身份只认平台注入，客户端不传任何身份字段 ---- */
-const SG_API = "https://app-6577eaef3c-d1gmtlqu9702c7de1-1252166086.ap-shanghai.app.tcloudbase.com/api";
+const SG_API = "https://app-bb176180ad-d6g0p672y89143628-1252166086.ap-shanghai.app.tcloudbase.com/api"; /* acctsave 应用侧 env（2026-11-12 对账确认：路由部署在应用侧 env，非共用 env） */
 const ACCT_MODE = (typeof window !== "undefined" && window.ColorboxAI && window.ColorboxAI.cloud && typeof window.ColorboxAI.cloud.request === "function")? "shell" : "local";
 async function acctGet(){
   try{
