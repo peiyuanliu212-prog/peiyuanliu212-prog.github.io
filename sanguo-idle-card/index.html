@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国挂机卡牌 · v2.1.4</title>
+<title>三国天命录 · v2.1.6</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -53,7 +53,7 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">v2.1.4</span></h1>
+  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v2.1.6</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -114,6 +114,18 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
     <p class="note">构成 SR/SSR 性格武将（<b>每抽必带性格</b>）＋<b>天命武将 1%</b>；10 连必 SSR、100 抽必出天命（独立保底）。天命武将<b>只出此池</b>。抽到天命将即解锁其<b>天命副本</b>（在副本页：10 关，首通 5 珠/关、全通 50 珠）。<b id="tmPityInfo"></b></p>
     <div class="log" id="gachaLog" style="max-height:180px">尚无抽卡记录。</div>
     <p class="note" id="tianmingNews" style="display:none;color:#93301f;font-weight:700;margin-top:6px"></p>
+  </div>
+  <h2 class="sec">概率公示（全部卡池）</h2>
+  <div class="card" id="rateDisclosure">
+    <p class="note">以下概率与游戏内实际抽取逻辑一致；各池保底计数互相独立、不共享。同池同稀有度内，每名符合条件的武将等概率随机出。</p>
+    <div class="kv"><span>挂机材料池（英雄池）</span><b>N 55% · R 35% · SR 10%</b></div>
+    <p class="note">只出所选阵营的普通卡：无 SSR、无性格、无天命。技能池从 8 种学习技能（主动 4 种＋被动 4 种）中等概率随机出 1 张普通版技能卡。</p>
+    <div class="kv"><span>普通卡池（1 招募令/抽）</span><b>N 40% · R 42% · SR 15% · SSR 3%</b></div>
+    <p class="note">只出普通卡（永不带性格）。保底：10 抽必出 SR 及以上、100 抽必出 SSR。</p>
+    <div class="kv"><span>元宝卡池（100 元宝/抽）</span><b>性格 3.5% · 其余走普通卡</b></div>
+    <p class="note">每抽先判定性格 3.5%：命中出性格版武将（其中 SSR 33% / SR 67%）；未命中（96.5%）出普通卡 R 70% / SR 24% / SSR 6%。保底：10 抽必出 SSR、100 抽必出性格。</p>
+    <div class="kv"><span>天命入驻池（1 天命珠/抽）</span><b>天命武将 1%</b></div>
+    <p class="note">天命武将共 9 名、等概率随机（每名约 0.11%），只出此池；未命中天命时出性格版武将 SR 70% / SSR 30%（每抽必带性格）。保底：10 抽必出 SSR、100 抽必出天命。</p>
   </div>
 </section>
 <section class="page" id="tab-cards">
@@ -243,6 +255,13 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
     <span class="note" id="adInfo">今日 0/20 次。demo 用模拟广告代替真实广告。</span></div>
     <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档管理（短码 / 长码 / 导入 / 删档）</button></div>
   </div>
+  <h2 class="sec">设置</h2>
+  <div class="card" id="settingsCard">
+    <div class="kv"><span>当前版本</span><b>v2.1.6</b></div>
+    <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档管理（短码 / 长码 / 导入 / 删档）</button>
+    <button class="btn sub" id="btnSettingsRates">查看概率公示</button></div>
+    <p class="note">重置说明：删档重开在存档页底部，需两步确认；只删当前槽，其他 4 个槽不受影响。删档不可恢复，删前请先在存档页生成短码或长码收好（存有短码 / 长码 / 导入前备份的仍可找回）。回选档界面也在存档页底部。</p>
+  </div>
 </section>
 </main>
 <nav class="tabs">
@@ -257,14 +276,14 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 </nav>
 </div>
 <div id="slotScreen" style="display:none">
-  <h1 class="big">三国挂机卡牌</h1>
-  <p class="sub">v2.1.4<br>选择存档槽进入游戏：共 5 个槽，各槽的存档、导入前备份与挂机进度互相独立</p>
+  <h1 class="big">三国天命录</h1>
+  <p class="sub">v2.1.6<br>选择存档槽进入游戏：共 5 个槽，各槽的存档、导入前备份与挂机进度互相独立</p>
   <div id="slotCards"></div>
   <p class="note" style="text-align:center">有档的槽点卡进入继续；空槽点卡开新档（开局选将）。<br>换设备：先在旧设备进档、到「存档」页生成短码；新设备选一个槽进入后在「存档」页导入，或在空槽的开局页直接输码取回。</p>
 </div>
 <div id="starterScreen" style="display:none">
-  <h1 class="big">三国挂机卡牌</h1>
-  <p class="sub">v2.1.4<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <h1 class="big">三国天命录</h1>
+  <p class="sub">v2.1.6<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
   <div class="card" style="max-width:520px;margin:14px auto;text-align:left">
     <p class="note">已有存档？输入短码（SG-XXXXXXXX）或粘贴长码，直接取回整档，不用重新开局。</p>
@@ -1848,6 +1867,8 @@ function bind(){
     state.adUsed.count++; addRes("tickets", CFG.adReward); renderAll();
   };
   $("btnReset").onclick = function(){ switchTab("save"); };
+  $("btnSettingsSave").onclick = function(){ switchTab("save"); };
+  $("btnSettingsRates").onclick = function(){ switchTab("pool"); const el=$("rateDisclosure"); if(el) el.scrollIntoView(); };
   $("btnBackSlots").onclick = function(){ save(); location.reload(); };
   /* ---- 存档页接线（v2.1.3） ---- */
   $("btnGenCode").onclick = async function(){
