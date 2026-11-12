@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国天命录 · v3.3</title>
+<title>三国天命录 · v3.4</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -64,7 +64,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.3</span></h1>
+  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.4</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -138,6 +138,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div style="margin:8px 0"><button class="btn" id="btnTm1" data-testid="tm-draw">单抽 1 珠</button>
     <button class="btn" id="btnTm10">10 连 10 珠</button>
     <button class="btn sub" id="btnBuyBead">买天命珠 · 200 元宝/个</button></div>
+    <p class="note" id="tmClosedNote" style="display:none;color:#93301f;font-weight:700">天命入驻尚未开启：天命武将将在后续版本登场，敬请期待。天命珠可通过每日签到先行积累，开启后即可抽取。</p>
     <p class="note">构成 SR/SSR 性格武将（<b>每抽必带性格</b>）＋<b>天命武将 1%</b>；10 连必 SSR、100 抽必出天命（独立保底）。天命武将<b>只出此池</b>。抽到天命将即解锁其<b>天命副本</b>（在副本页：10 关，首通 5 珠/关、全通 50 珠）。<b id="tmPityInfo"></b></p>
     <div class="log" id="gachaLog" style="max-height:180px">尚无抽卡记录。</div>
     <p class="note" id="tianmingNews" style="display:none;color:#93301f;font-weight:700;margin-top:6px"></p>
@@ -151,7 +152,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <p class="note">只出普通卡（永不带性格）。保底：10 抽必出 SR 及以上、100 抽必出 SSR。</p>
     <div class="kv"><span>元宝卡池（100 元宝/抽）</span><b>性格 3.5% · 其余走普通卡</b></div>
     <p class="note">每抽先判定性格 3.5%：命中出性格版武将（其中 SSR 33% / SR 67%）；未命中（96.5%）出普通卡 R 70% / SR 24% / SSR 6%。保底：10 抽必出 SSR、100 抽必出性格。</p>
-    <div class="kv"><span>天命入驻池（1 天命珠/抽）</span><b>天命武将 1%</b></div>
+    <div class="kv"><span>天命入驻池（1 天命珠/抽）<span id="tmRateState"></span></span><b>天命武将 1%</b></div>
     <p class="note">天命武将共 9 名、等概率随机（每名约 0.11%），只出此池；未命中天命时出性格版武将 SR 70% / SSR 30%（每抽必带性格）。保底：10 抽必出 SSR、100 抽必出天命。</p>
   </div>
 </section>
@@ -257,7 +258,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   </div>
   <h2 class="sec">设置</h2>
   <div class="card" id="settingsCard">
-    <div class="kv"><span>当前版本</span><b>v3.3</b></div>
+    <div class="kv"><span>当前版本</span><b>v3.4</b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button></div>
@@ -278,13 +279,13 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 </div>
 <div id="slotScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.3<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
+  <p class="sub">v3.4<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
   <p class="note" style="text-align:center" id="bootStatus">正在进入游戏…</p>
   <div style="text-align:center;margin:10px 0"><button class="btn" id="btnBootRetry" style="display:none">重新进入</button></div>
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.3<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">v3.4<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
 
   <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 统率成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 速度成长</p>
@@ -316,7 +317,7 @@ const CFG = {
   levelCap: 30,
   expNeedPerLevel: 135,        // 升下一级所需经验 = 当前等级 ×135（按满级 30 重标，总量约旧 50 级版 6 成）
   expStageWin: 40, expTowerWin: 60, expArenaWin: 30, expLoseRatio: 0.3,
-  tianmingRate: 0.01,          // 天命卡出率 1%（约 100 抽 1 张）：元宝英雄池（挂机四池＋天命入驻卡池）每次产卡先判定，命中从 TIANMING_IDS 等概率出、覆盖常规出货
+  tianmingRate: 0.01,          // 历史未引用字段：现行天命出率走 tmRate＋tmPity、仅限时卡池出天命（见 drawLimited），此值不参与抽取
   equipRefundPerTier: 30,      // v1.2 迁移：下线装备（衣甲/马匹）每阶折算返还元宝数
   jiSkillMul: 1.6,             // 技能「极」版倍率：专属技能伤害 ×1.6（相对普通版）
   jiChance: 0.08,              // 元宝技能池产「极」版技能卡概率（其他来源 0）
@@ -341,6 +342,7 @@ const CFG = {
   matRates: {R:75, SR:25},
   normalRates: {R:82, SR:15, SSR:3}, normalPitySR: 10, normalPitySSR: 100,
   ybCost: 100, ybPersRate: 0.035, ybPersTierSSR: 33, ybRates: {R:70, SR:24, SSR:6}, ybPitySSR10: 10, ybPityPers: 100,
+  tmOpen: false,               // 天命投放开关：前期不投放（主人 2026-11-12 批准）；开启置 true 发版即可，保底计数不清零
   tmCostBeads: 1, beadPrice: 200, tmRate: 0.01, tmPity: 100, tmPitySSR10: 10, tmPoolRates: {SR:70, SSR:30},
   dotMul: 0.3,
   migCardTicketRefund: 2,
@@ -900,6 +902,7 @@ bumpQuest("draw", drawn.length); save(); return drawn;
 }
 /* 限时卡池（天命入驻）：1 天命珠/抽；SR/SSR 性格（每抽必带性格）＋天命 1%；10 连必 SSR、100 抽必天命；抽中天命解锁其天命副本 */
 function drawLimited(n){
+if(!CFG.tmOpen) return []; /* 天命前期不投放：池未开启，不扣珠、不计保底、不记任务 */
 const drawn=[];
 for(let i=0;i<n;i++){
 if(state.beads < CFG.tmCostBeads) break;
@@ -924,6 +927,7 @@ if(!tmGen || !tmGen.baseId) return;
 if(!state.tmDungeons.unlocked[tmGen.id]){ state.tmDungeons.unlocked[tmGen.id] = true; state.tmDungeons.cleared[tmGen.id] = state.tmDungeons.cleared[tmGen.id]||0; }
 }
 function buyBeads(n){
+if(!CFG.tmOpen) return {ok:false,msg:"天命入驻尚未开启，开启后再来购买天命珠"};
 const cost = CFG.beadPrice * n;
 if(!spendRes("yuanbao", cost)) return {ok:false,msg:"元宝不足（"+CFG.beadPrice+" 元宝/个）"};
 state.beads += n; save();
@@ -1803,6 +1807,10 @@ function renderAll(){
   $("ybPityInfo").textContent = "距 SSR 保底 "+state.pity.yb.ssr+"/10，距性格保底 "+state.pity.yb.pers+"/100。";
   $("tmPityInfo").textContent = "距 SSR 保底 "+state.pity.tm.ssr+"/10，距天命保底 "+state.pity.tm.tm+"/100。";
   $("beadsInfo").textContent = state.beads;
+  { const tmClosed = !CFG.tmOpen;
+    ["btnTm1","btnTm10","btnBuyBead"].forEach(id=>{ const b = $(id); if(b) b.disabled = tmClosed; });
+    const cn = $("tmClosedNote"); if(cn) cn.style.display = tmClosed? "" : "none";
+    const rs = $("tmRateState"); if(rs) rs.textContent = tmClosed? "（尚未开启，下为开启后出率）" : ""; }
   const tnEl = $("tianmingNews");
   if(tnEl){ if(state.tianmingNews){ tnEl.style.display="block"; tnEl.textContent = "🎉 天命卡降临：「"+state.tianmingNews+"」已入包（典藏版，去武将页看金边卡面）"; } else { tnEl.style.display="none"; } }
   $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5，战力 "+teamPower()+"（站位前二后三：前两位＝前排、后三位＝后排）。羁绊："+
@@ -1899,7 +1907,7 @@ function renderDungeons(){
     TIANMING_IDS.forEach(id=>{ const g = GEN_BY_ID[id];
       const un = !!state.tmDungeons.unlocked[id], cl = state.tmDungeons.cleared[id]||0;
       const half = !!state.tmDungeons.half[id];
-      h += "<div class='card' style='display:flex;justify-content:space-between;align-items:center'><span><b>"+g.name+"</b> 天命副本 "+(un? ("进度 "+cl+"/10"+(half?"（重置重刷·减半）":"")) : "<span class='note'>未解锁（限时卡池抽到 "+g.name+" 解锁）</span>")+"</span><span>";
+      h += "<div class='card' style='display:flex;justify-content:space-between;align-items:center'><span><b>"+g.name+"</b> 天命副本 "+(un? ("进度 "+cl+"/10"+(half?"（重置重刷·减半）":"")) : "<span class='note'>未解锁（"+(CFG.tmOpen? "限时卡池抽到 "+g.name+" 解锁" : "天命入驻开启后，抽到 "+g.name+" 解锁")+"）</span>")+"</span><span>";
       if(un && cl<10) h += "<button class='btn sm' onclick='doTmFight("+id+","+(cl+1)+")'>挑战第 "+(cl+1)+" 关</button> ";
       if(un && state.tmDungeons.adRetry[id+"_"+(cl+1)]) h += "<button class='btn sm dark' onclick='doTmAd("+id+","+(cl+1)+")'>看广告重打（敌 ×0.8）</button> ";
       if(un && cl>0 && !half) h += "<button class='btn sm sub' onclick='doTmReset("+id+")'>广告重置（每日 1 次）</button>";
