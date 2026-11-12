@@ -84,7 +84,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div class="kv"><span>已推关</span><b id="homeStage">0 / 30 关</b></div>
     <div class="kv"><span>全民爬塔</span><b id="homeTower">第 0 层</b></div>
     <div class="kv"><span>上阵战力</span><b id="homePower">0</b></div>
-    <p class="note" style="margin-top:8px">玩法：挂机/抽卡拿卡 → 组 5 人上阵 → 全自动推关 → 升星强化升官 → 饭点爬塔。纯系统挂机，无剧情线。演示版参数已在各页明示，正式口径见定版规格。</p>
+    <p class="note" style="margin-top:8px">玩法：挂机/抽卡拿卡 → 组 5 人上阵 → 全自动推关 → 升星强化升官 → 饭点爬塔。纯系统挂机，无剧情线。各池的产出节拍都在卡池页明示。</p>
   </div>
   <div class="card" id="v7Notice" style="display:none"></div>
   <div class="card" id="questCard"></div>
@@ -102,12 +102,12 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div class="kv"><span>上次离线产出</span><b id="idleLastOffline">—</b></div>
     <div style="margin-top:8px"><button class="btn sub sm" id="btnIdleRules">离线结算规则说明</button></div>
     <div id="idleRules" style="display:none;margin-top:8px">
-      <p class="note">离线结算口径：关掉页面期间，已开启的池子按剩余开启时长继续产卡，产出不超过剩余时长，回来时一次性结算进卡册/技能卡。产卡节拍与在线一致（演示加速：池时钟每真实秒走 12 秒；正式版英雄池 60 秒/张）。在线期间每秒同步结算点，同一段时间不会重复结算。池子到期自动停产，回来花元宝延长即可继续；叠时最多 6 小时。</p>
+      <p class="note">离线结算口径：关掉页面期间，已开启的池子按剩余开启时长继续产卡，产出不超过剩余时长，回来时一次性结算进卡册/技能卡。产卡节拍与在线一致（池时钟每真实秒走 12 秒）。在线期间每秒同步结算点，同一段时间不会重复结算。池子到期自动停产，回来花元宝延长即可继续；叠时最多 6 小时。</p>
     </div>
   </div>
-  <h2 class="sec">挂机材料池（元宝开启 · 每分钟 1 张）</h2>
+  <h2 class="sec">挂机材料池（元宝开启 · 自动出卡）</h2>
   <div class="card">
-    <p class="note">挂机池即<b>材料池</b>：100 元宝/小时开启（可叠加至 6 小时），开启后每分钟自动出 1 张（演示加速：<b>演示 5 秒/张</b>，正式版 1 分钟/张）。构成 N/R/SR＝55/35/10，只出普通卡（喂强化/升星的材料主力）。英雄池与技能池同一入口、各开各的。</p>
+    <p class="note">挂机池即<b>材料池</b>：100 元宝/小时开启（可叠加至 6 小时），开启后自动出卡（池时钟每真实秒走 12 秒，约每 5 个真实秒出 1 张）。构成 N/R/SR＝55/35/10，只出普通卡（喂强化/升星的材料主力）。英雄池与技能池同一入口、各开各的。</p>
     <div class="kv"><span>英雄池（选阵营）</span>
       <select id="heroFac"><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select></div>
     <div class="kv"><span>英雄池剩余</span><b id="heroPoolInfo">未开启</b></div>
@@ -192,12 +192,12 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <div class="card"><p class="note">武将羁绊：集齐成员并同时上阵触发，全队生效。兵种羁绊为我方先行版（设计方原标「待讨论」）：上阵同兵种 ≥3 人触发，与武将羁绊叠加。</p><div id="dexBonds"></div></div>
 </section>
 <section class="page" id="tab-tower">
-  <h2 class="sec">全民爬塔（合并版 · 10 层）</h2>
+  <h2 class="sec">全民爬塔（10 层）</h2>
   <div class="card">
-    <p class="note">正式版每天 12:00–13:00、18:00–19:00 开放；<b>demo 演示期间开放时间放宽，全天可打</b>。最多失败 3 次出局。每层奖励 5 张招募券；功绩：胜 +50 / 败 +20（功绩只来自这里，用来升官职）。</p>
+    <p class="note">全天开放挑战。最多失败 3 次出局。每层奖励 5 张招募券；功绩：胜 +50 / 败 +20（功绩只来自这里，用来升官职）。</p>
     <div class="kv"><span>今日进度</span><b id="towerInfo">第 0 层 · 失败 0/3</b></div>
     <div style="margin-top:8px"><button class="btn" id="btnTowerFight" data-testid="tower-fight">挑战下一层</button>
-    <button class="btn sub" id="btnTowerReset">重置今日爬塔（demo 调试）</button></div>
+    <button class="btn sub" id="btnTowerReset">重置今日爬塔</button></div>
   </div>
   <div class="log" id="towerLog">尚未挑战。</div>
 </section>
@@ -275,11 +275,11 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div style="margin:6px 0"><button class="btn sub" id="btnSign">每日签到（7 日循环）</button>
     <span class="note">每日限领一次；连续签到奖励递进，断签回第 1 天。</span></div>
     <div id="signTable" style="margin:6px 0"></div>
-    <div style="margin:6px 0"><button class="btn sub" id="btnClaimNoon">12 点领取 · 招募券 +5</button>
-    <button class="btn sub" id="btnClaimEvening">18 点领取 · 招募券 +5</button>
-    <span class="note">demo 放宽为可领并明示；正式版限对应时段。</span></div>
+    <div style="margin:6px 0"><button class="btn sub" id="btnClaimNoon">午间领取 · 招募券 +5</button>
+    <button class="btn sub" id="btnClaimEvening">晚间领取 · 招募券 +5</button>
+    <span class="note">午间、晚间各可领一次，每日重置。</span></div>
     <div style="margin:6px 0"><button class="btn dark" id="btnAd" data-testid="ad-btn">模拟广告 · 招募券 +5</button>
-    <span class="note" id="adInfo">今日 0/20 次。demo 用模拟广告代替真实广告。</span></div>
+    <span class="note" id="adInfo">今日 0/20 次。</span></div>
     <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档管理（短码 / 长码 / 导入 / 删档）</button></div>
   </div>
   <h2 class="sec">设置</h2>
@@ -1628,7 +1628,7 @@ function $(id){ return document.getElementById(id); }
 function genByName(n){ return GENS.find(g=>g.name===n); }
 function teamCards(){ return state.cards.filter(c=>state.formation.indexOf(c.uid)>=0); }
 function teamPower(){ return resolveTeam(teamCards()).reduce((s,u)=>s+u.atk+u.def+Math.round(u.hp/10),0); }
-function fmtPool(sec){ if(sec<=0) return "未开启"; return "约 "+Math.ceil(sec/60)+" 分钟（演示时钟）"; }
+function fmtPool(sec){ if(sec<=0) return "未开启"; return "约 "+Math.ceil(sec/60)+" 分钟（池时钟）"; }
 function renderRes(){
   $("resYuanbao").textContent = Math.floor(state.yuanbao);
   $("resTickets").textContent = state.tickets;
@@ -1644,10 +1644,10 @@ function renderRes(){
 const TOUR_STEPS = [
  {screen:"slot", target:"slotCards", text:"欢迎来到天命录。先选一个存档槽开始——共 5 个槽，进度互不影响。", action:"slot"},
  {screen:"starter", target:"starterOpts", text:"开局四将按性格分工：刚胆看统率、鲁莽看武力、睿智看智谋、谨慎看速度。选一位领他出道。", action:"starter"},
- {screen:"main", tab:"home", target:"idleCard", text:"这是挂机明牌卡：离线也产出，产出速率、仓储上限、还能领多少，都写得明明白白。回来先看它。"},
+ {screen:"main", tab:"pool", target:"idleCard", text:"这是挂机明牌卡，在卡池页最上面：离线也产出，产出速率、仓储上限、还能领多少，都写得明明白白。回来先看它。"},
  {screen:"main", tab:"home", target:"questCard", text:"今日任务和新手任务都在这张卡上，照着做就有元宝和招募令，完成了点领取。"},
  {screen:"main", tab:"cards", target:"cardList", text:"你的开局将已经自动上阵。以后抽到新武将，点卡上的「上阵/下阵」调整阵容，最多上 5 人。"},
- {screen:"main", tab:"cards", target:"cardList", text:"升星靠重复卡当材料，星越高四维涨得越多；抽到的技能卡在武将详情里学，注意兵种要对位。"},
+ {screen:"main", tab:"cards", target:"cardList", text:function(){ const hasMat = state && ((state.skillsOwned||[]).length>0 || (state.cards||[]).some((c,i,arr)=>arr.some((o,j)=>j!==i && o.genId===c.genId))); return hasMat? "升星靠重复卡当材料，星越高四维涨得越多；抽到的技能卡在武将详情里学，注意兵种要对位。" : "看到武将名旁边的 ★ 了吗？那是星级。你现在只有一张卡，等抽到同一张卡就能在这里升星；抽到技能卡，也是在这张卡上学。"; }},
  {screen:"main", tab:"pool", target:"rateDisclosure", text:"卡池有普通、元宝、天命、材料四个池。每个池的出率和保底都公示在这一节，抽之前先看清。"},
  {screen:"main", tab:"stage", target:"stageList", text:"推关是主要的成长线：赢了给元宝，还会掉武将、装备和技能卡。副本页里还有日常、天命副本和一骑当先。"},
  {screen:"main", tab:"dex", target:"dexList", text:"图鉴记录 160 名武将的收集进度，57 条羁绊的条件也在这——组队凑羁绊有额外加成。"},
@@ -1717,7 +1717,7 @@ function tourRender(idx, preState){
   const dots = document.createElement("span"); dots.className = "dots";
   dots.textContent = TOUR_STEPS.map((_, i)=> i <= idx? "●" : "○").join("");
   tt.appendChild(dots); deck.appendChild(tt);
-  const tx = document.createElement("div"); tx.className = "tx"; tx.textContent = s.text; deck.appendChild(tx);
+  const tx = document.createElement("div"); tx.className = "tx"; tx.textContent = (typeof s.text === "function")? s.text() : s.text; deck.appendChild(tx);
   const row = document.createElement("div"); row.className = "row";
   if(s.final){
     const b = document.createElement("button"); b.className = "btn"; b.textContent = "完成（领元宝 +100）";
@@ -1801,8 +1801,8 @@ function renderAll(){
   const _ih = $("idleHeroLeft"); if(_ih) _ih.textContent = fmtPool(state.pool.hero.leftSec);
   const _is = $("idleSkillLeft"); if(_is) _is.textContent = fmtPool(state.pool.skill.leftSec);
   const _io = $("idleLastOffline"); if(_io) _io.textContent = state.lastOffline? ("×"+state.lastOffline+" 张") : "—";
-  const _ihr = $("idleHeroRate"); if(_ihr) _ihr.textContent = "演示 "+CFG.heroCardEveryRealSec+" 秒/张（正式版 60 秒/张）";
-  const _isr = $("idleSkillRate"); if(_isr) _isr.textContent = "演示 "+CFG.skillCardEveryRealSec+" 秒/张";
+  const _ihr = $("idleHeroRate"); if(_ihr) _ihr.textContent = CFG.heroCardEveryRealSec+" 秒/张";
+  const _isr = $("idleSkillRate"); if(_isr) _isr.textContent = CFG.skillCardEveryRealSec+" 秒/张";
   const grpOf = k => state.skillsOwned.filter(x=>x && x.kind===k);
   const grpHtml = (label, arr, hot) => arr.length? "<div class='stats'>"+label+"："+arr.map(x=>"<span class='tag"+(hot?" hot":"")+"'>"+x.name+"</span> "+ownedSkillDesc(x)).join("；")+"</div>" : "";
   $("skillList").innerHTML = state.skillsOwned.length? grpHtml("主动", grpOf("active"))+grpHtml("被动", grpOf("passive"))+grpHtml("极（收藏加成）", grpOf("ji"), true) : "<span class='note'>暂无技能卡。</span>";
@@ -1823,7 +1823,7 @@ function renderAll(){
   $("showAcc").textContent = Math.floor(state.showcaseAcc);
   $("showcaseList").innerHTML = state.showcase.length? state.showcase.map(uid=>{ const c=state.cards.find(x=>x.uid===uid); return c? "<span class='tag hot'>"+GEN_BY_ID[c.genId].name+"（"+showcaseRate(c).toFixed(1)+" 元宝/分钟）</span>" : ""; }).join("")+"<p class='note' style='margin-top:4px'>展位 "+state.showcase.length+"/"+CFG.showcaseSlots+" · 合计产速 "+showcaseTotalRate().toFixed(1)+" 元宝/分钟</p>" : "<span class='note'>橱窗空着，去武将页把任意卡摆进来（SSR 与天命卡产得最多）。</span>";
   const ad = state.adUsed.date===todayStr()? state.adUsed.count : 0;
-  $("adInfo").textContent = "今日 "+ad+"/"+CFG.adDailyCap+" 次。demo 用模拟广告代替真实广告。";
+  $("adInfo").textContent = "今日 "+ad+"/"+CFG.adDailyCap+" 次。";
   const rate = enhTarget? enhRate(enhFeeds.map(u=>state.cards.find(c=>c.uid===u)).filter(Boolean), (state.cards.find(c=>c.uid===enhTarget)||{}).genId) : 0;
   $("enhInfo").textContent = enhTarget? ("强化目标："+GEN_BY_ID[state.cards.find(c=>c.uid===enhTarget).genId].name+"，已选饲料 "+enhFeeds.length+"/5，当前成功率 "+rate+"%") : "尚未选择强化目标。";
   tourSync();
