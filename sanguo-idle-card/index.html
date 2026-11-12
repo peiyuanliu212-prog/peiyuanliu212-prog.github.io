@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国挂机卡牌 · v1.2.1</title>
+<title>三国挂机卡牌 · v2.0</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -53,10 +53,11 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">v1.2.1 · 设计：知白守黑</span></h1>
+  <h1><span class="seal">三国</span>挂机卡牌 <span style="font-size:11px;color:var(--mut)">v2.0 · 设计：知白守黑</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
+    <span>天命珠 <b id="resBeads">0</b></span>
     <span>功绩 <b id="resMerit">0</b></span>
     <span>演武积分 <b id="resArena">0</b></span>
     <span>官职 <b id="resRank">白身</b></span>
@@ -77,27 +78,39 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
   <div class="card" id="rankBox"></div>
 </section>
 <section class="page" id="tab-pool">
-  <h2 class="sec">元宝卡池 · 挂机池（招牌）</h2>
+  <h2 class="sec">挂机材料池（元宝开启 · 每分钟 1 张）</h2>
   <div class="card">
-    <p class="note"><b>元宝卡池</b>包含三处：挂机英雄池、技能池与天命入驻卡池（在下方抽卡区），全部花元宝。挂机池花元宝开启，开启后自动出卡。演示加速：出卡节拍压缩（<b>演示 5 秒/张</b>，正式版 1 分钟/张），池时长按演示时钟折算显示。</p>
+    <p class="note">挂机池即<b>材料池</b>：100 元宝/小时开启（可叠加至 6 小时），开启后每分钟自动出 1 张（演示加速：<b>演示 5 秒/张</b>，正式版 1 分钟/张）。构成 N/R/SR＝55/35/10，只出普通卡（喂强化/升星的材料主力）。英雄池与技能池同一入口、各开各的。</p>
     <div class="kv"><span>英雄池（选阵营）</span>
       <select id="heroFac"><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select></div>
     <div class="kv"><span>英雄池剩余</span><b id="heroPoolInfo">未开启</b></div>
     <div style="margin:8px 0"><button class="btn" id="btnHeroPool" data-testid="open-hero-pool">开启/延长 1 小时 · 100 元宝</button></div>
     <div class="kv"><span>技能池剩余</span><b id="skillPoolInfo">未开启</b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSkillPool">开启/延长 1 小时 · 80 元宝</button></div>
-    <p class="note">开启时长可叠加，上限 6 小时。已拥有技能卡：<b id="skillOwned">0</b> 张。技能卡是学习库存：武将 10 级解锁主动位、20 级解锁被动位，在武将页卡片技能区选学、每学一个消耗 1 张；「极」版是收藏加成卡，拥有即对对应武将的专属技能生效、不消耗、不占学习位。</p>
+    <p class="note">技能池只出学习技能卡（主动/被动）：武将 10 级解锁主动位、20 级解锁被动位，在武将页选学、每学消耗 1 张。「极」版技能卡自 v2 起停产——极＝天命卡自带（天命版怒技即极级）。已拥有技能卡：<b id="skillOwned">0</b> 张。</p>
     <div id="skillList" style="margin-top:4px"></div>
   </div>
-  <h2 class="sec">抽卡</h2>
+  <h2 class="sec">普通卡池（招募令）</h2>
   <div class="card">
-    <div class="kv"><span>普通招募（招募券）</span><b>1 券 1 抽 · 不出 SSR</b></div>
-    <div style="margin:8px 0"><button class="btn dark" id="btnTicketDraw" data-testid="ticket-draw">招募 1 次</button>
-    <button class="btn sub" id="btnTicketDraw10">招募 10 次</button></div>
-    <div class="kv"><span>天命入驻卡池（元宝）</span><b>单抽 200 · 10 连 2000 保底 SSR</b></div>
-    <div style="margin:8px 0"><button class="btn" id="btnLimit1">天命入驻单抽 200 元宝</button>
-    <button class="btn" id="btnLimit10" data-testid="limit10">天命入驻 10 连 2000 元宝</button></div>
-    <p class="note">天命入驻卡池<b>每抽必带性格卡</b>（构成沿用 SSR 加权、10 连保底 SSR）。稀有度分 R / SR / SSR（SSR 橙底），与升星 ★1–★5 相互独立。性格卡只出自天命入驻卡池与开局选将；挂机英雄池只出普通卡，招募券抽的是普通卡池（不出 SSR）。<b>天命卡</b>（典藏版）首发 4 张：龙胆赵云 / 无双吕布 / 武圣关羽 / 燕人张飞，约每 100 抽 1 张，挂机英雄池与天命入驻卡池均可出（天命入驻卡池出的天命卡同样带性格）。距离保底：<b id="pityInfo">0</b></p>
+    <div class="kv"><span>构成 N/R/SR/SSR＝40/42/15/3</span><b>普卡 only · 永不带性格</b></div>
+    <div style="margin:8px 0"><button class="btn dark" id="btnNorm1" data-testid="normal-draw">招募 1 次 · 1 令</button>
+    <button class="btn sub" id="btnNorm10">招募 10 次 · 10 令</button></div>
+    <p class="note">保底：10 连必出 SR 及以上、100 抽必出 SSR（本池独立计数）。<b id="normPityInfo"></b></p>
+  </div>
+  <h2 class="sec">元宝卡池（100 元宝/抽）</h2>
+  <div class="card">
+    <div class="kv"><span>性格卡 3.5% · 普卡 SSR 6%</span><b>10 连必 SSR · 100 抽必性格</b></div>
+    <div style="margin:8px 0"><button class="btn" id="btnYb1" data-testid="yb-draw">单抽 100 元宝</button>
+    <button class="btn" id="btnYb10">10 连 1000 元宝</button></div>
+    <p class="note">每抽先摇性格 3.5%：命中出 SR/SSR 带性格版；未命中走普卡 R/SR/SSR＝70/24/6。保底独立计数。<b id="ybPityInfo"></b></p>
+  </div>
+  <h2 class="sec">限时卡池 · 天命入驻（天命珠）</h2>
+  <div class="card">
+    <div class="kv"><span>1 天命珠/抽 · 当前天命珠</span><b id="beadsInfo">0</b></div>
+    <div style="margin:8px 0"><button class="btn" id="btnTm1" data-testid="tm-draw">单抽 1 珠</button>
+    <button class="btn" id="btnTm10">10 连 10 珠</button>
+    <button class="btn sub" id="btnBuyBead">买天命珠 · 200 元宝/个</button></div>
+    <p class="note">构成 SR/SSR 性格武将（<b>每抽必带性格</b>）＋<b>天命武将 1%</b>；10 连必 SSR、100 抽必出天命（独立保底）。天命武将<b>只出此池</b>。抽到天命将即解锁其<b>天命副本</b>（在副本页：10 关，首通 5 珠/关、全通 50 珠）。<b id="tmPityInfo"></b></p>
     <div class="log" id="gachaLog" style="max-height:180px">尚无抽卡记录。</div>
     <p class="note" id="tianmingNews" style="display:none;color:#93301f;font-weight:700;margin-top:6px"></p>
   </div>
@@ -108,15 +121,21 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
     <span>阵营筛选 </span><select id="factionFilter" data-testid="faction-filter"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
     <button class="btn sm dark" id="btnAutoForm" data-testid="auto-form" style="margin-left:8px">一键上阵（战力前 5）</button>
     <p class="note" id="formationInfo" style="margin-top:6px"></p>
-    <p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80 兵力）。强化：先点一张卡「设为强化目标」，再勾选 5 张饲料卡（不能是上阵/橱窗中的卡），成功率实时显示；同名饲料贡献翻倍，封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→防御、睿智→智力、谨慎→攻速。<b>性格卡只出自天命入驻卡池</b>（每抽必带）与开局选将；挂机英雄池、招募券、推关掉落等只出普通卡。<b>天命卡</b>是典藏版武将（龙胆赵云／无双吕布／武圣关羽／燕人张飞，金边卡面）：基础四维比本体高 8%，成长＝本体成长＋天命增幅（逐维定版写死：本命维 +1.00、最弱维 +0.50），约每 100 抽 1 张，只出自元宝英雄池（挂机＋天命入驻；天命入驻出的天命卡同样带性格）。<b>技能三通道</b>：专属技能只认怒气，满 100 必放（代替普攻，不满绝不放）；学来的主动技能在普攻后按 30% 判定释放；被动技能学会即常驻生效。技能位：10 级解锁主动位、20 级解锁被动位，每位 1 个，在下方卡片技能区从技能卡库存里学（消耗 1 张，换学覆盖且不返还）。「极」版是 SSR 武将专属技能的收藏卡（如「极·天下无双」，专属伤害 ×1.6），只出自元宝技能池。装备两件：武器＝武力（攻）+5/阶、兵书＝专属技能伤害 +8%/阶。布阵前二后三：上阵顺序前两位是前排、后三位是后排，敌方单体攻击先打前排，前排全倒才打后排（全体技能除外）。</p>
-    <p class="note" id="enhInfo"></p>
+    <p class="note">分工：<b>升星只加四维</b>（★1–★5，任何稀有度都能升满）；<b>强化只加兵力</b>（每级 +80）。强化：先点一张卡「设为强化目标」，再勾 5 张饲料卡（不能是上阵/橱窗中的卡），同名饲料贡献翻倍、成功率封顶 95%；<b>失败强化等级归 0——归 0 的只是兵力加成</b>，卡、四维与升星不丢。性格卡给对应维成长 +0.5：鲁莽→武力、刚胆→统率、睿智→智力、谨慎→速度。<b>性格卡出处</b>：元宝卡池 3.5%、限时卡池（天命入驻）每抽必带、开局选将；挂机材料池/普通卡池/推关掉落只出普通卡。<b>天命卡</b>是典藏版武将（龙胆赵云／无双吕布／武圣关羽／燕人张飞，金边卡面）：基础四维比本体高 8%，成长＝本体成长＋天命增幅，怒技即极级（伤害倍率已含 ×1.6），<b>只出自限时卡池</b>（1%＋100 抽保底），抽到即解锁其天命副本。<b>技能三通道</b>：怒技（专属技能）只认怒气，满 100 必放、代替普攻，效果按数据结算（眩晕/灼烧/中毒/持续回复/护盾/嘲讽/分担/净化/出手提前等，见卡面描述）；学来的主动技能在普攻后按 30% 判定释放；被动技能学会即常驻。技能位：10 级解锁主动位、20 级解锁被动位，每位 1 个（消耗 1 张技能卡，换学不返还）。装备两件：武器＝武力（攻）+5/阶、兵书＝专属技能伤害 +8%/阶。布阵前二后三：单体攻击先打前排，前排全倒才打后排（全体/后排目标技能除外）。</p>
+<p class="note" id="enhInfo"></p>
   </div>
+  <div class="card"><div class="kv"><span>经验池（全来源经验汇入，手动升级）</span><b id="expPoolInfo">0</b></div>
+  <p class="note">主线/爬塔/擂台/日常副本/天命副本的经验全部进经验池；在下方卡片上点「升级」从池里扣经验升级（本级需 当前等级×135），可连升。</p></div>
   <div id="cardList"></div>
 </section>
 <section class="page" id="tab-stage">
   <h2 class="sec">推关副本（3 章 × 10 关 · 无剧情，纯关卡）</h2>
-  <div class="card"><p class="note">每章第 5 关小 BOSS、第 10 关章末大 BOSS（有概率掉装备与好卡）。战斗全自动：攻速定出手、枪克骑/骑克弓/弓克枪 ×1.25。触发三通道：专属技能怒气满 100 必放（代替普攻，不满绝不放）；主动技能在普攻后按 30% 判定释放；被动技能常驻生效。布阵前二后三：单体攻击先打前排，前排全灭才及后排，全体技能除外。上阵武将打仗得经验升级（满级 30 级），按各自成长系数涨四维。</p></div>
+  <div class="card"><p class="note">每章第 5 关小 BOSS、第 10 关章末大 BOSS（有概率掉装备与好卡）。战斗全自动：速度定出手、枪克骑/骑克弓/弓克枪 ×1.25。触发三通道：专属技能怒气满 100 必放（代替普攻，不满绝不放）；主动技能在普攻后按 30% 判定释放；被动技能常驻生效。布阵前二后三：单体攻击先打前排，前排全灭才及后排，全体技能除外。全来源经验汇入经验池，在武将页手动升级（满级 30 级），按各自成长系数涨四维。</p></div>
   <div id="stageList"></div>
+  <h2 class="sec">日常副本（复刷场 · 10 关）</h2>
+  <div class="card"><p class="note">掉落经验（入经验池）＋招募令＋元宝，可重复攻打；已通关的关复刷经验减半，其余掉落按 50% 概率。</p><div id="dailyList"></div></div>
+  <h2 class="sec">天命副本（抽到天命将解锁其专属 10 关）</h2>
+  <div class="card"><p class="note">每关首通得 5 天命珠，全通 50 珠（回抽限时池）。打不过可看广告（模拟）重打 1 次（敌方强度 ×0.8）；活动期间每天可看广告重置 1 个已通副本，重刷收益减半（全通 25 珠）。</p><div id="tmList"></div></div>
   <h2 class="sec">战报</h2>
   <div class="log" id="battleLog">尚未出战。</div>
 </section>
@@ -174,9 +193,9 @@ h1.big{font-size:24px;letter-spacing:3px;text-align:center;margin:16px 0 4px}
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国挂机卡牌</h1>
-  <p class="sub">设计：知白守黑 · v1.2.1<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">设计：知白守黑 · v2.0<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
-  <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 防御成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 攻速成长</p>
+  <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 统率成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 速度成长</p>
 </div>
 <script>
 "use strict";
@@ -198,7 +217,7 @@ const CFG = {
   starMulPer: 0.25,            // 升星每星四维 +25%（只加四维，不碰兵力）
   starSkillPer: 0.20,          // 升星每星技能伤害 +20%
   starCap: 5,                  // 升星上限统一 ★5
-  troopsBase: {SSR:1100, SR:1050, R:1000}, // 兵力基础值：全员近似一致，±小幅按稀有度浮动
+  troopsBase: {SSR:1100, SR:1050, R:1000, N:950}, // 兵力基础值：全员近似一致，±小幅按稀有度浮动
   troopsPerEnh: 80,            // 强化只加兵力：每强化级 +80 兵力
   enhBasePerStar: 3,           // 强化：每张饲料按星级 ×3% 计成功率
   enhRateCap: 95,
@@ -221,16 +240,25 @@ const CFG = {
   towerLayers: 10, towerMaxFails: 3, towerTicketPerLayer: 5, towerMeritWin: 50, towerMeritLose: 20,
   arenaWinPts: 10, arenaLosePts: 3,
   showcaseSlots: 5,
-  showcaseBasePerMin: {SSR:6, SR:3, R:1.5}, // 橱窗产速（元宝/分钟）按稀有度计价值
+  showcaseBasePerMin: {SSR:6, SR:3, R:1.5, N:0.8}, // 橱窗产速（元宝/分钟）按稀有度计价值
   showcaseStarMulPer: 0.2,     // 每星 +20% 产速
   showcaseVariantMul: 2,       // 限定 ×2
   showcasePersMul: 1.5,        // 性格卡 ×1.5
   stageYuanbaoBase: 20, stageYuanbaoPer: 2,
+  /* v2 四池与新系统（全部数值只许在此） */
+  matRates: {N:55, R:35, SR:10},
+  normalRates: {N:40, R:42, SR:15, SSR:3}, normalPitySR: 10, normalPitySSR: 100,
+  ybCost: 100, ybPersRate: 0.035, ybPersTierSSR: 33, ybRates: {R:70, SR:24, SSR:6}, ybPitySSR10: 10, ybPityPers: 100,
+  tmCostBeads: 1, beadPrice: 200, tmRate: 0.01, tmPity: 100, tmPitySSR10: 10, tmPoolRates: {SR:70, SSR:30},
+  dotMul: 0.3,
+  migCardTicketRefund: 2,
+  dailyStages: 10, dailyExpBase: 120, dailyExpPer: 40,
+  tmStageBeads: 5, tmAdRetryPowerMul: 0.8,
 };
-/* 性格 → 成长维（刚胆→防御，结算挂统率维 tong） */
+/* 性格 → 成长维（刚胆→统率，结算挂统率维 tong） */
 const PERS_STAT = { "鲁莽":"wu", "刚胆":"tong", "睿智":"zhi", "谨慎":"spd" };
 const PERS_LIST = Object.keys(PERS_STAT);
-const PERS_LABEL = { "鲁莽":"武力成长", "刚胆":"防御成长", "睿智":"智力成长", "谨慎":"攻速成长" };
+const PERS_LABEL = { "鲁莽":"武力成长", "刚胆":"统率成长", "睿智":"智力成长", "谨慎":"速度成长" };
 /* 存档迁移专用映射（旧性格名 → 新名），仅迁移时使用 */
 const PERS_MIGRATE = { "冷静":"睿智", "胆小":"谨慎" };
 const BEATS = { "枪":"骑", "骑":"弓", "弓":"枪" };
@@ -240,43 +268,12 @@ const RANKS = [
   {name:"太尉", merit:2500},{name:"丞相", merit:3200}
 ];
 /* ============ DATA 数据区 ============ */
-/* [名,阵营,v0星级(→稀有度映射),武,智,统,攻速,兵种,技能名,技能倍率]；v1 起性格为卡实例属性，不再挂武将 */
-const GEN_ROWS = [
-["曹操","魏",5,82,94,96,55,"骑","魏武挥鞭",1.9],["司马懿","魏",5,68,97,90,48,"弓","鬼谋连环",1.9],
-["夏侯惇","魏",4,90,52,78,62,"骑","刚烈突刺",1.6],["张辽","魏",4,88,66,84,70,"骑","逍遥突袭",1.6],
-["夏侯渊","魏",3,84,48,70,78,"弓","神速连射",1.45],["徐晃","魏",3,82,55,72,58,"枪","长驱直入",1.45],
-["许褚","魏",3,93,30,64,50,"枪","虎痴蛮力",1.45],["曹仁","魏",3,76,50,80,45,"枪","江陵铁壁",1.4],
-["程昱","魏",2,45,82,66,42,"弓","火攻之计",1.3],
-["刘备","蜀",4,72,70,82,52,"枪","仁德双剑",1.6],["关羽","蜀",5,96,72,88,60,"枪","青龙偃月",1.95],
-["张飞","蜀",4,95,38,74,58,"枪","长坂怒吼",1.6],["赵云","蜀",5,93,70,86,82,"骑","七进七出",1.9],
-["诸葛亮","蜀",5,50,99,94,44,"弓","八阵图",1.95],["黄忠","蜀",4,88,55,76,56,"弓","老当益壮",1.6],
-["马超","蜀",4,92,45,78,76,"骑","西凉铁骑",1.6],["魏延","蜀",3,84,50,70,64,"骑","子午奇袭",1.45],
-["姜维","蜀",3,82,78,76,66,"枪","麒麟之才",1.45],
-["孙权","吴",4,68,74,84,50,"弓","制衡之术",1.55],["周瑜","吴",5,72,95,92,58,"弓","赤壁火计",1.9],
-["吕蒙","吴",4,78,80,82,54,"枪","白衣渡江",1.6],["陆逊","吴",4,66,92,84,52,"弓","夷陵火营",1.6],
-["孙策","吴",4,90,58,80,72,"骑","小霸王",1.6],["太史慈","吴",3,86,52,72,68,"弓","神亭酣战",1.45],
-["甘宁","吴",3,85,46,68,74,"骑","百骑劫营",1.45],["黄盖","吴",2,74,44,66,46,"枪","苦肉诈降",1.3],
-["周泰","吴",3,84,38,70,52,"枪","不屈护主",1.4],
-["吕布","群",5,99,35,82,78,"骑","天下无双",2.0],["貂蝉","群",4,60,86,68,62,"弓","闭月离间",1.6],
-["董卓","群",4,80,42,78,40,"枪","暴虐镇压",1.55],["张角","群",4,55,88,74,46,"弓","苍天已死",1.6],
-["华雄","群",3,88,32,66,56,"骑","汜水斩将",1.45],["袁绍","群",3,62,60,80,44,"枪","四世三公",1.4],
-["公孙瓒","群",3,80,50,70,70,"骑","白马义从",1.45],["颜良","群",2,86,30,62,54,"枪","河北双壁",1.3],
-["文丑","群",2,85,28,60,58,"骑","河北双壁",1.3]
-];
-const GENS = GEN_ROWS.map((r,i)=>({id:i+1,name:r[0],fac:r[1],rar:CFG.rarityFromV0Star[r[2]],wu:r[3],zhi:r[4],tong:r[5],spd:r[6],troop:r[7],skill:r[8],skillMul:r[9],variant:false,baseId:i+1}));
-/* 天命卡（典藏版）：基础四维＝本体 ×1.08 取整；专属技能/兵种/阵营/羁绊归属与本体相同；成长见 GROWTH（本体＋DESTINY[本体] 字面量） */
-GENS.push({id:101,name:"龙胆赵云",fac:"蜀",rar:"SSR",wu:100,zhi:76,tong:93,spd:89,troop:"骑",skill:"七进七出",skillMul:1.9,variant:true,baseId:13});
-GENS.push({id:102,name:"无双吕布",fac:"群",rar:"SSR",wu:107,zhi:38,tong:89,spd:84,troop:"骑",skill:"天下无双",skillMul:2.0,variant:true,baseId:28});
-GENS.push({id:103,name:"武圣关羽",fac:"蜀",rar:"SSR",wu:104,zhi:78,tong:95,spd:65,troop:"枪",skill:"青龙偃月",skillMul:1.95,variant:true,baseId:11});
-GENS.push({id:104,name:"燕人张飞",fac:"蜀",rar:"SSR",wu:103,zhi:41,tong:80,spd:63,troop:"枪",skill:"长坂怒吼",skillMul:1.6,variant:true,baseId:12});
-const TIANMING_IDS = [101,102,103,104];
-/* 逐人成长系数表（每级成长，两位小数；锚点：张飞武力 1.95、吕布武力 2.30，系数按稀有度档编：SSR 2.32%/SR 2.05%/R 1.68% × 基础值）；天命版 101–104 成长＝本体 GROWTH＋DESTINY[本体] 逐维字面量 */
-const GROWTH = {1:{wu:1.90,zhi:2.18,tong:2.23,spd:1.28},2:{wu:1.58,zhi:2.25,tong:2.09,spd:1.11},3:{wu:1.85,zhi:1.07,tong:1.60,spd:1.27},4:{wu:1.80,zhi:1.35,tong:1.72,spd:1.44},5:{wu:1.41,zhi:0.81,tong:1.18,spd:1.31},6:{wu:1.38,zhi:0.92,tong:1.21,spd:0.97},7:{wu:1.56,zhi:0.50,tong:1.08,spd:0.84},8:{wu:1.28,zhi:0.84,tong:1.34,spd:0.76},9:{wu:0.76,zhi:1.38,tong:1.11,spd:0.71},10:{wu:1.48,zhi:1.44,tong:1.68,spd:1.07},11:{wu:2.23,zhi:1.67,tong:2.04,spd:1.39},12:{wu:1.95,zhi:0.78,tong:1.52,spd:1.19},13:{wu:2.16,zhi:1.62,tong:2.00,spd:1.90},14:{wu:1.16,zhi:2.30,tong:2.18,spd:1.02},15:{wu:1.80,zhi:1.13,tong:1.56,spd:1.15},16:{wu:1.89,zhi:0.92,tong:1.60,spd:1.56},17:{wu:1.41,zhi:0.84,tong:1.18,spd:1.08},18:{wu:1.38,zhi:1.31,tong:1.28,spd:1.11},19:{wu:1.39,zhi:1.52,tong:1.72,spd:1.03},20:{wu:1.67,zhi:2.20,tong:2.13,spd:1.35},21:{wu:1.60,zhi:1.64,tong:1.68,spd:1.11},22:{wu:1.35,zhi:1.89,tong:1.72,spd:1.07},23:{wu:1.85,zhi:1.19,tong:1.64,spd:1.48},24:{wu:1.44,zhi:0.87,tong:1.21,spd:1.14},25:{wu:1.43,zhi:0.77,tong:1.14,spd:1.24},26:{wu:1.24,zhi:0.74,tong:1.11,spd:0.77},27:{wu:1.41,zhi:0.64,tong:1.18,spd:0.87},28:{wu:2.30,zhi:0.81,tong:1.90,spd:1.81},29:{wu:1.23,zhi:1.76,tong:1.39,spd:1.27},30:{wu:1.64,zhi:0.86,tong:1.60,spd:0.82},31:{wu:1.13,zhi:1.80,tong:1.52,spd:0.94},32:{wu:1.48,zhi:0.54,tong:1.11,spd:0.94},33:{wu:1.04,zhi:1.01,tong:1.34,spd:0.74},34:{wu:1.34,zhi:0.84,tong:1.18,spd:1.18},35:{wu:1.44,zhi:0.50,tong:1.04,spd:0.91},36:{wu:1.43,zhi:0.47,tong:1.01,spd:0.97},101:{wu:3.16,zhi:2.12,tong:2.85,spd:2.66},102:{wu:3.30,zhi:1.31,tong:2.77,spd:2.65},103:{wu:3.23,zhi:2.34,tong:2.93,spd:1.89},104:{wu:2.95,zhi:1.28,tong:2.34,spd:1.87}};
-/* 天命定版表（知白守黑定版）：按每将 GROWTH 形状写死字面量——成长最高维增幅 1.00、最低维 0.50、中间维线性插值（两位小数）；运行时不随机 */
-const DESTINY = {1:{wu:0.83,zhi:0.97,tong:1.00,spd:0.50},2:{wu:0.71,zhi:1.00,tong:0.93,spd:0.50},3:{wu:1.00,zhi:0.50,tong:0.84,spd:0.63},4:{wu:1.00,zhi:0.50,tong:0.91,spd:0.60},5:{wu:1.00,zhi:0.50,tong:0.81,spd:0.92},6:{wu:1.00,zhi:0.50,tong:0.82,spd:0.55},7:{wu:1.00,zhi:0.50,tong:0.77,spd:0.66},8:{wu:0.95,zhi:0.57,tong:1.00,spd:0.50},9:{wu:0.54,zhi:1.00,tong:0.80,spd:0.50},10:{wu:0.84,zhi:0.80,tong:1.00,spd:0.50},11:{wu:1.00,zhi:0.67,tong:0.89,spd:0.50},12:{wu:1.00,zhi:0.50,tong:0.82,spd:0.68},13:{wu:1.00,zhi:0.50,tong:0.85,spd:0.76},14:{wu:0.55,zhi:1.00,tong:0.95,spd:0.50},15:{wu:1.00,zhi:0.50,tong:0.82,spd:0.51},16:{wu:1.00,zhi:0.50,tong:0.85,spd:0.83},17:{wu:1.00,zhi:0.50,tong:0.80,spd:0.71},18:{wu:1.00,zhi:0.87,tong:0.81,spd:0.50},19:{wu:0.76,zhi:0.86,tong:1.00,spd:0.50},20:{wu:0.69,zhi:1.00,tong:0.96,spd:0.50},21:{wu:0.93,zhi:0.96,tong:1.00,spd:0.50},22:{wu:0.67,zhi:1.00,tong:0.90,spd:0.50},23:{wu:1.00,zhi:0.50,tong:0.84,spd:0.72},24:{wu:1.00,zhi:0.50,tong:0.80,spd:0.74},25:{wu:1.00,zhi:0.50,tong:0.78,spd:0.86},26:{wu:1.00,zhi:0.50,tong:0.87,spd:0.53},27:{wu:1.00,zhi:0.50,tong:0.85,spd:0.65},28:{wu:1.00,zhi:0.50,tong:0.87,spd:0.84},29:{wu:0.50,zhi:1.00,tong:0.65,spd:0.54},30:{wu:1.00,zhi:0.52,tong:0.98,spd:0.50},31:{wu:0.61,zhi:1.00,tong:0.84,spd:0.50},32:{wu:1.00,zhi:0.50,tong:0.80,spd:0.71},33:{wu:0.75,zhi:0.73,tong:1.00,spd:0.50},34:{wu:1.00,zhi:0.50,tong:0.84,spd:0.84},35:{wu:1.00,zhi:0.50,tong:0.79,spd:0.72},36:{wu:1.00,zhi:0.50,tong:0.78,spd:0.76},101:{wu:1.00,zhi:0.50,tong:0.85,spd:0.76},102:{wu:1.00,zhi:0.50,tong:0.87,spd:0.83}};
-/* 迁移专用：v0 时代每名武将的固定旧性格名（老卡据此补实例性格，再经 PERS_MIGRATE 改名）；旧名仅许出现在本表与 PERS_MIGRATE */
-const V0_PERS_OLD = {1:"冷静",2:"冷静",3:"刚胆",4:"刚胆",5:"鲁莽",6:"刚胆",7:"鲁莽",8:"胆小",9:"冷静",10:"刚胆",11:"刚胆",12:"鲁莽",13:"刚胆",14:"冷静",15:"冷静",16:"鲁莽",17:"鲁莽",18:"冷静",19:"胆小",20:"冷静",21:"冷静",22:"冷静",23:"刚胆",24:"刚胆",25:"鲁莽",26:"刚胆",27:"胆小",28:"鲁莽",29:"冷静",30:"胆小",31:"冷静",32:"鲁莽",33:"胆小",34:"刚胆",35:"鲁莽",36:"鲁莽",101:"刚胆",102:"鲁莽"};
+/* ==== v2 名册（构建生成：蜀最终版 50 原样＋魏逐人表∪名单＋吴/群名单模板补＋天命 4；src 标记 稿/补） ==== */
+const GENS = [{"id":1,"name":"樊友","fac":"蜀","troop":"枪","rar":"N","wu":43,"tong":72,"zhi":34,"spd":30,"gr":{"wu":0.7,"tong":1.2,"zhi":0.6,"spd":0.6},"skill":"坚盾固守","skillDesc":"为自身施加恢复兵力，回复量＝自身统率×1.2，持续2回合。","fx":[{"t":"self","k":"hot","s":"tong","m":1.2,"tn":2}],"src":"稿","variant":false,"baseId":1},{"id":2,"name":"王含","fac":"蜀","troop":"枪","rar":"N","wu":45,"tong":68,"zhi":32,"spd":33,"gr":{"wu":0.7,"tong":1.1,"zhi":0.6,"spd":0.7},"skill":"毒刺贯甲","skillDesc":"对敌方前排单体造成武力×1.0兵刃伤害；叠加中毒，持续2回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1,"pois":2}],"src":"稿","variant":false,"baseId":2},{"id":3,"name":"蒋斌","fac":"蜀","troop":"枪","rar":"N","wu":41,"tong":70,"zhi":74,"spd":31,"gr":{"wu":0.6,"tong":1.2,"zhi":1.7,"spd":0.6},"skill":"绥军安民","skillDesc":"为一名友方施加恢复兵力，回复量＝自身统率×1.2；目标统率+6%，持续2回合。","fx":[{"t":"a1","k":"hot","s":"tong","m":1.2,"tn":2},{"t":"a1","k":"buff","stat":"tong","p":6,"tn":2}],"src":"稿","variant":false,"baseId":3},{"id":4,"name":"傅士仁","fac":"蜀","troop":"枪","rar":"N","wu":66,"tong":64,"zhi":29,"spd":35,"gr":{"wu":1.3,"tong":1,"zhi":0.6,"spd":0.7},"skill":"破阵突刺","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"稿","variant":false,"baseId":4},{"id":5,"name":"吴兰","fac":"蜀","troop":"枪","rar":"R","wu":82,"tong":76,"zhi":36,"spd":42,"gr":{"wu":1.5,"tong":1.2,"zhi":0.7,"spd":1.1},"skill":"汉中先锋","skillDesc":"对敌方前排单体造成武力×1.6兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.6}],"src":"稿","variant":false,"baseId":5},{"id":6,"name":"雷铜","fac":"蜀","troop":"枪","rar":"R","wu":78,"tong":74,"zhi":34,"spd":44,"gr":{"wu":1.4,"tong":1.2,"zhi":0.7,"spd":1.1},"skill":"浴血死斗","skillDesc":"对敌方前排单体造成武力×1.3兵刃伤害；自身获得恢复兵力，回复量＝自身统率×0.8。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3},{"t":"self","k":"hot","s":"tong","m":0.8,"tn":2}],"src":"稿","variant":false,"baseId":6},{"id":7,"name":"傅肜","fac":"蜀","troop":"枪","rar":"R","wu":76,"tong":75,"zhi":38,"spd":40,"gr":{"wu":1.4,"tong":1.2,"zhi":0.8,"spd":1},"skill":"断后死战","skillDesc":"对敌方全体造成武力×1.2兵刃伤害；自身武力+18%、受到伤害+12%，持续2回合。","fx":[{"t":"E","k":"dmg","s":"wu","m":1.2},{"t":"self","k":"buff","stat":"wu","p":18,"tn":2},{"t":"self","k":"buff","stat":"dIn","p":12,"tn":2}],"src":"稿","variant":false,"baseId":7},{"id":8,"name":"傅佥","fac":"蜀","troop":"枪","rar":"R","wu":80,"tong":73,"zhi":35,"spd":43,"gr":{"wu":1.4,"tong":1.2,"zhi":0.7,"spd":1.1},"skill":"关隘突将","skillDesc":"对敌方前排单体造成武力×1.0兵刃伤害；附加眩晕，持续1回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1,"stun":1}],"src":"稿","variant":false,"baseId":8},{"id":9,"name":"冯习","fac":"蜀","troop":"枪","rar":"R","wu":72,"tong":78,"zhi":33,"spd":41,"gr":{"wu":1.2,"tong":1.3,"zhi":0.7,"spd":1},"skill":"夷陵督将","skillDesc":"全体友方出手顺序提前，持续2回合。","fx":[{"t":"aA","k":"haste"}],"src":"稿","variant":false,"baseId":9},{"id":10,"name":"张南","fac":"蜀","troop":"枪","rar":"R","wu":70,"tong":79,"zhi":32,"spd":40,"gr":{"wu":1.2,"tong":1.3,"zhi":0.7,"spd":1},"skill":"陷阵前锋","skillDesc":"自身获得恢复兵力，回复量＝自身统率×1.0，持续2回合。","fx":[{"t":"self","k":"hot","s":"tong","m":1,"tn":2}],"src":"稿","variant":false,"baseId":10},{"id":11,"name":"关银屏","fac":"蜀","troop":"枪","rar":"SR","wu":86,"tong":80,"zhi":42,"spd":65,"gr":{"wu":1.8,"tong":1.7,"zhi":1,"spd":1.7},"skill":"将门虎女","skillDesc":"对敌方前排单体造成武力×1.2兵刃伤害；附加灼烧，持续2回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.2,"burn":2}],"src":"稿","variant":false,"baseId":11},{"id":12,"name":"魏延","fac":"蜀","troop":"枪","rar":"SR","wu":90,"tong":84,"zhi":62,"spd":54,"gr":{"wu":1.8,"tong":1.7,"zhi":1.7,"spd":1.6},"skill":"反骨奇袭","skillDesc":"自由选择敌方前排或后排单体，造成武力×1.5兵刃伤害。","fx":[{"t":"A","k":"dmg","s":"wu","m":1.5}],"src":"稿","variant":false,"baseId":12},{"id":13,"name":"霍弋","fac":"蜀","troop":"枪","rar":"SR","wu":70,"tong":82,"zhi":84,"spd":53,"gr":{"wu":1.2,"tong":1.8,"zhi":1.8,"spd":1.5},"skill":"南中镇抚","skillDesc":"为一名友方施加恢复兵力，回复量＝自身统率×1.5；目标统率+10%，持续2回合。","fx":[{"t":"a1","k":"hot","s":"tong","m":1.5,"tn":2},{"t":"a1","k":"buff","stat":"tong","p":10,"tn":2}],"src":"稿","variant":false,"baseId":13},{"id":14,"name":"向宠","fac":"蜀","troop":"枪","rar":"SR","wu":74,"tong":86,"zhi":66,"spd":55,"gr":{"wu":1.3,"tong":1.8,"zhi":1.7,"spd":1.6},"skill":"中军严整","skillDesc":"全体友方获得恢复兵力，回复量＝自身统率×0.9，持续1回合。","fx":[{"t":"aA","k":"hot","s":"tong","m":0.9,"tn":1}],"src":"稿","variant":false,"baseId":14},{"id":15,"name":"高翔","fac":"蜀","troop":"枪","rar":"SR","wu":76,"tong":88,"zhi":58,"spd":52,"gr":{"wu":1.3,"tong":1.8,"zhi":1.6,"spd":1.5},"skill":"壁垒摧锋","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"稿","variant":false,"baseId":15},{"id":16,"name":"张飞","fac":"蜀","troop":"枪","rar":"SSR","wu":98,"tong":85,"zhi":38,"spd":68,"gr":{"wu":2.5,"tong":2.2,"zhi":0.8,"spd":2.1},"skill":"横锋扫阵","skillDesc":"对敌方全体造成武力×1.1兵刃伤害；敌方全体受到恢复效果-15%，持续2回合。","fx":[{"t":"E","k":"dmg","s":"wu","m":1.1},{"t":"E","k":"buff","stat":"hIn","p":-15,"tn":2}],"src":"稿","variant":false,"baseId":16},{"id":17,"name":"关羽","fac":"蜀","troop":"枪","rar":"SSR","wu":97,"tong":90,"zhi":60,"spd":62,"gr":{"wu":2.4,"tong":2.3,"zhi":1.2,"spd":2},"skill":"武圣威震","skillDesc":"对敌方前排单体造成武力×1.8兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.8}],"src":"稿","variant":false,"baseId":17},{"id":18,"name":"赵云","fac":"蜀","troop":"枪","rar":"SSR","wu":96,"tong":92,"zhi":70,"spd":76,"gr":{"wu":2.3,"tong":2.3,"zhi":2.2,"spd":2.4},"skill":"龙胆破阵","skillDesc":"自由选择敌方任意单体，造成武力×1.6兵刃伤害；自身获得恢复兵力，回复量＝自身统率×1.2。","fx":[{"t":"A","k":"dmg","s":"wu","m":1.6},{"t":"self","k":"hot","s":"tong","m":1.2,"tn":2}],"src":"稿","variant":false,"baseId":18},{"id":19,"name":"句扶","fac":"蜀","troop":"骑","rar":"N","wu":70,"tong":66,"zhi":30,"spd":82,"gr":{"wu":0.7,"tong":0.7,"zhi":0.6,"spd":2},"skill":"南中突骑","skillDesc":"对敌方后排单体造成武力×1.3兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.3}],"src":"稿","variant":false,"baseId":19},{"id":20,"name":"李球","fac":"蜀","troop":"骑","rar":"N","wu":64,"tong":62,"zhi":33,"spd":80,"gr":{"wu":0.7,"tong":0.6,"zhi":0.6,"spd":2},"skill":"骑锋增益","skillDesc":"选择一名友方骑兵，该单位攻击后排时伤害+8%，持续2回合。","fx":[{"t":"aC","k":"buff","stat":"atkB","p":8,"tn":2}],"src":"稿","variant":false,"baseId":20},{"id":21,"name":"韩综","fac":"蜀","troop":"骑","rar":"N","wu":62,"tong":60,"zhi":34,"spd":84,"gr":{"wu":0.6,"tong":0.7,"zhi":0.7,"spd":2},"skill":"北疆哨骑","skillDesc":"对敌方后排单体造成武力×1.2兵刃伤害；自身速度+12%，持续2回合。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.2},{"t":"self","k":"buff","stat":"spd","p":12,"tn":2}],"src":"稿","variant":false,"baseId":21},{"id":22,"name":"卫继","fac":"蜀","troop":"骑","rar":"N","wu":60,"tong":61,"zhi":38,"spd":81,"gr":{"wu":0.6,"tong":0.7,"zhi":0.7,"spd":2},"skill":"游骑斥候","skillDesc":"对敌方随机2名武将施加眩晕，持续1回合。","fx":[{"t":"R2","k":"stun","tn":1}],"src":"稿","variant":false,"baseId":22},{"id":23,"name":"马岱","fac":"蜀","troop":"骑","rar":"R","wu":84,"tong":74,"zhi":44,"spd":88,"gr":{"wu":1.3,"tong":1.2,"zhi":1.1,"spd":2.3},"skill":"临危受命","skillDesc":"锁定敌方兵力最低的后排单体，造成武力×1.4兵刃伤害；自身武力+15%，持续2回合。","fx":[{"t":"L","k":"dmg","s":"wu","m":1.4},{"t":"self","k":"buff","stat":"wu","p":15,"tn":2}],"src":"稿","variant":false,"baseId":23},{"id":24,"name":"陈到","fac":"蜀","troop":"骑","rar":"R","wu":76,"tong":80,"zhi":48,"spd":72,"gr":{"wu":1.2,"tong":1.3,"zhi":1.2,"spd":1.8},"skill":"白毦精兵","skillDesc":"全体友方受到伤害-5%，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"dIn","p":-5,"tn":2}],"src":"稿","variant":false,"baseId":24},{"id":25,"name":"刘封","fac":"蜀","troop":"骑","rar":"R","wu":80,"tong":72,"zhi":40,"spd":78,"gr":{"wu":1.3,"tong":1.2,"zhi":1.1,"spd":2.1},"skill":"养子锋锐","skillDesc":"对敌方后排单体造成武力×1.0兵刃伤害；附加中毒，持续2回合。","fx":[{"t":"B","k":"dmg","s":"wu","m":1,"pois":2}],"src":"稿","variant":false,"baseId":25},{"id":26,"name":"张翼","fac":"蜀","troop":"骑","rar":"R","wu":74,"tong":76,"zhi":53,"spd":70,"gr":{"wu":1.2,"tong":1.3,"zhi":1.2,"spd":1.8},"skill":"镇军督将","skillDesc":"自身统率+16%，嘲讽敌方前排优先攻击自身，持续2回合。","fx":[{"t":"self","k":"buff","stat":"tong","p":16,"tn":2},{"t":"self","k":"taunt","tn":2}],"src":"稿","variant":false,"baseId":26},{"id":27,"name":"廖化","fac":"蜀","troop":"骑","rar":"R","wu":72,"tong":74,"zhi":50,"spd":74,"gr":{"wu":1.2,"tong":1.2,"zhi":1.2,"spd":1.9},"skill":"老将持重","skillDesc":"为自身施加恢复兵力，回复量＝自身统率×1.3；一名友方受到伤害-10%，持续1回合。","fx":[{"t":"self","k":"hot","s":"tong","m":1.3,"tn":2},{"t":"a1","k":"buff","stat":"dIn","p":-10,"tn":1}],"src":"稿","variant":false,"baseId":27},{"id":28,"name":"姜维","fac":"蜀","troop":"骑","rar":"SR","wu":82,"tong":86,"zhi":90,"spd":74,"gr":{"wu":1.8,"tong":1.8,"zhi":2,"spd":1.7},"skill":"伯约远略","skillDesc":"对敌方随机2名武将造成智力×1.2谋略伤害；附加中毒，持续2回合。","fx":[{"t":"R2","k":"dmg","s":"zhi","m":1.2,"pois":2}],"src":"稿","variant":false,"baseId":28},{"id":29,"name":"吴班","fac":"蜀","troop":"骑","rar":"SR","wu":78,"tong":72,"zhi":54,"spd":80,"gr":{"wu":1.8,"tong":1.7,"zhi":1.6,"spd":1.7},"skill":"绵竹锐骑","skillDesc":"对敌方后排单体造成武力×1.3兵刃伤害；自身出手顺序提前。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.3},{"t":"self","k":"haste"}],"src":"稿","variant":false,"baseId":29},{"id":30,"name":"吴懿","fac":"蜀","troop":"骑","rar":"SR","wu":76,"tong":80,"zhi":65,"spd":76,"gr":{"wu":1.7,"tong":1.8,"zhi":1.7,"spd":1.6},"skill":"宿将安边","skillDesc":"全体友方武力、统率各+7%；友方骑兵攻击后排时伤害额外+7%，持续3回合。","fx":[{"t":"aA","k":"buff","stat":"wu","p":7,"tn":3},{"t":"aA","k":"buff","stat":"tong","p":7,"tn":3},{"t":"cA","k":"buff","stat":"atkB","p":7,"tn":3}],"src":"稿","variant":false,"baseId":30},{"id":31,"name":"关平","fac":"蜀","troop":"骑","rar":"SR","wu":84,"tong":80,"zhi":55,"spd":75,"gr":{"wu":1.8,"tong":1.7,"zhi":1.6,"spd":1.6},"skill":"父子相随","skillDesc":"选择一名友方武将，分担其30%受到的伤害，持续2回合；自身统率+10%。","fx":[{"t":"a1","k":"share","p":30,"tn":2},{"t":"self","k":"buff","stat":"tong","p":10,"tn":2}],"src":"稿","variant":false,"baseId":31},{"id":32,"name":"马超","fac":"蜀","troop":"骑","rar":"SSR","wu":99,"tong":88,"zhi":36,"spd":95,"gr":{"wu":2.5,"tong":2.2,"zhi":1.5,"spd":2.5},"skill":"西凉锦骑","skillDesc":"对敌方随机2名武将造成武力×1.4兵刃伤害；自身出手顺序提前。","fx":[{"t":"R2","k":"dmg","s":"wu","m":1.4},{"t":"self","k":"haste"}],"src":"稿","variant":false,"baseId":32},{"id":33,"name":"刘备","fac":"蜀","troop":"骑","rar":"SSR","wu":74,"tong":92,"zhi":82,"spd":60,"gr":{"wu":2,"tong":2.4,"zhi":2.3,"spd":2},"skill":"仁德载世","skillDesc":"全体友方施加恢复兵力，回复量＝自身统率×1.2；全体友方受到兵刃伤害-10%，持续2回合。","fx":[{"t":"aA","k":"hot","s":"tong","m":1.2,"tn":2},{"t":"aA","k":"buff","stat":"dInP","p":-10,"tn":2}],"src":"稿","variant":false,"baseId":33},{"id":34,"name":"吕乂","fac":"蜀","troop":"弓","rar":"N","wu":36,"tong":64,"zhi":78,"spd":28,"gr":{"wu":0.6,"tong":0.7,"zhi":1.7,"spd":0.6},"skill":"治军粮料","skillDesc":"选择一名友方武将，施加恢复兵力，回复量＝自身智力×1.2。","fx":[{"t":"a1","k":"hot","s":"zhi","m":1.2,"tn":2}],"src":"稿","variant":false,"baseId":34},{"id":35,"name":"王甫","fac":"蜀","troop":"弓","rar":"N","wu":39,"tong":62,"zhi":76,"spd":32,"gr":{"wu":0.6,"tong":0.6,"zhi":1.7,"spd":0.6},"skill":"荆州从事","skillDesc":"全体友方谋略伤害+8%，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"dOutM","p":8,"tn":2}],"src":"稿","variant":false,"baseId":35},{"id":36,"name":"赵累","fac":"蜀","troop":"弓","rar":"N","wu":60,"tong":63,"zhi":40,"spd":31,"gr":{"wu":0.6,"tong":0.6,"zhi":0.7,"spd":0.6},"skill":"牙门将吏","skillDesc":"对敌方后排单体造成武力×1.1兵刃伤害；降低目标防御6%，持续1回合。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.1},{"t":"B","k":"buff","stat":"tong","p":-6,"tn":1}],"src":"稿","variant":false,"baseId":36},{"id":37,"name":"阎宇","fac":"蜀","troop":"弓","rar":"N","wu":37,"tong":60,"zhi":76,"spd":30,"gr":{"wu":0.6,"tong":0.7,"zhi":1.7,"spd":0.7},"skill":"巴东督守","skillDesc":"自身统率+10%，攻击前排目标时伤害+8%，持续2回合。","fx":[{"t":"self","k":"buff","stat":"tong","p":10,"tn":2},{"t":"self","k":"buff","stat":"atkF","p":8,"tn":2}],"src":"稿","variant":false,"baseId":37},{"id":38,"name":"霍峻","fac":"蜀","troop":"弓","rar":"R","wu":70,"tong":84,"zhi":54,"spd":38,"gr":{"wu":1.1,"tong":1.3,"zhi":1.2,"spd":1},"skill":"孤城死守","skillDesc":"自身防御+10%、受到伤害-10%/层，最多叠加2层，持续2回合。","fx":[{"t":"self","k":"buff","stat":"tong","p":10,"tn":2,"stk":2},{"t":"self","k":"buff","stat":"dIn","p":-10,"tn":2,"stk":2}],"src":"稿","variant":false,"baseId":38},{"id":39,"name":"向朗","fac":"蜀","troop":"弓","rar":"R","wu":44,"tong":56,"zhi":84,"spd":40,"gr":{"wu":1,"tong":1.1,"zhi":1.3,"spd":1},"skill":"藏书传学","skillDesc":"全体友方谋略伤害+6%，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"dOutM","p":6,"tn":2}],"src":"稿","variant":false,"baseId":39},{"id":40,"name":"伊籍","fac":"蜀","troop":"弓","rar":"R","wu":40,"tong":52,"zhi":80,"spd":42,"gr":{"wu":1,"tong":1.1,"zhi":1.3,"spd":1.1},"skill":"机辩捷才","skillDesc":"对敌方随机2名武将施加眩晕，持续1回合。","fx":[{"t":"R2","k":"stun","tn":1}],"src":"稿","variant":false,"baseId":40},{"id":41,"name":"糜竺","fac":"蜀","troop":"弓","rar":"R","wu":42,"tong":54,"zhi":82,"spd":40,"gr":{"wu":1,"tong":1.1,"zhi":1.3,"spd":1},"skill":"富商厚资","skillDesc":"全体友方获得护盾，护盾值＝自身统率×1.2。","fx":[{"t":"aA","k":"shield","s":"tong","m":1.2}],"src":"稿","variant":false,"baseId":41},{"id":42,"name":"糜芳","fac":"蜀","troop":"弓","rar":"R","wu":68,"tong":63,"zhi":42,"spd":45,"gr":{"wu":1.2,"tong":1.2,"zhi":1.1,"spd":1.1},"skill":"荆州守将","skillDesc":"对敌方后排单体造成武力×1.0兵刃伤害；附加灼烧，持续2回合。","fx":[{"t":"B","k":"dmg","s":"wu","m":1,"burn":2}],"src":"稿","variant":false,"baseId":42},{"id":43,"name":"法正","fac":"蜀","troop":"弓","rar":"SR","wu":46,"tong":74,"zhi":94,"spd":58,"gr":{"wu":1.5,"tong":1.6,"zhi":2,"spd":1.7},"skill":"奇谋制胜","skillDesc":"选择一名友方武将，其造成伤害+18%、受到伤害-10%，持续2回合。","fx":[{"t":"a1","k":"buff","stat":"dOut","p":18,"tn":2},{"t":"a1","k":"buff","stat":"dIn","p":-10,"tn":2}],"src":"稿","variant":false,"baseId":43},{"id":44,"name":"徐庶","fac":"蜀","troop":"弓","rar":"SR","wu":52,"tong":68,"zhi":92,"spd":56,"gr":{"wu":1.5,"tong":1.6,"zhi":1.6,"spd":1.6},"skill":"元直破谋","skillDesc":"对敌方随机2名武将造成智力×1.3谋略伤害；附加中毒，持续1回合。","fx":[{"t":"R2","k":"dmg","s":"zhi","m":1.3,"pois":1}],"src":"稿","variant":false,"baseId":44},{"id":45,"name":"费祎","fac":"蜀","troop":"弓","rar":"SR","wu":45,"tong":62,"zhi":88,"spd":57,"gr":{"wu":1.4,"tong":1.6,"zhi":1.9,"spd":1.6},"skill":"敬贤恤民","skillDesc":"全体友方施加恢复兵力，回复量＝自身智力×1.0；全体友方怒技伤害+6%，持续1回合。","fx":[{"t":"aA","k":"hot","s":"zhi","m":1,"tn":2},{"t":"aA","k":"buff","stat":"dOut","p":6,"tn":1}],"src":"稿","variant":false,"baseId":45},{"id":46,"name":"蒋琬","fac":"蜀","troop":"弓","rar":"SR","wu":44,"tong":70,"zhi":90,"spd":56,"gr":{"wu":1.4,"tong":1.6,"zhi":1.9,"spd":1.6},"skill":"琬琰重器","skillDesc":"全体友方防御+12%，每回合施加恢复兵力，回复量＝自身统率×0.5，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"tong","p":12,"tn":2},{"t":"aA","k":"hot","s":"tong","m":0.5,"tn":2}],"src":"稿","variant":false,"baseId":46},{"id":47,"name":"马良","fac":"蜀","troop":"弓","rar":"SR","wu":48,"tong":63,"zhi":87,"spd":55,"gr":{"wu":1.5,"tong":1.6,"zhi":1.9,"spd":1.6},"skill":"白眉良才","skillDesc":"清除一名友方武将身上全部中毒、灼烧状态，该单位接下来两次受到伤害-20%。","fx":[{"t":"a1","k":"cleanse"},{"t":"a1","k":"buff","stat":"dIn","p":-20,"tn":99,"chg":2}],"src":"稿","variant":false,"baseId":47},{"id":48,"name":"黄忠","fac":"蜀","troop":"弓","rar":"SSR","wu":94,"tong":78,"zhi":48,"spd":54,"gr":{"wu":2.4,"tong":2.1,"zhi":1.7,"spd":1.9},"skill":"狙杀要害","skillDesc":"对敌方后排单体造成武力×1.6兵刃伤害；附加眩晕，持续1回合。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.6,"stun":1}],"src":"稿","variant":false,"baseId":48},{"id":49,"name":"庞统","fac":"蜀","troop":"弓","rar":"SSR","wu":48,"tong":70,"zhi":96,"spd":72,"gr":{"wu":1.6,"tong":2,"zhi":2.5,"spd":2.1},"skill":"凤雏连环","skillDesc":"对敌方全体造成智力×1.1谋略伤害；全体附加灼烧，持续2回合。","fx":[{"t":"E","k":"dmg","s":"zhi","m":1.1,"burn":2}],"src":"稿","variant":false,"baseId":49},{"id":50,"name":"诸葛亮","fac":"蜀","troop":"弓","rar":"SSR","wu":38,"tong":93,"zhi":100,"spd":78,"gr":{"wu":0.5,"tong":2.2,"zhi":2.8,"spd":2.2},"skill":"八阵燎原","skillDesc":"对敌方全体造成智力×1.2谋略伤害；全体附加灼烧，持续2回合。","fx":[{"t":"E","k":"dmg","s":"zhi","m":1.2,"burn":2}],"src":"稿","variant":false,"baseId":50},{"id":51,"name":"曹操","fac":"魏","troop":"骑","rar":"SSR","wu":89,"tong":96,"zhi":90,"spd":81,"gr":{"wu":2.3,"tong":2.8,"zhi":2.7,"spd":2.1},"skill":"魏武挥鞭","skillDesc":"对敌方前排单体造成智力×1.3谋略伤害；我方全体恢复兵力，恢复量＝曹操智力×0.5。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.3},{"t":"aA","k":"heal","s":"zhi","m":0.5}],"src":"稿","variant":false,"baseId":51},{"id":52,"name":"夏侯惇","fac":"魏","troop":"枪","rar":"SSR","wu":94,"tong":89,"zhi":62,"spd":81,"gr":{"wu":2.7,"tong":2.5,"zhi":1.4,"spd":2.1},"skill":"拔矢啖睛","skillDesc":"猛攻敌方前排单体，武力×1.5兵刃伤害；目标眩晕1回合，按伤害25%回血。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.5,"stun":1,"ls":25}],"src":"稿","variant":false,"baseId":52},{"id":53,"name":"夏侯渊","fac":"魏","troop":"骑","rar":"SSR","wu":93,"tong":84,"zhi":59,"spd":91,"gr":{"wu":2.6,"tong":2.2,"zhi":1.3,"spd":2.7},"skill":"疾行奔袭","skillDesc":"突袭敌方后排单体，武力×1.5兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.5}],"src":"稿","variant":false,"baseId":53},{"id":54,"name":"张辽","fac":"魏","troop":"骑","rar":"SSR","wu":95,"tong":89,"zhi":76,"spd":89,"gr":{"wu":2.7,"tong":2.5,"zhi":1.9,"spd":2.7},"skill":"威震逍遥","skillDesc":"冲击敌方前排单体，武力×1.5兵刃伤害；目标眩晕1回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.5,"stun":1}],"src":"稿","variant":false,"baseId":54},{"id":55,"name":"徐晃","fac":"魏","troop":"枪","rar":"SSR","wu":91,"tong":87,"zhi":69,"spd":79,"gr":{"wu":2.5,"tong":2.3,"zhi":1.7,"spd":2},"skill":"长驱直入","skillDesc":"猛攻敌方前排单体，武力×1.4兵刃伤害；按伤害20%回血。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4,"ls":20}],"src":"稿","variant":false,"baseId":55},{"id":56,"name":"张郃","fac":"魏","troop":"枪","rar":"SSR","wu":90,"tong":88,"zhi":77,"spd":83,"gr":{"wu":2.5,"tong":2.4,"zhi":2,"spd":2.2},"skill":"巧变制敌","skillDesc":"攻击敌方前排单体，武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"稿","variant":false,"baseId":56},{"id":57,"name":"许褚","fac":"魏","troop":"骑","rar":"SSR","wu":97,"tong":81,"zhi":36,"spd":82,"gr":{"wu":2.8,"tong":2,"zhi":0.6,"spd":2.2},"skill":"虎痴破阵","skillDesc":"猛攻敌方前排单体，武力×1.6兵刃伤害；目标眩晕1回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.6,"stun":1}],"src":"稿","variant":false,"baseId":57},{"id":58,"name":"司马懿","fac":"魏","troop":"弓","rar":"SSR","wu":48,"tong":94,"zhi":99,"spd":77,"gr":{"wu":0.9,"tong":2.7,"zhi":2.8,"spd":2.1},"skill":"鹰视狼顾","skillDesc":"对敌方前排单体智力×1.3谋略伤害；施加灼烧2回合。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.3,"burn":2}],"src":"稿","variant":false,"baseId":58},{"id":59,"name":"贾诩","fac":"魏","troop":"弓","rar":"SSR","wu":44,"tong":75,"zhi":98,"spd":84,"gr":{"wu":0.7,"tong":2,"zhi":2.8,"spd":2.3},"skill":"毒士乱局","skillDesc":"对敌方前排单体智力×1.3谋略伤害；目标眩晕1回合。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.3,"stun":1}],"src":"稿","variant":false,"baseId":59},{"id":60,"name":"郭嘉","fac":"魏","troop":"弓","rar":"SSR","wu":43,"tong":71,"zhi":98,"spd":87,"gr":{"wu":0.7,"tong":1.9,"zhi":2.8,"spd":2.4},"skill":"奇谋遗计","skillDesc":"对敌方前排单体智力×1.4谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.4}],"src":"稿","variant":false,"baseId":60},{"id":61,"name":"于禁","fac":"魏","troop":"枪","rar":"SR","wu":84,"tong":88,"zhi":70,"spd":70,"gr":{"wu":2.2,"tong":2.4,"zhi":1.8,"spd":1.8},"skill":"持节勒军","skillDesc":"攻击敌方前排单体，武力×1.3兵刃伤害；为一名友方恢复兵力。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3},{"t":"a1","k":"heal","s":"wu","m":0.8}],"src":"稿","variant":false,"baseId":61},{"id":62,"name":"乐进","fac":"魏","troop":"骑","rar":"SR","wu":88,"tong":81,"zhi":52,"spd":87,"gr":{"wu":2.4,"tong":2.1,"zhi":1.2,"spd":2.4},"skill":"先登死战","skillDesc":"突击敌方前排单体，武力×1.3兵刃伤害；20%回血。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3,"ls":20}],"src":"稿","variant":false,"baseId":62},{"id":63,"name":"李典","fac":"魏","troop":"骑","rar":"SR","wu":83,"tong":84,"zhi":80,"spd":75,"gr":{"wu":2.2,"tong":2.2,"zhi":2.1,"spd":2},"skill":"儒雅合军","skillDesc":"对敌方前排智力×1.1谋略伤害；治疗一名友方。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.1},{"t":"a1","k":"heal","s":"zhi","m":0.8}],"src":"稿","variant":false,"baseId":63},{"id":64,"name":"曹仁","fac":"魏","troop":"枪","rar":"SR","wu":87,"tong":90,"zhi":62,"spd":71,"gr":{"wu":2.3,"tong":2.5,"zhi":1.5,"spd":1.8},"skill":"固镇守城","skillDesc":"攻击敌方前排单体，武力×1.3兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3}],"src":"稿","variant":false,"baseId":64},{"id":65,"name":"曹洪","fac":"魏","troop":"骑","rar":"SR","wu":85,"tong":78,"zhi":46,"spd":76,"gr":{"wu":2.3,"tong":2,"zhi":0.9,"spd":2.1},"skill":"舍身护主","skillDesc":"突击敌方前排单体，武力×1.2兵刃伤害；按伤害20%回血。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.2,"ls":20}],"src":"稿","variant":false,"baseId":65},{"id":66,"name":"程昱","fac":"魏","troop":"弓","rar":"SR","wu":49,"tong":78,"zhi":92,"spd":72,"gr":{"wu":0.9,"tong":2.1,"zhi":2.6,"spd":1.9},"skill":"伏兵破敌","skillDesc":"对敌方前排智力×1.2谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.2}],"src":"稿","variant":false,"baseId":66},{"id":67,"name":"荀攸","fac":"魏","troop":"弓","rar":"SR","wu":45,"tong":75,"zhi":93,"spd":77,"gr":{"wu":0.8,"tong":2,"zhi":2.7,"spd":2.1},"skill":"谋主画策","skillDesc":"对敌方前排智力×1.2谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.2}],"src":"稿","variant":false,"baseId":67},{"id":68,"name":"满宠","fac":"魏","troop":"弓","rar":"SR","wu":51,"tong":82,"zhi":90,"spd":70,"gr":{"wu":0.9,"tong":2.2,"zhi":2.5,"spd":1.8},"skill":"镇御疆土","skillDesc":"救治一名友方，恢复量＝智力×1.2。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1.2}],"src":"稿","variant":false,"baseId":68},{"id":69,"name":"文聘","fac":"魏","troop":"枪","rar":"SR","wu":86,"tong":85,"zhi":65,"spd":74,"gr":{"wu":2.3,"tong":2.2,"zhi":1.6,"spd":1.9},"skill":"荆襄拒敌","skillDesc":"攻击敌方前排单体，武力×1.3兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3}],"src":"稿","variant":false,"baseId":69},{"id":70,"name":"臧霸","fac":"魏","troop":"骑","rar":"SR","wu":84,"tong":82,"zhi":61,"spd":80,"gr":{"wu":2.2,"tong":2.2,"zhi":1.5,"spd":2.1},"skill":"青徐骁骑","skillDesc":"冲击敌方前排单体，武力×1.2兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.2}],"src":"稿","variant":false,"baseId":70},{"id":71,"name":"曹纯","fac":"魏","troop":"骑","rar":"R","wu":82,"tong":83,"zhi":60,"spd":84,"gr":{"wu":2.1,"tong":2.2,"zhi":1.4,"spd":2.2},"skill":"虎豹驰突","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"稿","variant":false,"baseId":71},{"id":72,"name":"曹彰","fac":"魏","troop":"骑","rar":"R","wu":87,"tong":79,"zhi":42,"spd":85,"gr":{"wu":2.3,"tong":2,"zhi":0.8,"spd":2.3},"skill":"黄须冲阵","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"稿","variant":false,"baseId":72},{"id":73,"name":"刘晔","fac":"魏","troop":"弓","rar":"R","wu":46,"tong":76,"zhi":86,"spd":71,"gr":{"wu":0.8,"tong":2,"zhi":2.4,"spd":1.8},"skill":"械略破阵","skillDesc":"对敌方前排智力×1.1谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.1}],"src":"稿","variant":false,"baseId":73},{"id":74,"name":"毛玠","fac":"魏","troop":"弓","rar":"R","wu":42,"tong":79,"zhi":85,"spd":67,"gr":{"wu":0.7,"tong":2.1,"zhi":2.3,"spd":1.7},"skill":"奉法安民","skillDesc":"救治一名友方，恢复量＝智力×1.0。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1}],"src":"稿","variant":false,"baseId":74},{"id":75,"name":"钟繇","fac":"魏","troop":"弓","rar":"R","wu":40,"tong":77,"zhi":84,"spd":65,"gr":{"wu":0.7,"tong":2,"zhi":2.3,"spd":1.6},"skill":"绥靖抚军","skillDesc":"救治一名友方，恢复量＝智力×1.0。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1}],"src":"稿","variant":false,"baseId":75},{"id":76,"name":"韩浩","fac":"魏","troop":"枪","rar":"R","wu":79,"tong":78,"zhi":63,"spd":70,"gr":{"wu":2,"tong":2,"zhi":1.6,"spd":1.8},"skill":"督军拒战","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"稿","variant":false,"baseId":76},{"id":77,"name":"史涣","fac":"魏","troop":"骑","rar":"R","wu":80,"tong":77,"zhi":57,"spd":73,"gr":{"wu":2,"tong":2,"zhi":1.3,"spd":1.9},"skill":"游骑袭扰","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"稿","variant":false,"baseId":77},{"id":78,"name":"牵招","fac":"魏","troop":"枪","rar":"R","wu":78,"tong":80,"zhi":66,"spd":72,"gr":{"wu":1.9,"tong":2.1,"zhi":1.7,"spd":1.9},"skill":"镇抚边地","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"稿","variant":false,"baseId":78},{"id":79,"name":"田豫","fac":"魏","troop":"枪","rar":"R","wu":77,"tong":81,"zhi":71,"spd":71,"gr":{"wu":1.9,"tong":2.1,"zhi":1.8,"spd":1.9},"skill":"北疆御寇","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"稿","variant":false,"baseId":79},{"id":80,"name":"郭淮","fac":"魏","troop":"弓","rar":"R","wu":53,"tong":80,"zhi":87,"spd":69,"gr":{"wu":1,"tong":2.1,"zhi":2.4,"spd":1.8},"skill":"御守陇西","skillDesc":"对敌方前排智力×1.0谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1}],"src":"稿","variant":false,"baseId":80},{"id":81,"name":"典韦","fac":"魏","troop":"枪","rar":"SSR","wu":97,"tong":84,"zhi":35,"spd":68,"gr":{"wu":2.6,"tong":2.1,"zhi":0.7,"spd":2},"skill":"恶来怒击","skillDesc":"对敌方前排单体造成武力×1.7兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.7}],"src":"补","variant":false,"baseId":81},{"id":82,"name":"荀彧","fac":"魏","troop":"弓","rar":"SSR","wu":40,"tong":88,"zhi":98,"spd":70,"gr":{"wu":0.7,"tong":2.4,"zhi":2.8,"spd":2},"skill":"王佐之才","skillDesc":"我方全体恢复兵力，恢复量＝智力×0.6；全体友方智力+8%，持续2回合。","fx":[{"t":"aA","k":"heal","s":"zhi","m":0.6},{"t":"aA","k":"buff","stat":"zhi","p":8,"tn":2}],"src":"补","variant":false,"baseId":82},{"id":83,"name":"邓艾","fac":"魏","troop":"枪","rar":"SSR","wu":88,"tong":90,"zhi":84,"spd":72,"gr":{"wu":2.3,"tong":2.4,"zhi":2.2,"spd":1.9},"skill":"偷渡阴平","skillDesc":"突袭敌方后排单体，武力×1.5兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.5}],"src":"补","variant":false,"baseId":83},{"id":84,"name":"庞德","fac":"魏","troop":"骑","rar":"SR","wu":90,"tong":80,"zhi":50,"spd":76,"gr":{"wu":2.3,"tong":2,"zhi":1.1,"spd":2.1},"skill":"抬棺决战","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害；按伤害15%回血。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4,"ls":15}],"src":"补","variant":false,"baseId":84},{"id":85,"name":"曹昂","fac":"魏","troop":"骑","rar":"R","wu":78,"tong":74,"zhi":55,"spd":78,"gr":{"wu":2,"tong":1.9,"zhi":1.3,"spd":2},"skill":"孝烈突骑","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":85},{"id":86,"name":"曹真","fac":"魏","troop":"枪","rar":"R","wu":80,"tong":84,"zhi":66,"spd":68,"gr":{"wu":2,"tong":2.2,"zhi":1.7,"spd":1.7},"skill":"镇守陈仓","skillDesc":"自身统率+12%，持续2回合。","fx":[{"t":"self","k":"buff","stat":"tong","p":12,"tn":2}],"src":"补","variant":false,"baseId":86},{"id":87,"name":"蒋济","fac":"魏","troop":"弓","rar":"R","wu":42,"tong":76,"zhi":86,"spd":66,"gr":{"wu":0.7,"tong":2,"zhi":2.4,"spd":1.7},"skill":"奇谋缓兵","skillDesc":"对敌方前排单体智力×1.1谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.1}],"src":"补","variant":false,"baseId":87},{"id":88,"name":"曹休","fac":"魏","troop":"骑","rar":"R","wu":80,"tong":76,"zhi":52,"spd":82,"gr":{"wu":2.1,"tong":2,"zhi":1.2,"spd":2.2},"skill":"虎豹骑督","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":88},{"id":89,"name":"梁习","fac":"魏","troop":"枪","rar":"N","wu":55,"tong":70,"zhi":72,"spd":40,"gr":{"wu":0.8,"tong":1.1,"zhi":1.5,"spd":0.6},"skill":"并州安抚","skillDesc":"为一名友方施加恢复兵力，回复量＝自身统率×1.0，持续2回合。","fx":[{"t":"a1","k":"hot","s":"tong","m":1,"tn":2}],"src":"补","variant":false,"baseId":89},{"id":90,"name":"田畴","fac":"魏","troop":"骑","rar":"N","wu":58,"tong":62,"zhi":70,"spd":78,"gr":{"wu":0.8,"tong":0.9,"zhi":1.4,"spd":1.9},"skill":"无终向导","skillDesc":"对敌方后排单体造成武力×1.1兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":90},{"id":91,"name":"仓慈","fac":"魏","troop":"弓","rar":"N","wu":45,"tong":66,"zhi":74,"spd":35,"gr":{"wu":0.6,"tong":1,"zhi":1.6,"spd":0.6},"skill":"仁政平准","skillDesc":"救治一名友方，恢复量＝智力×1.0。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1}],"src":"补","variant":false,"baseId":91},{"id":92,"name":"苏则","fac":"魏","troop":"枪","rar":"N","wu":62,"tong":68,"zhi":60,"spd":55,"gr":{"wu":1,"tong":1.1,"zhi":1,"spd":1},"skill":"金城直谏","skillDesc":"对敌方前排单体造成武力×1.2兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.2}],"src":"补","variant":false,"baseId":92},{"id":93,"name":"孙策","fac":"吴","troop":"骑","rar":"SSR","wu":96,"tong":84,"zhi":56,"spd":92,"gr":{"wu":2.6,"tong":2.2,"zhi":1.3,"spd":2.6},"skill":"小霸王","skillDesc":"横枪突阵，对敌方前排单体造成武力×1.7兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.7}],"src":"补","variant":false,"baseId":93},{"id":94,"name":"孙权","fac":"吴","troop":"弓","rar":"SSR","wu":62,"tong":90,"zhi":84,"spd":58,"gr":{"wu":1.5,"tong":2.5,"zhi":2.3,"spd":1.6},"skill":"制衡之术","skillDesc":"全体友方统率+8%，持续2回合；我方全体恢复兵力，恢复量＝智力×0.4。","fx":[{"t":"aA","k":"buff","stat":"tong","p":8,"tn":2},{"t":"aA","k":"heal","s":"zhi","m":0.4}],"src":"补","variant":false,"baseId":94},{"id":95,"name":"周瑜","fac":"吴","troop":"弓","rar":"SSR","wu":58,"tong":86,"zhi":97,"spd":72,"gr":{"wu":1.3,"tong":2.3,"zhi":2.8,"spd":2},"skill":"赤壁火计","skillDesc":"对敌方全体造成智力×1.1谋略伤害；全体附加灼烧，持续2回合。","fx":[{"t":"E","k":"dmg","s":"zhi","m":1.1,"burn":2}],"src":"补","variant":false,"baseId":95},{"id":96,"name":"陆逊","fac":"吴","troop":"弓","rar":"SSR","wu":55,"tong":88,"zhi":95,"spd":70,"gr":{"wu":1.2,"tong":2.4,"zhi":2.7,"spd":2},"skill":"夷陵火营","skillDesc":"对敌方全体造成智力×1.2谋略伤害；全体附加灼烧，持续2回合。","fx":[{"t":"E","k":"dmg","s":"zhi","m":1.2,"burn":2}],"src":"补","variant":false,"baseId":96},{"id":97,"name":"吕蒙","fac":"吴","troop":"枪","rar":"SSR","wu":84,"tong":86,"zhi":88,"spd":64,"gr":{"wu":2.2,"tong":2.3,"zhi":2.4,"spd":1.8},"skill":"白衣渡江","skillDesc":"奇袭敌方后排单体，武力×1.5兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.5}],"src":"补","variant":false,"baseId":97},{"id":98,"name":"甘宁","fac":"吴","troop":"骑","rar":"SSR","wu":92,"tong":78,"zhi":50,"spd":90,"gr":{"wu":2.5,"tong":2,"zhi":1.1,"spd":2.6},"skill":"百骑劫营","skillDesc":"对敌方随机2名武将造成武力×1.3兵刃伤害。","fx":[{"t":"R2","k":"dmg","s":"wu","m":1.3}],"src":"补","variant":false,"baseId":98},{"id":99,"name":"太史慈","fac":"吴","troop":"弓","rar":"SSR","wu":94,"tong":80,"zhi":55,"spd":78,"gr":{"wu":2.5,"tong":2.1,"zhi":1.3,"spd":2.2},"skill":"神亭酣战","skillDesc":"对敌方前排单体造成武力×1.6兵刃伤害；目标眩晕1回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.6,"stun":1}],"src":"补","variant":false,"baseId":99},{"id":100,"name":"周泰","fac":"吴","troop":"枪","rar":"SSR","wu":90,"tong":88,"zhi":42,"spd":60,"gr":{"wu":2.4,"tong":2.4,"zhi":0.9,"spd":1.7},"skill":"不屈护主","skillDesc":"选择一名友方武将，分担其30%受到的伤害，持续2回合；自身统率+10%。","fx":[{"t":"a1","k":"share","p":30,"tn":2},{"t":"self","k":"buff","stat":"tong","p":10,"tn":2}],"src":"补","variant":false,"baseId":100},{"id":101,"name":"鲁肃","fac":"吴","troop":"弓","rar":"SSR","wu":50,"tong":86,"zhi":93,"spd":62,"gr":{"wu":1,"tong":2.3,"zhi":2.6,"spd":1.7},"skill":"指囷相赠","skillDesc":"救治一名友方，恢复量＝智力×1.3。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1.3}],"src":"补","variant":false,"baseId":101},{"id":102,"name":"黄盖","fac":"吴","troop":"枪","rar":"SR","wu":84,"tong":82,"zhi":48,"spd":56,"gr":{"wu":2.2,"tong":2.2,"zhi":1.1,"spd":1.5},"skill":"苦肉诈降","skillDesc":"对敌方前排单体造成武力×1.2兵刃伤害；附加灼烧，持续2回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.2,"burn":2}],"src":"补","variant":false,"baseId":102},{"id":103,"name":"凌统","fac":"吴","troop":"骑","rar":"SR","wu":86,"tong":76,"zhi":50,"spd":82,"gr":{"wu":2.3,"tong":2,"zhi":1.1,"spd":2.2},"skill":"国士之风","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"补","variant":false,"baseId":103},{"id":104,"name":"韩当","fac":"吴","troop":"弓","rar":"SR","wu":84,"tong":78,"zhi":52,"spd":64,"gr":{"wu":2.2,"tong":2,"zhi":1.2,"spd":1.7},"skill":"弓马娴熟","skillDesc":"对敌方后排单体造成武力×1.3兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.3}],"src":"补","variant":false,"baseId":104},{"id":105,"name":"蒋钦","fac":"吴","troop":"骑","rar":"SR","wu":82,"tong":74,"zhi":46,"spd":84,"gr":{"wu":2.2,"tong":1.9,"zhi":1,"spd":2.3},"skill":"劫江营","skillDesc":"突袭敌方后排单体，武力×1.3兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.3}],"src":"补","variant":false,"baseId":105},{"id":106,"name":"徐盛","fac":"吴","troop":"枪","rar":"SR","wu":80,"tong":86,"zhi":60,"spd":58,"gr":{"wu":2.1,"tong":2.3,"zhi":1.5,"spd":1.5},"skill":"疑城之计","skillDesc":"自身统率+14%，持续2回合。","fx":[{"t":"self","k":"buff","stat":"tong","p":14,"tn":2}],"src":"补","variant":false,"baseId":106},{"id":107,"name":"丁奉","fac":"吴","troop":"枪","rar":"SR","wu":85,"tong":80,"zhi":54,"spd":62,"gr":{"wu":2.3,"tong":2.1,"zhi":1.2,"spd":1.6},"skill":"雪中奋短","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"补","variant":false,"baseId":107},{"id":108,"name":"潘璋","fac":"吴","troop":"骑","rar":"SR","wu":83,"tong":75,"zhi":48,"spd":80,"gr":{"wu":2.2,"tong":1.9,"zhi":1,"spd":2.2},"skill":"生擒之勇","skillDesc":"锁定敌方兵力最低的后排单体，武力×1.3兵刃伤害。","fx":[{"t":"L","k":"dmg","s":"wu","m":1.3}],"src":"补","variant":false,"baseId":108},{"id":109,"name":"诸葛瑾","fac":"吴","troop":"弓","rar":"SR","wu":46,"tong":74,"zhi":90,"spd":58,"gr":{"wu":0.9,"tong":1.9,"zhi":2.5,"spd":1.6},"skill":"弘雅之德","skillDesc":"救治一名友方，恢复量＝智力×1.1。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1.1}],"src":"补","variant":false,"baseId":109},{"id":110,"name":"步练师","fac":"吴","troop":"弓","rar":"SR","wu":44,"tong":76,"zhi":88,"spd":56,"gr":{"wu":0.8,"tong":2,"zhi":2.4,"spd":1.5},"skill":"无怨之德","skillDesc":"全体友方施加恢复兵力，回复量＝自身统率×0.7，持续2回合。","fx":[{"t":"aA","k":"hot","s":"tong","m":0.7,"tn":2}],"src":"补","variant":false,"baseId":110},{"id":111,"name":"程普","fac":"吴","troop":"枪","rar":"SR","wu":82,"tong":84,"zhi":58,"spd":54,"gr":{"wu":2.1,"tong":2.2,"zhi":1.4,"spd":1.4},"skill":"老将稳军","skillDesc":"全体友方受到伤害-6%，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"dIn","p":-6,"tn":2}],"src":"补","variant":false,"baseId":111},{"id":112,"name":"吕岱","fac":"吴","troop":"枪","rar":"SR","wu":80,"tong":82,"zhi":64,"spd":60,"gr":{"wu":2,"tong":2.2,"zhi":1.6,"spd":1.6},"skill":"平定交州","skillDesc":"对敌方前排单体造成武力×1.3兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3}],"src":"补","variant":false,"baseId":112},{"id":113,"name":"朱桓","fac":"吴","troop":"骑","rar":"SR","wu":84,"tong":77,"zhi":52,"spd":78,"gr":{"wu":2.2,"tong":2,"zhi":1.2,"spd":2.1},"skill":"休穆之断","skillDesc":"对敌方前排单体造成武力×1.3兵刃伤害；目标眩晕1回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3,"stun":1}],"src":"补","variant":false,"baseId":113},{"id":114,"name":"朱然","fac":"吴","troop":"枪","rar":"R","wu":76,"tong":80,"zhi":55,"spd":50,"gr":{"wu":1.9,"tong":2.1,"zhi":1.3,"spd":1.3},"skill":"守江陵","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":114},{"id":115,"name":"朱治","fac":"吴","troop":"枪","rar":"R","wu":72,"tong":82,"zhi":58,"spd":46,"gr":{"wu":1.8,"tong":2.2,"zhi":1.4,"spd":1.2},"skill":"安国之守","skillDesc":"自身统率+10%，持续2回合。","fx":[{"t":"self","k":"buff","stat":"tong","p":10,"tn":2}],"src":"补","variant":false,"baseId":115},{"id":116,"name":"顾雍","fac":"吴","troop":"弓","rar":"R","wu":42,"tong":70,"zhi":85,"spd":44,"gr":{"wu":0.7,"tong":1.8,"zhi":2.3,"spd":1.2},"skill":"得人专任","skillDesc":"救治一名友方，恢复量＝智力×1.0。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1}],"src":"补","variant":false,"baseId":116},{"id":117,"name":"张昭","fac":"吴","troop":"弓","rar":"R","wu":44,"tong":72,"zhi":86,"spd":42,"gr":{"wu":0.8,"tong":1.9,"zhi":2.4,"spd":1.1},"skill":"文武框架","skillDesc":"全体友方智力+6%，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"zhi","p":6,"tn":2}],"src":"补","variant":false,"baseId":117},{"id":118,"name":"张纮","fac":"吴","troop":"弓","rar":"R","wu":43,"tong":71,"zhi":84,"spd":45,"gr":{"wu":0.7,"tong":1.8,"zhi":2.3,"spd":1.2},"skill":"二张之策","skillDesc":"对敌方前排单体智力×1.1谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.1}],"src":"补","variant":false,"baseId":118},{"id":119,"name":"骆统","fac":"吴","troop":"弓","rar":"R","wu":45,"tong":68,"zhi":82,"spd":48,"gr":{"wu":0.8,"tong":1.7,"zhi":2.2,"spd":1.3},"skill":"抚民之政","skillDesc":"救治一名友方，恢复量＝智力×1.0。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1}],"src":"补","variant":false,"baseId":119},{"id":120,"name":"吾粲","fac":"吴","troop":"枪","rar":"R","wu":74,"tong":76,"zhi":52,"spd":52,"gr":{"wu":1.9,"tong":2,"zhi":1.2,"spd":1.4},"skill":"清正之守","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":120},{"id":121,"name":"贺齐","fac":"吴","troop":"骑","rar":"R","wu":78,"tong":72,"zhi":50,"spd":76,"gr":{"wu":2,"tong":1.9,"zhi":1.1,"spd":2},"skill":"平定山越","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":121},{"id":122,"name":"全琮","fac":"吴","troop":"弓","rar":"R","wu":46,"tong":74,"zhi":83,"spd":50,"gr":{"wu":0.8,"tong":1.9,"zhi":2.2,"spd":1.3},"skill":"赈赡之恩","skillDesc":"为一名友方施加恢复兵力，回复量＝自身统率×0.9，持续2回合。","fx":[{"t":"a1","k":"hot","s":"tong","m":0.9,"tn":2}],"src":"补","variant":false,"baseId":122},{"id":123,"name":"孙翊","fac":"吴","troop":"骑","rar":"R","wu":80,"tong":70,"zhi":44,"spd":80,"gr":{"wu":2.1,"tong":1.8,"zhi":0.9,"spd":2.2},"skill":"骁悍之锋","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":123},{"id":124,"name":"孙桓","fac":"吴","troop":"骑","rar":"R","wu":79,"tong":71,"zhi":46,"spd":78,"gr":{"wu":2,"tong":1.9,"zhi":1,"spd":2.1},"skill":"宗室之勇","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":124},{"id":125,"name":"孙韶","fac":"吴","troop":"枪","rar":"R","wu":75,"tong":78,"zhi":54,"spd":54,"gr":{"wu":1.9,"tong":2,"zhi":1.3,"spd":1.4},"skill":"边陲之守","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":125},{"id":126,"name":"徐详","fac":"吴","troop":"弓","rar":"N","wu":42,"tong":60,"zhi":76,"spd":30,"gr":{"wu":0.6,"tong":0.8,"zhi":1.7,"spd":0.6},"skill":"甘露之使","skillDesc":"救治一名友方，恢复量＝智力×1.0。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1}],"src":"补","variant":false,"baseId":126},{"id":127,"name":"宋谦","fac":"吴","troop":"骑","rar":"N","wu":64,"tong":60,"zhi":34,"spd":80,"gr":{"wu":0.9,"tong":0.8,"zhi":0.6,"spd":2},"skill":"合肥奋战","skillDesc":"对敌方后排单体造成武力×1.2兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.2}],"src":"补","variant":false,"baseId":127},{"id":128,"name":"谢旌","fac":"吴","troop":"枪","rar":"N","wu":60,"tong":64,"zhi":40,"spd":45,"gr":{"wu":0.9,"tong":1,"zhi":0.8,"spd":0.8},"skill":"陆口守御","skillDesc":"为自身施加恢复兵力，回复量＝自身统率×1.0，持续2回合。","fx":[{"t":"self","k":"hot","s":"tong","m":1,"tn":2}],"src":"补","variant":false,"baseId":128},{"id":129,"name":"李异","fac":"吴","troop":"骑","rar":"N","wu":66,"tong":58,"zhi":36,"spd":82,"gr":{"wu":1,"tong":0.8,"zhi":0.6,"spd":2},"skill":"江上突骑","skillDesc":"对敌方后排单体造成武力×1.2兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.2}],"src":"补","variant":false,"baseId":129},{"id":130,"name":"吕布","fac":"群","troop":"骑","rar":"SSR","wu":99,"tong":82,"zhi":35,"spd":88,"gr":{"wu":2.8,"tong":2.1,"zhi":0.7,"spd":2.5},"skill":"天下无双","skillDesc":"对敌方前排单体造成武力×1.9兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.9}],"src":"补","variant":false,"baseId":130},{"id":131,"name":"马超","fac":"群","troop":"骑","rar":"SSR","wu":97,"tong":85,"zhi":40,"spd":94,"gr":{"wu":2.7,"tong":2.2,"zhi":0.9,"spd":2.7},"skill":"西凉铁骑","skillDesc":"对敌方随机2名武将造成武力×1.4兵刃伤害。","fx":[{"t":"R2","k":"dmg","s":"wu","m":1.4}],"src":"补","variant":false,"baseId":131},{"id":132,"name":"张角","fac":"群","troop":"弓","rar":"SSR","wu":52,"tong":78,"zhi":96,"spd":58,"gr":{"wu":1.1,"tong":2.1,"zhi":2.7,"spd":1.6},"skill":"苍天已死","skillDesc":"对敌方全体造成智力×1.2谋略伤害。","fx":[{"t":"E","k":"dmg","s":"zhi","m":1.2}],"src":"补","variant":false,"baseId":132},{"id":133,"name":"袁绍","fac":"群","troop":"枪","rar":"SSR","wu":78,"tong":90,"zhi":72,"spd":56,"gr":{"wu":2,"tong":2.5,"zhi":1.9,"spd":1.5},"skill":"四世三公","skillDesc":"全体友方武力、统率各+7%，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"wu","p":7,"tn":2},{"t":"aA","k":"buff","stat":"tong","p":7,"tn":2}],"src":"补","variant":false,"baseId":133},{"id":134,"name":"董卓","fac":"群","troop":"枪","rar":"SSR","wu":88,"tong":86,"zhi":45,"spd":48,"gr":{"wu":2.3,"tong":2.3,"zhi":1,"spd":1.3},"skill":"暴虐镇压","skillDesc":"对敌方全体造成武力×1.1兵刃伤害。","fx":[{"t":"E","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":134},{"id":135,"name":"高顺","fac":"群","troop":"枪","rar":"SSR","wu":90,"tong":88,"zhi":58,"spd":66,"gr":{"wu":2.4,"tong":2.4,"zhi":1.4,"spd":1.8},"skill":"陷阵之志","skillDesc":"对敌方前排单体造成武力×1.6兵刃伤害；全体友方受到伤害-5%，持续2回合。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.6},{"t":"aA","k":"buff","stat":"dIn","p":-5,"tn":2}],"src":"补","variant":false,"baseId":135},{"id":136,"name":"貂蝉","fac":"群","troop":"弓","rar":"SSR","wu":55,"tong":72,"zhi":90,"spd":74,"gr":{"wu":1.2,"tong":1.9,"zhi":2.5,"spd":2.1},"skill":"闭月离间","skillDesc":"对敌方前排单体造成智力×1.3谋略伤害；目标眩晕1回合。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.3,"stun":1}],"src":"补","variant":false,"baseId":136},{"id":137,"name":"贾诩","fac":"群","troop":"弓","rar":"SSR","wu":45,"tong":76,"zhi":97,"spd":82,"gr":{"wu":0.8,"tong":2,"zhi":2.8,"spd":2.3},"skill":"毒士之策","skillDesc":"对敌方前排单体造成智力×1.4谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.4}],"src":"补","variant":false,"baseId":137},{"id":138,"name":"马腾","fac":"群","troop":"骑","rar":"SR","wu":86,"tong":80,"zhi":48,"spd":82,"gr":{"wu":2.3,"tong":2.1,"zhi":1.1,"spd":2.2},"skill":"西凉之主","skillDesc":"对敌方前排单体造成武力×1.3兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3}],"src":"补","variant":false,"baseId":138},{"id":139,"name":"韩遂","fac":"群","troop":"骑","rar":"SR","wu":82,"tong":78,"zhi":66,"spd":80,"gr":{"wu":2.1,"tong":2,"zhi":1.7,"spd":2.1},"skill":"九曲黄河","skillDesc":"对敌方前排单体造成武力×1.3兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.3}],"src":"补","variant":false,"baseId":139},{"id":140,"name":"颜良","fac":"群","troop":"枪","rar":"SR","wu":90,"tong":76,"zhi":32,"spd":62,"gr":{"wu":2.4,"tong":2,"zhi":0.7,"spd":1.6},"skill":"河北之勇","skillDesc":"对敌方前排单体造成武力×1.5兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.5}],"src":"补","variant":false,"baseId":140},{"id":141,"name":"文丑","fac":"群","troop":"骑","rar":"SR","wu":89,"tong":74,"zhi":30,"spd":78,"gr":{"wu":2.4,"tong":1.9,"zhi":0.6,"spd":2.1},"skill":"河北双壁","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"补","variant":false,"baseId":141},{"id":142,"name":"田丰","fac":"群","troop":"弓","rar":"SR","wu":44,"tong":72,"zhi":90,"spd":58,"gr":{"wu":0.8,"tong":1.9,"zhi":2.5,"spd":1.6},"skill":"刚而犯上","skillDesc":"对敌方前排单体造成智力×1.2谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.2}],"src":"补","variant":false,"baseId":142},{"id":143,"name":"沮授","fac":"群","troop":"弓","rar":"SR","wu":46,"tong":74,"zhi":91,"spd":56,"gr":{"wu":0.9,"tong":2,"zhi":2.6,"spd":1.5},"skill":"监军之略","skillDesc":"全体友方智力+8%，持续2回合。","fx":[{"t":"aA","k":"buff","stat":"zhi","p":8,"tn":2}],"src":"补","variant":false,"baseId":143},{"id":144,"name":"李儒","fac":"群","troop":"弓","rar":"SR","wu":42,"tong":70,"zhi":92,"spd":60,"gr":{"wu":0.7,"tong":1.8,"zhi":2.6,"spd":1.7},"skill":"鸩杀之毒","skillDesc":"对敌方前排单体造成智力×1.2谋略伤害；附加中毒，持续2回合。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.2,"pois":2}],"src":"补","variant":false,"baseId":144},{"id":145,"name":"公孙瓒","fac":"群","troop":"骑","rar":"SR","wu":84,"tong":80,"zhi":55,"spd":84,"gr":{"wu":2.2,"tong":2.1,"zhi":1.2,"spd":2.3},"skill":"白马义从","skillDesc":"全体友方骑兵速度+10%，持续2回合。","fx":[{"t":"cA","k":"buff","stat":"spd","p":10,"tn":2}],"src":"补","variant":false,"baseId":145},{"id":146,"name":"张任","fac":"群","troop":"枪","rar":"SR","wu":85,"tong":84,"zhi":60,"spd":64,"gr":{"wu":2.2,"tong":2.2,"zhi":1.5,"spd":1.7},"skill":"忠烈之守","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"补","variant":false,"baseId":146},{"id":147,"name":"华雄","fac":"群","troop":"骑","rar":"SR","wu":90,"tong":72,"zhi":34,"spd":70,"gr":{"wu":2.4,"tong":1.9,"zhi":0.7,"spd":1.9},"skill":"汜水斩将","skillDesc":"对敌方前排单体造成武力×1.5兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.5}],"src":"补","variant":false,"baseId":147},{"id":148,"name":"纪灵","fac":"群","troop":"枪","rar":"SR","wu":86,"tong":80,"zhi":48,"spd":58,"gr":{"wu":2.3,"tong":2.1,"zhi":1.1,"spd":1.5},"skill":"三尖两刃","skillDesc":"对敌方前排单体造成武力×1.4兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.4}],"src":"补","variant":false,"baseId":148},{"id":149,"name":"张绣","fac":"群","troop":"骑","rar":"SR","wu":84,"tong":76,"zhi":55,"spd":82,"gr":{"wu":2.2,"tong":2,"zhi":1.3,"spd":2.2},"skill":"宛城之变","skillDesc":"突袭敌方后排单体，武力×1.4兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.4}],"src":"补","variant":false,"baseId":149},{"id":150,"name":"张宝","fac":"群","troop":"弓","rar":"R","wu":48,"tong":68,"zhi":82,"spd":46,"gr":{"wu":0.9,"tong":1.7,"zhi":2.2,"spd":1.2},"skill":"地公将军","skillDesc":"对敌方全体造成智力×0.9谋略伤害。","fx":[{"t":"E","k":"dmg","s":"zhi","m":0.9}],"src":"补","variant":false,"baseId":150},{"id":151,"name":"张梁","fac":"群","troop":"枪","rar":"R","wu":78,"tong":72,"zhi":40,"spd":52,"gr":{"wu":2,"tong":1.9,"zhi":0.8,"spd":1.4},"skill":"人公将军","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":151},{"id":152,"name":"张邈","fac":"群","troop":"弓","rar":"R","wu":44,"tong":70,"zhi":84,"spd":48,"gr":{"wu":0.8,"tong":1.8,"zhi":2.3,"spd":1.3},"skill":"孟卓之谊","skillDesc":"为一名友方施加恢复兵力，回复量＝自身统率×0.9，持续2回合。","fx":[{"t":"a1","k":"hot","s":"tong","m":0.9,"tn":2}],"src":"补","variant":false,"baseId":152},{"id":153,"name":"张超","fac":"群","troop":"弓","rar":"R","wu":46,"tong":72,"zhi":80,"spd":50,"gr":{"wu":0.9,"tong":1.9,"zhi":2.1,"spd":1.3},"skill":"广陵之守","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":153},{"id":154,"name":"桥蕤","fac":"群","troop":"枪","rar":"R","wu":76,"tong":74,"zhi":44,"spd":54,"gr":{"wu":1.9,"tong":1.9,"zhi":0.9,"spd":1.4},"skill":"袁术部将","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":154},{"id":155,"name":"雷薄","fac":"群","troop":"枪","rar":"R","wu":77,"tong":73,"zhi":42,"spd":56,"gr":{"wu":2,"tong":1.9,"zhi":0.9,"spd":1.5},"skill":"略地之锋","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":155},{"id":156,"name":"陈兰","fac":"群","troop":"枪","rar":"R","wu":75,"tong":75,"zhi":45,"spd":52,"gr":{"wu":1.9,"tong":2,"zhi":0.9,"spd":1.4},"skill":"潜山之据","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":156},{"id":157,"name":"韩暹","fac":"群","troop":"骑","rar":"R","wu":76,"tong":70,"zhi":40,"spd":76,"gr":{"wu":2,"tong":1.8,"zhi":0.8,"spd":2},"skill":"白波渠帅","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":157},{"id":158,"name":"杨奉","fac":"群","troop":"骑","rar":"R","wu":74,"tong":72,"zhi":48,"spd":74,"gr":{"wu":1.9,"tong":1.9,"zhi":1.1,"spd":2},"skill":"护驾之功","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":158},{"id":159,"name":"边章","fac":"群","troop":"骑","rar":"R","wu":73,"tong":71,"zhi":55,"spd":72,"gr":{"wu":1.9,"tong":1.9,"zhi":1.3,"spd":1.9},"skill":"凉州之乱","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":159},{"id":160,"name":"北宫伯玉","fac":"群","troop":"骑","rar":"R","wu":77,"tong":69,"zhi":38,"spd":80,"gr":{"wu":2,"tong":1.8,"zhi":0.7,"spd":2.2},"skill":"羌胡之骑","skillDesc":"对敌方后排单体造成武力×1.1兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":160},{"id":161,"name":"娄圭","fac":"群","troop":"弓","rar":"R","wu":43,"tong":73,"zhi":85,"spd":52,"gr":{"wu":0.7,"tong":1.9,"zhi":2.3,"spd":1.4},"skill":"奇士之谋","skillDesc":"对敌方前排单体智力×1.1谋略伤害。","fx":[{"t":"F","k":"dmg","s":"zhi","m":1.1}],"src":"补","variant":false,"baseId":161},{"id":162,"name":"华佗","fac":"群","troop":"弓","rar":"R","wu":40,"tong":72,"zhi":92,"spd":55,"gr":{"wu":0.7,"tong":1.9,"zhi":2.6,"spd":1.5},"skill":"青囊妙术","skillDesc":"救治一名友方，恢复量＝智力×1.4，并清除其中毒、灼烧状态。","fx":[{"t":"a1","k":"heal","s":"zhi","m":1.4},{"t":"a1","k":"cleanse"}],"src":"补","variant":false,"baseId":162},{"id":163,"name":"眭元进","fac":"群","troop":"枪","rar":"N","wu":58,"tong":60,"zhi":34,"spd":42,"gr":{"wu":0.9,"tong":0.9,"zhi":0.6,"spd":0.8},"skill":"乌巢守夜","skillDesc":"攻击敌方前排单体，武力×1.1兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.1}],"src":"补","variant":false,"baseId":163},{"id":164,"name":"韩莒子","fac":"群","troop":"弓","rar":"N","wu":50,"tong":58,"zhi":44,"spd":38,"gr":{"wu":0.7,"tong":0.8,"zhi":0.9,"spd":0.7},"skill":"粮草督运","skillDesc":"为一名友方施加恢复兵力，回复量＝自身统率×0.9，持续2回合。","fx":[{"t":"a1","k":"hot","s":"tong","m":0.9,"tn":2}],"src":"补","variant":false,"baseId":164},{"id":165,"name":"吕威璜","fac":"群","troop":"枪","rar":"N","wu":62,"tong":56,"zhi":30,"spd":48,"gr":{"wu":1,"tong":0.8,"zhi":0.5,"spd":0.9},"skill":"营垒先登","skillDesc":"对敌方前排单体造成武力×1.2兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":1.2}],"src":"补","variant":false,"baseId":165},{"id":166,"name":"马延","fac":"群","troop":"骑","rar":"N","wu":64,"tong":55,"zhi":32,"spd":80,"gr":{"wu":0.9,"tong":0.8,"zhi":0.6,"spd":2},"skill":"河北轻骑","skillDesc":"对敌方后排单体造成武力×1.2兵刃伤害。","fx":[{"t":"B","k":"dmg","s":"wu","m":1.2}],"src":"补","variant":false,"baseId":166},{"id":201,"name":"龙胆赵云","fac":"蜀","troop":"枪","rar":"SSR","wu":104,"tong":99,"zhi":76,"spd":82,"gr":{"wu":3.05,"tong":3.05,"zhi":2.7,"spd":3.4},"skill":"龙胆破阵","skillDesc":"自由选择敌方任意单体，造成武力×1.6兵刃伤害；自身获得恢复兵力，回复量＝自身统率×1.2。","fx":[{"t":"A","k":"dmg","s":"wu","m":2.56},{"t":"self","k":"hot","s":"tong","m":1.2,"tn":2}],"src":"稿","variant":true,"baseId":18},{"id":202,"name":"无双吕布","fac":"群","troop":"骑","rar":"SSR","wu":107,"tong":89,"zhi":38,"spd":95,"gr":{"wu":3.8,"tong":2.93,"zhi":1.2,"spd":3.43},"skill":"天下无双","skillDesc":"对敌方前排单体造成武力×1.9兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":3.04}],"src":"补","variant":true,"baseId":130},{"id":203,"name":"武圣关羽","fac":"蜀","troop":"枪","rar":"SSR","wu":105,"tong":97,"zhi":65,"spd":67,"gr":{"wu":3.4,"tong":3.26,"zhi":1.7,"spd":2.83},"skill":"武圣威震","skillDesc":"对敌方前排单体造成武力×1.8兵刃伤害。","fx":[{"t":"F","k":"dmg","s":"wu","m":2.88}],"src":"稿","variant":true,"baseId":17},{"id":204,"name":"燕人张飞","fac":"蜀","troop":"枪","rar":"SSR","wu":106,"tong":92,"zhi":41,"spd":73,"gr":{"wu":3.5,"tong":3.11,"zhi":1.3,"spd":2.98},"skill":"横锋扫阵","skillDesc":"对敌方全体造成武力×1.1兵刃伤害；敌方全体受到恢复效果-15%，持续2回合。","fx":[{"t":"E","k":"dmg","s":"wu","m":1.76},{"t":"E","k":"buff","stat":"hIn","p":-15,"tn":2}],"src":"稿","variant":true,"baseId":16}];
 const GEN_BY_ID = {}; GENS.forEach(g=>GEN_BY_ID[g.id]=g);
+const TIANMING_IDS = [201,202,203,204];
+const GROWTH = {}; GENS.forEach(g=>{ GROWTH[g.id] = g.gr; });
+const V0_PERS_OLD = {1:"冷静",2:"冷静",3:"刚胆",4:"刚胆",5:"鲁莽",6:"刚胆",7:"鲁莽",8:"胆小",9:"冷静",10:"刚胆",11:"刚胆",12:"鲁莽",13:"刚胆",14:"冷静",15:"冷静",16:"鲁莽",17:"鲁莽",18:"冷静",19:"胆小",20:"冷静",21:"冷静",22:"冷静",23:"刚胆",24:"刚胆",25:"鲁莽",26:"刚胆",27:"胆小",28:"鲁莽",29:"冷静",30:"胆小",31:"冷静",32:"鲁莽",33:"胆小",34:"刚胆",35:"鲁莽",36:"鲁莽",101:"刚胆",102:"鲁莽"};
 /* 学习技能表：主动＝普攻后概率释放；被动＝常驻本将。效果数值只许在此表/CFG */
 const ACTIVE_SKILLS = {
   "火计":{scope:"all", mul:0.60, desc:"敌方全体 60% 攻击伤害"},
@@ -301,7 +298,7 @@ function activeSkillDesc(name){ const s = ACTIVE_SKILLS[name]; if(!s) return "";
   if(s.scope==="heal") return "己方兵力最低者回复 "+Math.round(CFG.jiJiuHealRatio*100)+"% 最大兵力";
   return s.desc||""; }
 function passiveSkillDesc(name){ const s = PASSIVE_SKILLS[name]; if(!s) return "";
-  const statName = {def:"防御", atk:"攻击", spd:"攻速", troops:"兵力"}[s.stat]||s.stat;
+  const statName = {def:"统率", atk:"攻击", spd:"速度", troops:"兵力"}[s.stat]||s.stat;
   return "本将"+statName+" +"+(s.pct? Math.round(s.pct*100)+"%" : s.add); }
 function ownedSkillDesc(x){ if(!x) return "";
   if(x.grade==="极") return "对应武将专属技能伤害 ×"+fmtMul(CFG.jiSkillMul)+"（收藏加成，拥有即生效）";
@@ -309,47 +306,44 @@ function ownedSkillDesc(x){ if(!x) return "";
   if(x.kind==="passive") return passiveSkillDesc(x.name);
   return ""; }
 
-/* 迁移专用：v1 旧技能卡名 → v1.1 技能名（kind 随新名定） */
+Object.assign(SKILL_DESC, {"横锋扫阵":"横矛立马，一声断喝压全场。","武圣威震":"青龙所指，敌阵胆寒。","龙胆破阵":"一身是胆，单骑破阵。","坚盾固守":"盾立如山，岿然不动。","绥军安民":"安民抚军，军心自稳。","将门虎女":"将门虎女，巾帼不让须眉。","反骨奇袭":"奇袭子午，出敌不意。","南中镇抚":"镇抚南中，恩威并施。","中军严整":"中军严整，号令如山。","伯约远略":"九伐中原，志在千里。","绵竹锐骑":"锐骑突进，势如破竹。","西凉锦骑":"锦马超至，西凉铁骑卷尘而来。","仁德载世":"仁德载物，四方来归。","八阵燎原":"八阵既成，燎原之火扑面。","凤雏连环":"连环暗结，一着定乾坤。","狙杀要害":"百步穿杨，一箭要害。","奇谋制胜":"奇谋迭出，制敌先机。","元直破谋":"破谋于无声之处。","白眉良才":"白眉最良，德才兼备。","魏武挥鞭":"挥鞭东指，天下归心。","拔矢啖睛":"拔矢啖睛，夏侯之烈。","威震逍遥":"逍遥津一战，江东小儿不敢啼。","鹰视狼顾":"鹰视狼顾，王者之相。","毒士乱局":"毒士一出，局势自乱。","奇谋遗计":"遗计定辽东。","持节勒军":"持节勒军，法度森严。","王佐之才":"王佐之才，经世济民。","偷渡阴平":"偷渡阴平，直捣成都。"});
 const SKILL_CARD_MAP = {"火计":"火计","连环计":"连环计","兵书残页":"落雷","虎符":"急救","铁壁阵":"铁壁阵","强弩令":"强弩令","疾风步":"疾风步","练兵令":"练兵令"};
-const BONDS = [
-  {name:"桃园结义", members:["刘备","关羽","张飞"], atk:0.10, def:0.10},
-  {name:"五虎上将", members:["关羽","张飞","赵云","马超","黄忠"], atk:0.08, def:0.08},
-  {name:"魏武雄图", members:["曹操","夏侯惇","张辽"], atk:0.09, def:0.06},
-  {name:"江东双璧", members:["周瑜","孙策"], atk:0.10, def:0.05},
-  {name:"龙虎对峙", members:["诸葛亮","司马懿"], atk:0.07, def:0.07},
-  {name:"连环之计", members:["吕布","貂蝉"], atk:0.12, def:0.0},
-  {name:"江东基业", members:["孙权","周瑜","吕蒙"], atk:0.06, def:0.09},
-  {name:"西凉传承", members:["马超","姜维"], atk:0.09, def:0.04}
-];
+const BONDS = [{"name":"宗室宗亲","members":[["曹操",""],["夏侯惇",""],["夏侯渊",""],["曹仁",""],["曹洪",""]],"fx":{"tong":9,"wu":7,"firstHeal":0.4,"troops":[]},"disabled":false},{"name":"五子良将","members":[["张辽",""],["乐进",""],["于禁",""],["张郃",""],["徐晃",""]],"fx":{"wu":10,"spd":7,"troops":[]},"disabled":false},{"name":"魏谋中枢","members":[["荀彧",""],["郭嘉",""],["贾诩","魏"],["程昱",""],["钟繇",""]],"fx":{"zhi":12,"mag":8,"troops":[]},"disabled":false},{"name":"虎卫双雄","members":[["典韦",""],["许褚",""]],"fx":{"wu":9,"dIn":6,"troops":[]},"disabled":false},{"name":"护主虎卫","members":[["曹操",""],["典韦",""],["许褚",""]],"fx":{"wu":8,"tong":7,"dInP":7,"troops":[]},"disabled":false},{"name":"宛城忠烈","members":[["曹操",""],["典韦",""],["曹昂",""]],"fx":{"tong":8,"heal":10,"troops":[]},"disabled":false},{"name":"北疆戍守","members":[["郭淮",""],["满宠",""],["邓艾",""]],"fx":{"tong":8,"zhi":6,"roundHeal":0.3,"troops":[]},"disabled":false},{"name":"谯沛基层","members":[["韩浩",""],["史涣",""]],"fx":{"tong":6,"rage":6,"troops":[]},"disabled":false},{"name":"儒将相和","members":[["李典",""],["乐进",""]],"fx":{"tong":7,"rage":7,"troops":[]},"disabled":false},{"name":"镇边宿将","members":[["臧霸",""],["文聘",""]],"fx":{"tong":8,"dInM":6,"troops":[]},"disabled":false},{"name":"曹氏虎儿","members":[["曹彰",""],["曹昂",""]],"fx":{"troops":[{"t":"骑","wu":7,"spd":8}]},"disabled":false},{"name":"二代宗室","members":[["曹休",""],["曹真",""]],"fx":{"spd":6,"phys":6,"troops":[]},"disabled":false},{"name":"尚书贤臣","members":[["毛玠",""],["蒋济",""]],"fx":{"zhi":7,"heal":7,"troops":[]},"disabled":false},{"name":"奇策辅弼","members":[["刘晔",""],["程昱",""]],"fx":{"mag":7,"spd":6,"troops":[]},"disabled":false},{"name":"塞外镇将","members":[["牵招",""],["郭淮",""]],"fx":{"tong":7,"dInP":6,"troops":[]},"disabled":false},{"name":"虎骑后援","members":[["曹休",""],["曹彰",""]],"fx":{"dIn":5,"troops":[{"t":"骑","wu":6}]},"disabled":false},{"name":"桃园结义","members":[["刘备",""],["关羽",""],["张飞",""]],"fx":{"wu":9,"tong":8,"firstHeal":0.4,"troops":[]},"disabled":false},{"name":"五虎雄风","members":[["关羽",""],["张飞",""],["赵云",""],["马超","蜀"],["黄忠",""]],"fx":{"wu":11,"spd":7,"troops":[]},"disabled":false},{"name":"三顾茅庐","members":[["刘备",""],["诸葛亮",""]],"fx":{"zhi":10,"heal":10,"rage":6,"troops":[]},"disabled":false},{"name":"蜀汉谋柱","members":[["诸葛亮",""],["庞统",""],["法正",""]],"fx":{"zhi":12,"mag":9,"troops":[]},"disabled":false},{"name":"荆襄旧部","members":[["关羽",""],["关平",""]],"fx":{"wu":8,"phys":7,"troops":[]},"disabled":false},{"name":"益州归贤","members":[["法正",""],["吴懿",""]],"fx":{"zhi":8,"tong":7,"troops":[]},"disabled":false},{"name":"二代虎子","members":[["关兴",""],["张苞",""]],"fx":{"wu":8,"spd":8,"troops":[]},"disabled":true},{"name":"边镇良将","members":[["魏延",""],["李严",""],["王平",""]],"fx":{"tong":8,"dInP":6,"troops":[]},"disabled":true},{"name":"早期元从","members":[["简雍",""],["糜竺",""],["孙乾",""]],"fx":{"tong":7,"heal":8,"troops":[]},"disabled":true},{"name":"荆襄文佐","members":[["伊籍",""],["糜竺",""]],"fx":{"zhi":7,"rage":6,"troops":[]},"disabled":false},{"name":"北伐宿卫","members":[["廖化",""],["张翼",""]],"fx":{"tong":6,"phys":6,"troops":[]},"disabled":false},{"name":"白毦骁将","members":[["陈到",""],["向宠",""]],"fx":{"spd":7,"dIn":5,"troops":[]},"disabled":false},{"name":"南中平将","members":[["张嶷",""],["马岱",""]],"fx":{"wu":7,"dInM":6,"troops":[]},"disabled":true},{"name":"汉中坚壁","members":[["高翔",""],["霍峻",""]],"fx":{"tong":7,"dIn":6,"troops":[]},"disabled":false},{"name":"忠烈前锋","members":[["傅肜",""],["魏延",""]],"fx":{"phys":7,"spd":6,"troops":[]},"disabled":false},{"name":"蜀地同袍","members":[["辅匡",""],["黄权",""]],"fx":{"zhi":7,"mag":6,"troops":[]},"disabled":true},{"name":"江东双主","members":[["孙策",""],["孙权",""]],"fx":{"spd":7,"tong":6,"firstHeal":0.4,"troops":[]},"disabled":false},{"name":"大都督","members":[["周瑜",""],["陆逊",""],["吕蒙",""]],"fx":{"zhi":11,"mag":9,"troops":[]},"disabled":false},{"name":"江表虎臣","members":[["甘宁",""],["太史慈",""],["周泰",""],["黄盖",""],["程普",""]],"fx":{"wu":10,"spd":6,"troops":[]},"disabled":false},{"name":"幕下贤辅","members":[["鲁肃",""],["诸葛瑾",""],["步练师",""]],"fx":{"tong":7,"rage":7,"troops":[]},"disabled":false},{"name":"赤壁同谋","members":[["周瑜",""],["黄盖",""]],"fx":{"mag":8,"spd":7,"troops":[]},"disabled":false},{"name":"江表宿卫","members":[["周泰",""],["凌统",""]],"fx":{"dIn":8,"wu":6,"troops":[]},"disabled":false},{"name":"老臣三朝","members":[["程普",""],["朱治",""]],"fx":{"tong":7,"heal":8,"troops":[]},"disabled":false},{"name":"淮泗元勋","members":[["张昭",""],["张纮",""]],"fx":{"zhi":8,"rage":7,"troops":[]},"disabled":false},{"name":"后起猛将","members":[["丁奉",""],["徐盛",""]],"fx":{"wu":7,"spd":7,"troops":[]},"disabled":false},{"name":"宗室后继","members":[["孙翊",""],["孙桓",""],["孙韶",""]],"fx":{"spd":7,"phys":7,"troops":[]},"disabled":false},{"name":"吴地文治","members":[["顾雍",""],["骆统",""]],"fx":{"zhi":7,"heal":7,"troops":[]},"disabled":false},{"name":"山越悍将","members":[["贺齐",""],["蒋钦",""]],"fx":{"wu":7,"dInP":6,"troops":[]},"disabled":false},{"name":"南土镇将","members":[["吕岱",""],["吾粲",""]],"fx":{"tong":7,"mag":6,"troops":[]},"disabled":false},{"name":"朱家英锐","members":[["朱然",""],["朱桓",""]],"fx":{"spd":7,"phys":7,"troops":[]},"disabled":false},{"name":"江左望族","members":[["全琮",""],["步练师",""]],"fx":{"tong":6,"heal":8,"troops":[]},"disabled":false},{"name":"锦帆同列","members":[["甘宁",""],["潘璋",""]],"fx":{"wu":8,"spd":7,"troops":[]},"disabled":false},{"name":"陷阵风雷","members":[["吕布",""],["高顺",""]],"fx":{"wu":8,"spd":7,"troops":[]},"disabled":false},{"name":"凤仪惊鸿","members":[["吕布",""],["貂蝉",""],["董卓",""]],"fx":{"wu":9,"mag":7,"spd":6,"troops":[]},"disabled":false},{"name":"黄巾三师","members":[["张角",""],["张宝",""],["张梁",""]],"fx":{"zhi":10,"mag":8,"troops":[]},"disabled":false},{"name":"河北君臣","members":[["袁绍",""],["颜良",""],["文丑",""],["田丰",""],["沮授",""]],"fx":{"tong":8,"wu":7,"troops":[]},"disabled":false},{"name":"西凉铁骑","members":[["马超","群"],["马腾",""],["韩遂",""]],"fx":{"troops":[{"t":"骑","wu":8,"spd":9}]},"disabled":false},{"name":"乱世诡谋","members":[["董卓",""],["李儒",""],["贾诩","群"]],"fx":{"mag":9,"troops":[]},"disabled":false},{"name":"河北猛将","members":[["颜良",""],["文丑",""]],"fx":{"wu":9,"spd":7,"troops":[]},"disabled":false},{"name":"河北谋臣","members":[["田丰",""],["沮授",""]],"fx":{"zhi":9,"rage":7,"troops":[]},"disabled":false},{"name":"西凉父子","members":[["马腾",""],["马超","群"]],"fx":{"tong":6,"troops":[{"t":"骑","wu":9}]},"disabled":false},{"name":"关东诸侯","members":[["张邈",""],["张超",""]],"fx":{"tong":6,"phys":6,"troops":[]},"disabled":false},{"name":"袁术部曲","members":[["桥蕤",""],["雷薄",""],["陈兰",""]],"fx":{"wu":6,"dIn":5,"troops":[]},"disabled":false},{"name":"白波渠帅","members":[["韩暹",""],["杨奉",""]],"fx":{"spd":7,"phys":6,"troops":[]},"disabled":false},{"name":"西羌旧部","members":[["边章",""],["北宫伯玉",""]],"fx":{"spd":7,"troops":[{"t":"骑","wu":6}]},"disabled":false},{"name":"荆淮悍将","members":[["纪灵",""],["华雄",""]],"fx":{"wu":7,"dInP":6,"troops":[]},"disabled":false},{"name":"奇士筹谋","members":[["娄圭",""],["李儒",""]],"fx":{"mag":7,"spd":6,"troops":[]},"disabled":false},{"name":"白马先驱","members":[["公孙瓒",""],["张任",""]],"fx":{"troops":[{"t":"枪","tong":7},{"t":"骑","spd":7}]},"disabled":false},{"name":"三分天下","members":[["曹操",""],["刘备",""],["孙权",""]],"fx":{"tong":8,"phys":6,"mag":6,"rage":5,"troops":[]},"disabled":false},{"name":"天下无双","members":[["关羽",""],["吕布",""]],"fx":{"wu":10,"phys":6,"troops":[]},"disabled":false},{"name":"枪阵英豪","members":[["张飞",""],["张任",""]],"fx":{"troops":[{"t":"枪","tong":7}]},"disabled":false},{"name":"神射齐名","members":[["黄忠",""],["太史慈",""]],"fx":{"troops":[{"t":"弓","spd":8}]},"disabled":false},{"name":"奇策破局","members":[["郭嘉",""],["法正",""]],"fx":{"mag":9,"spd":6,"troops":[]},"disabled":false},{"name":"王佐双杰","members":[["荀彧",""],["诸葛亮",""]],"fx":{"zhi":10,"tong":6,"troops":[]},"disabled":false},{"name":"济世仁医","members":[["华佗",""],["鲁肃",""]],"fx":{"heal":12,"troops":[]},"disabled":false},{"name":"白马义从","members":[["公孙瓒",""],["赵云",""]],"fx":{"troops":[{"t":"骑","spd":12}]},"disabled":false},{"name":"锐骑先锋","members":[["高顺",""],["夏侯惇",""]],"fx":{"dInP":6,"troops":[{"t":"骑","wu":9}]},"disabled":false},{"name":"铁壁护卫","members":[["周泰",""],["赵云",""]],"fx":{"dIn":7,"troops":[]},"disabled":false}];
 const CHAPTERS = ["黄巾之乱","董卓乱政","群雄逐鹿"];
 const EQUIP_TYPES = {wp:{name:"武器",stat:"atk"}, bs:{name:"兵书",stat:"skill"}};
 function equipName(type, tier){ const base={wp:["铁剑","环首刀","青釭剑","方天画戟"],bs:["兵书残卷","孙子兵法","三略","孟德新书"]}[type]; return base[Math.min(tier-1,3)]+"·"+tier+"阶"; }
 /* ============ state + 存档层（唯一读写口）+ 账本 ============ */
 const SAVE_KEY = "sanguo_idle_save_v1";
 let _uid = 1;
-function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate();}
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+(d.getDate());}
+/* 迁移专用：v1.2.1 旧名册（genId → {n:人名, f:阵营, tm:是否天命典藏}）与旧 v0 星级、旧专属技能名（构建期由旧 GEN_ROWS 生成） */
+const OLD_ROSTER_NAMES = {"1":{"n":"曹操","f":"魏","tm":false},"2":{"n":"司马懿","f":"魏","tm":false},"3":{"n":"夏侯惇","f":"魏","tm":false},"4":{"n":"张辽","f":"魏","tm":false},"5":{"n":"夏侯渊","f":"魏","tm":false},"6":{"n":"徐晃","f":"魏","tm":false},"7":{"n":"许褚","f":"魏","tm":false},"8":{"n":"曹仁","f":"魏","tm":false},"9":{"n":"程昱","f":"魏","tm":false},"10":{"n":"刘备","f":"蜀","tm":false},"11":{"n":"关羽","f":"蜀","tm":false},"12":{"n":"张飞","f":"蜀","tm":false},"13":{"n":"赵云","f":"蜀","tm":false},"14":{"n":"诸葛亮","f":"蜀","tm":false},"15":{"n":"黄忠","f":"蜀","tm":false},"16":{"n":"马超","f":"蜀","tm":false},"17":{"n":"魏延","f":"蜀","tm":false},"18":{"n":"姜维","f":"蜀","tm":false},"19":{"n":"孙权","f":"吴","tm":false},"20":{"n":"周瑜","f":"吴","tm":false},"21":{"n":"吕蒙","f":"吴","tm":false},"22":{"n":"陆逊","f":"吴","tm":false},"23":{"n":"孙策","f":"吴","tm":false},"24":{"n":"太史慈","f":"吴","tm":false},"25":{"n":"甘宁","f":"吴","tm":false},"26":{"n":"黄盖","f":"吴","tm":false},"27":{"n":"周泰","f":"吴","tm":false},"28":{"n":"吕布","f":"群","tm":false},"29":{"n":"貂蝉","f":"群","tm":false},"30":{"n":"董卓","f":"群","tm":false},"31":{"n":"张角","f":"群","tm":false},"32":{"n":"华雄","f":"群","tm":false},"33":{"n":"袁绍","f":"群","tm":false},"34":{"n":"公孙瓒","f":"群","tm":false},"35":{"n":"颜良","f":"群","tm":false},"36":{"n":"文丑","f":"群","tm":false},"101":{"n":"赵云","f":"蜀","tm":true},"102":{"n":"吕布","f":"群","tm":true},"103":{"n":"关羽","f":"蜀","tm":true},"104":{"n":"张飞","f":"蜀","tm":true}};
+const OLD_V0_STAR = {"1":5,"2":5,"3":4,"4":4,"5":3,"6":3,"7":3,"8":3,"9":2,"10":4,"11":5,"12":4,"13":5,"14":5,"15":4,"16":4,"17":3,"18":3,"19":4,"20":5,"21":4,"22":4,"23":4,"24":3,"25":3,"26":2,"27":3,"28":5,"29":4,"30":4,"31":4,"32":3,"33":3,"34":3,"35":2,"36":2,"101":5,"102":5,"103":5,"104":5};
+function freshPity(){ return { normal:{sr:0,ssr:0}, yb:{ssr:0,pers:0}, tm:{ssr:0,tm:0} }; }
+function freshTmDungeons(){ return { unlocked:{}, cleared:{}, half:{}, adRetry:{}, resetDate:"", resetUsed:false }; }
 function newState(){
-return { ver:4, yuanbao:CFG.startYuanbao, tickets:0, merit:0, rankIdx:0, arenaPts:0,
+return { ver:5, yuanbao:CFG.startYuanbao, tickets:0, beads:0, merit:0, rankIdx:0, arenaPts:0,
 cards:[], skillsOwned:[], equips:[], formation:[], starterGenId:0,
 pool:{ hero:{fac:"蜀",leftSec:0,acc:0}, skill:{leftSec:0,acc:0}},
-gachaPity:0, stageCleared:0,
+pity:freshPity(), expPool:0, daily:{cleared:0}, tmDungeons:freshTmDungeons(),
+stageCleared:0,
 tower:{date:todayStr(), layer:0, fails:0, done:false},
 showcase:[], showcaseAcc:0, showcaseTs:Date.now(),
 signDate:"", adUsed:{date:todayStr(),count:0}, claims:{noon:"",evening:""},
-createdAt:Date.now(), tianmingNews:""};
+createdAt:Date.now(), tianmingNews:"", migLog:[]};
 }
 let state = newState();
 function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state));}catch(e){}}
-/* v0(ver1) → v1(ver2) 存档迁移：老卡补 level/exp/实例性格，升星折算为独立 ★，其余字段原样保留，迁移后立刻回写 */
+/* v0(ver1) → v1(ver2)：老卡补 level/exp/实例性格，并打上 migName/migFac/migVariant 标记（v5 换代表时按名映射）；其余原样 */
 function migrateV1toV2(old){
   if(!old || old.ver>=2) return old;
   const s = Object.assign(newState(), old);
   s.cards = (old.cards||[]).map(c=>{
-    const g = GEN_BY_ID[c.genId]; if(!g) return null;
-    const v0BaseStar = g.variant? 5 : (GEN_ROWS[g.baseId-1]? GEN_ROWS[g.baseId-1][2] : 5);
+    const info = OLD_ROSTER_NAMES[c.genId]; if(!info) return null;
+    const v0BaseStar = OLD_V0_STAR[c.genId] || 3;
     const ups = Math.max(0, (c.star||v0BaseStar) - v0BaseStar);
     const oldPers = V0_PERS_OLD[c.genId];
-    return { uid:c.uid, genId:c.genId, star:Math.min(CFG.starCap, 1+ups), enh:c.enh||0,
+    return { uid:c.uid, genId:c.genId, migName:info.n, migFac:info.f, migVariant:!!info.tm, star:Math.min(CFG.starCap, 1+ups), enh:c.enh||0,
       equip:Object.assign({wp:0,ar:0,hs:0,tr:0}, c.equip||{}),
       level:1, exp:0, pers: oldPers? (PERS_MIGRATE[oldPers]||oldPers) : null, tianming:null };
   }).filter(Boolean);
@@ -366,7 +360,7 @@ function normalizeSkillEntry(x){
   e.kind = SKILL_KIND[e.name] || "active";
   return e;
 }
-/* v1(ver2) → v1.1(ver3) 存档迁移：等级钳 30、卡补学习技能字段、技能卡补 kind 并改名、天命换 DESTINY 定版值，其余原样；迁移后立刻回写 */
+/* v1(ver2) → v1.1(ver3)：等级钳 30、卡补学习技能字段、技能卡规范化；天命 trait 原样保留（v1.2 迁移统一拆除） */
 function migrateV2toV3(old){
   if(!old || old.ver>=3) return old;
   const s = Object.assign(newState(), old);
@@ -376,16 +370,14 @@ function migrateV2toV3(old){
     if(nc.level>=CFG.levelCap) nc.exp = 0;
     if(nc.learnedActive===undefined) nc.learnedActive = null;
     if(nc.learnedPassive===undefined) nc.learnedPassive = null;
-    if(nc.tianming) nc.tianming = DESTINY[nc.genId]? Object.assign({}, DESTINY[nc.genId]) : null;
+    if(nc.tianming) nc.tianming = Object.assign({}, nc.tianming);
     return nc;
   });
   s.skillsOwned = (old.skillsOwned||[]).map(normalizeSkillEntry);
   s.ver = 3;
   return s;
 }
-/* v1.1(ver3) → v1.2(ver4) 存档迁移：拆天命 trait（全卡 tianming 置 null，成长回本体＋性格口径）；
-   装备两件化——tr(宝物) 平移为 bs(兵书)：uid/阶数不变、换兵书名；ar/hs 按 CFG.equipRefundPerTier/阶折算元宝返还并删除；
-   卡 equip 字段重建为 {wp, bs}；极卡名随天命版专属技能与本体统一而改名（龙胆枪魂→七进七出、无双乱舞→天下无双）；其余原样；迁移后立刻回写 */
+/* v1.1(ver3) → v1.2(ver4)：拆天命 trait；装备两件化（tr→bs 平移，ar/hs 折元宝返还）；极卡名随专属技能统一改名 */
 function migrateV3toV4(old){
   if(!old || old.ver>=4) return old;
   const s = Object.assign(newState(), old);
@@ -415,7 +407,70 @@ function migrateV3toV4(old){
   s.ver = 4;
   return s;
 }
-function load(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s){ const parsed=JSON.parse(s); state=Object.assign(newState(), parsed); let migrated=false; if(state.ver<2){ state=migrateV1toV2(state); migrated=true; } if(state.ver<3){ state=migrateV2toV3(state); migrated=true; } if(state.ver<4){ state=migrateV3toV4(state); migrated=true; } if(migrated) save(); state.cards.forEach(c=>{ c.tianming=null; const eq=c.equip||{}; c.equip={ wp:eq.wp||0, bs:eq.bs||eq.tr||0 }; if(c.learnedActive===undefined) c.learnedActive=null; if(c.learnedPassive===undefined) c.learnedPassive=null; }); state.skillsOwned = (state.skillsOwned||[]).map(normalizeSkillEntry); return true;}}catch(e){} return false;}
+/* v1.2(ver4) → v2(ver5)：名册换代——按人名＋阵营把旧卡映射到新名册 id（天命典藏映射到新天命卡）；
+   映射不到的旧卡每张折招募令×CFG.migCardTicketRefund 并记 migLog；已投入经验按旧曲线折算回经验池（等级保留、卡内 exp 清零）；
+   新增天命珠/保底计数/经验池/日常与天命副本字段带默认值 */
+function findNewGen(info){
+  if(!info) return null;
+  const base = GENS.find(g=>g.name===info.n && g.fac===info.f && !g.variant);
+  if(!base) return null;
+  if(info.tm) return GENS.find(g=>g.variant && g.baseId===base.id) || null;
+  return base;
+}
+function migrateV4toV5(old){
+  if(!old || old.ver>=5) return old;
+  const s = Object.assign(newState(), old);
+  s.beads = old.beads||0;
+  s.pity = freshPity();
+  s.tmDungeons = freshTmDungeons();
+  s.daily = {cleared:0};
+  s.migLog = [];
+  let expPool = 0;
+  const keptUids = new Set();
+  s.cards = (old.cards||[]).map(c=>{
+    const info = c.migName? {n:c.migName, f:c.migFac, tm:c.migVariant} : OLD_ROSTER_NAMES[c.genId];
+    const ng = findNewGen(info);
+    if(!ng){
+      s.tickets = (s.tickets||0) + CFG.migCardTicketRefund;
+      s.migLog.push("旧卡（"+(info? info.n : "genId="+c.genId)+"）未能映射到新名册，折招募令×"+CFG.migCardTicketRefund);
+      return null;
+    }
+    let invested = c.exp||0;
+    for(let l=1; l<(c.level||1); l++) invested += l*CFG.expNeedPerLevel;
+    expPool += invested;
+    keptUids.add(c.uid);
+    const nc = Object.assign({}, c);
+    nc.genId = ng.id;
+    nc.level = Math.min(c.level||1, CFG.levelCap);
+    nc.exp = 0;
+    nc.tianming = null;
+    delete nc.migName; delete nc.migFac; delete nc.migVariant;
+    const eq = c.equip||{};
+    nc.equip = { wp: eq.wp||0, bs: eq.bs||eq.tr||0 };
+    if(nc.learnedActive===undefined) nc.learnedActive = null;
+    if(nc.learnedPassive===undefined) nc.learnedPassive = null;
+    return nc;
+  }).filter(Boolean);
+  s.expPool = expPool;
+  s.formation = (old.formation||[]).filter(u=>keptUids.has(u));
+  s.showcase = (old.showcase||[]).filter(u=>keptUids.has(u));
+  s.skillsOwned = (old.skillsOwned||[]).map(x=>{
+    if(x && x.grade==="极" && x.genId){
+      const info = OLD_ROSTER_NAMES[x.genId];
+      const base = info? GENS.find(g=>g.name===info.n && g.fac===info.f && !g.variant) : null;
+      if(base) return Object.assign({}, x, {name:"极·"+base.skill, genId:base.id});
+    }
+    return x;
+  });
+  const sinfo = OLD_ROSTER_NAMES[old.starterGenId];
+  if(sinfo){ const sg = findNewGen(sinfo); s.starterGenId = sg? sg.id : 0; }
+  /* 已拥有的天命卡 → 解锁其天命副本（直接写迁移目标 s，不走全局 state 的 unlockTmDungeon） */
+  s.cards.forEach(c=>{ const g = GEN_BY_ID[c.genId]; if(g && g.variant){ s.tmDungeons.unlocked[g.id] = true; s.tmDungeons.cleared[g.id] = s.tmDungeons.cleared[g.id]||0; } });
+  s.ver = 5;
+  return s;
+}
+function load(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s){ const parsed=JSON.parse(s); state=Object.assign(newState(), parsed); let migrated=false; if(state.ver<2){ state=migrateV1toV2(state); migrated=true; } if(state.ver<3){ state=migrateV2toV3(state); migrated=true; } if(state.ver<4){ state=migrateV3toV4(state); migrated=true; } if(state.ver<5){ state=migrateV4toV5(state); migrated=true; } if(migrated) save(); state.cards.forEach(c=>{ c.tianming=null; const eq=c.equip||{}; c.equip={ wp:eq.wp||0, bs:eq.bs||eq.tr||0 }; if(c.learnedActive===undefined) c.learnedActive=null; if(c.learnedPassive===undefined) c.learnedPassive=null; }); if(!state.pity) state.pity=freshPity(); ["normal","yb","tm"].forEach(k=>{ if(!state.pity[k]) state.pity[k]=freshPity()[k]; }); if(typeof state.beads!=="number") state.beads=0; if(typeof state.expPool!=="number") state.expPool=0; if(!state.daily) state.daily={cleared:0}; if(!state.tmDungeons) state.tmDungeons=freshTmDungeons(); ["unlocked","cleared","half","adRetry"].forEach(k=>{ if(!state.tmDungeons[k]) state.tmDungeons[k]={}; }); if(!state.migLog) state.migLog=[]; state.skillsOwned = (state.skillsOwned||[]).map(normalizeSkillEntry); return true;}}catch(e){} return false;}
+
 const RES_FIELD = { yuanbao:"yuanbao", tickets:"tickets", merit:"merit", arenaPts:"arenaPts"};
 function addRes(kind, n){ state[RES_FIELD[kind]] += n; if(state[RES_FIELD[kind]]<0) state[RES_FIELD[kind]]=0; save();}
 function spendRes(kind, n){ if(state[RES_FIELD[kind]] < n) return false; state[RES_FIELD[kind]] -= n; save(); return true;}
@@ -430,7 +485,7 @@ const c = { uid:_uid++, genId:genId, star:1, enh:0, equip:{wp:0,bs:0}, level:1, 
 state.cards.push(c); save(); return c;
 }
 function growthOf(card){
-const base = GROWTH[card.genId]; const eff = {wu:base.wu, zhi:base.zhi, tong:base.tong, spd:base.spd};
+const base = GEN_BY_ID[card.genId].gr; const eff = {wu:base.wu, zhi:base.zhi, tong:base.tong, spd:base.spd};
 if(card.pers && PERS_STAT[card.pers]) eff[PERS_STAT[card.pers]] += CFG.persGrowthBonus;
 return eff;
 }
@@ -442,18 +497,9 @@ function troopsOf(card){
 const g = GEN_BY_ID[card.genId];
 return CFG.troopsBase[g.rar] + (card.enh||0) * CFG.troopsPerEnh;
 }
-function gainExp(card, n){
-if(card.level>=CFG.levelCap) return;
-card.exp = (card.exp||0) + n;
-while(card.level<CFG.levelCap && card.exp >= card.level*CFG.expNeedPerLevel){ card.exp -= card.level*CFG.expNeedPerLevel; card.level++; }
-}
-function grantTeamExp(n, win){
-const amt = win? n : Math.round(n*CFG.expLoseRatio);
-state.formation.forEach(uid=>{ const c=state.cards.find(x=>x.uid===uid); if(c) gainExp(c, amt); });
-}
 function addEquip(type, tier){ const e={uid:_uid++, type:type, tier:tier, name:equipName(type,tier)}; state.equips.push(e); save(); return e;}
 function randPick(arr){ return arr[Math.floor(Math.random()*arr.length)];}
-/* ============ 卡池模块 ============ */
+/* ============ 卡池模块（v2 四池） ============ */
 function openPool(kind){
 const cost = kind==="hero"? CFG.heroPoolCost: CFG.skillPoolCost;
 const p = state.pool[kind];
@@ -463,25 +509,26 @@ p.leftSec = Math.min(CFG.poolMaxSec, p.leftSec + CFG.poolHourSec);
 if(kind==="hero"){ const sel=document.getElementById("heroFac"); if(sel) p.fac=sel.value;}
 save(); return {ok:true,msg:"已开启/延长 1 小时"};
 }
-/* 技能卡产出：普通版从主动/被动技能表出（带 kind，是学习库存）；「极·<专属>」为收藏加成卡，只出自元宝技能池（jiChance），其他来源不出 */
+/* 技能卡产出：只出学习技卡（主动/被动）。「极」版自 v2 起停产——按设计方口径极＝天命卡自带（见施工纸一.9），存量极卡保留收藏加成 */
 function produceSkillCard(source){
-if(source==="yuanbao" && Math.random() < CFG.jiChance){
-const ownedJi = new Set(state.skillsOwned.filter(x=>x.grade==="极").map(x=>x.name));
-const cand = GENS.filter(g=>g.rar==="SSR" && !ownedJi.has("极·"+g.skill));
-if(cand.length){ const g = randPick(cand); return {name:"极·"+g.skill, grade:"极", kind:"ji", genId:g.id}; }
-}
 const pool = Object.keys(ACTIVE_SKILLS).map(n=>({name:n, kind:"active"})).concat(Object.keys(PASSIVE_SKILLS).map(n=>({name:n, kind:"passive"})));
 const p = randPick(pool);
 return {name:p.name, grade:"普通", kind:p.kind};
+}
+function rollRarity(rates){
+const r = Math.random()*100; let acc = 0;
+for(const k of ["SSR","SR","R","N"]){ if(rates[k]){ acc += rates[k]; if(r < acc) return k; } }
+return "N";
 }
 function poolTick(){
 let changed=false;
 const hp = state.pool.hero;
 if(hp.leftSec>0){ hp.leftSec=Math.max(0,hp.leftSec-CFG.demoTickRate); hp.acc+=1;
 if(hp.acc>=CFG.heroCardEveryRealSec){ hp.acc=0;
-/* 天命覆盖判定：每次产卡先摇 1%，命中从天命名单等概率出（不分阵营）；未命中走本池常规——挂机英雄池只出普通卡（无性格） */
-if(Math.random() < CFG.tianmingRate){ const tg = GEN_BY_ID[randPick(TIANMING_IDS)]; addCard(tg.id); state.tianmingNews = tg.name; }
-else { const cand=GENS.filter(g=>g.fac===hp.fac &&!g.variant); addCard(randPick(cand).id); }
+/* 挂机材料池：N/R/SR＝55/35/10，只出普通卡（无性格、无天命） */
+const rar = rollRarity(CFG.matRates);
+const cand = GENS.filter(g=>g.fac===hp.fac && !g.variant && g.rar===rar);
+addCard(randPick(cand.length? cand : GENS.filter(g=>g.fac===hp.fac && !g.variant)).id);
 changed=true;}}
 const sp = state.pool.skill;
 if(sp.leftSec>0){ sp.leftSec=Math.max(0,sp.leftSec-CFG.demoTickRate); sp.acc+=1;
@@ -489,34 +536,166 @@ if(sp.acc>=CFG.skillCardEveryRealSec){ sp.acc=0; state.skillsOwned.push(produceS
 if(changed) save();
 return changed;
 }
-function drawTicket(){
-if(!spendRes("tickets", CFG.ticketDrawCost)) return null;
-const cand = GENS.filter(g=>!g.variant && g.rar!=="SSR");
-const g = randPick(cand); addCard(g.id); return g;
-}
-function drawLimited(n){
-const cost = n===10? CFG.limitTen: CFG.limitSingle*n;
-if(!spendRes("yuanbao", cost)) return null;
+/* 普通卡池（招募令）：普卡 only（永不带性格）；10 连必 SR+、100 抽必 SSR，计数各池独立 */
+function drawNormal(n){
 const drawn=[];
 for(let i=0;i<n;i++){
-let g;
-/* 每抽先做天命覆盖判定（1%）：命中出天命典藏卡；未命中走常规构成（变体不再混入常规构成）。天命入驻卡池每抽必带性格（含天命张） */
-if(Math.random() < CFG.tianmingRate){ g = GEN_BY_ID[randPick(TIANMING_IDS)]; state.tianmingNews = g.name; }
-else { const r = Math.random();
-if(r<0.15){ g=randPick(GENS.filter(x=>x.rar==="SSR" &&!x.variant));}
-else if(r<0.45){ g=randPick(GENS.filter(x=>x.rar==="SR"));}
-else { g=randPick(GENS.filter(x=>x.rar==="R"));} }
-if(g.rar==="SSR"){ state.gachaPity=0;} else { state.gachaPity++;}
-drawn.push(g); addCard(g.id, {persMode:"always"});
-}
-if(n===10 &&!drawn.some(g=>g.rar==="SSR")){
-const g = randPick(GENS.filter(x=>x.rar==="SSR" &&!x.variant));
-drawn[9]=g; const lastCard = state.cards[state.cards.length-1]; lastCard.genId=g.id;
-state.gachaPity=0;
+if(!spendRes("tickets", CFG.ticketDrawCost)) break;
+const P = state.pity.normal;
+let rar;
+if(P.ssr >= CFG.normalPitySSR-1) rar = "SSR";
+else if(P.sr >= CFG.normalPitySR-1) rar = (Math.random()*100 < CFG.normalRates.SSR)? "SSR" : "SR";
+else rar = rollRarity(CFG.normalRates);
+const cand = GENS.filter(g=>!g.variant && g.rar===rar);
+const g = randPick(cand.length? cand : GENS.filter(x=>!x.variant));
+drawn.push(g); addCard(g.id);
+if(g.rar==="SSR"){ P.ssr=0; P.sr=0; } else { P.ssr++; if(g.rar==="SR") P.sr=0; else P.sr++; }
 }
 save(); return drawn;
 }
-/* ============ 战斗模块（纯函数模拟器） ============ */
+/* 元宝卡池：100 元宝/抽；性格 3.5%（SR/SSR 带性格版）、普卡 R/SR/SSR＝70/24/6；10 连必 SSR、100 抽必性格 */
+function drawYuanbao(n){
+const drawn=[];
+for(let i=0;i<n;i++){
+if(!spendRes("yuanbao", CFG.ybCost)) break;
+const P = state.pity.yb;
+let pers = Math.random() < CFG.ybPersRate;
+if(P.pers >= CFG.ybPityPers-1) pers = true;
+let rar, g;
+if(pers){
+rar = (Math.random()*100 < CFG.ybPersTierSSR)? "SSR" : "SR";
+const cand = GENS.filter(x=>!x.variant && x.rar===rar);
+g = randPick(cand);
+} else {
+rar = rollRarity(CFG.ybRates);
+if(P.ssr >= CFG.ybPitySSR10-1 && rar!=="SSR") rar = "SSR";
+const cand = GENS.filter(x=>!x.variant && x.rar===rar);
+g = randPick(cand.length? cand : GENS.filter(x=>!x.variant && x.rar==="SSR"));
+}
+drawn.push(g); addCard(g.id, pers? {persMode:"always"} : {});
+if(g.rar==="SSR") P.ssr=0; else P.ssr++;
+if(pers) P.pers=0; else P.pers++;
+}
+save(); return drawn;
+}
+/* 限时卡池（天命入驻）：1 天命珠/抽；SR/SSR 性格（每抽必带性格）＋天命 1%；10 连必 SSR、100 抽必天命；抽中天命解锁其天命副本 */
+function drawLimited(n){
+const drawn=[];
+for(let i=0;i<n;i++){
+if(state.beads < CFG.tmCostBeads) break;
+state.beads -= CFG.tmCostBeads;
+const P = state.pity.tm;
+let g = null, isTm = false;
+if(P.tm >= CFG.tmPity-1 || Math.random() < CFG.tmRate){ isTm = true; g = GEN_BY_ID[randPick(TIANMING_IDS)]; }
+else {
+let rar = rollRarity(CFG.tmPoolRates);
+if(P.ssr >= CFG.tmPitySSR10-1) rar = "SSR";
+const cand = GENS.filter(x=>!x.variant && x.rar===rar);
+g = randPick(cand.length? cand : GENS.filter(x=>!x.variant && x.rar==="SSR"));
+}
+drawn.push(g); addCard(g.id, {persMode:"always"});
+if(isTm){ P.tm=0; P.ssr=0; state.tianmingNews = g.name; unlockTmDungeon(g); }
+else { P.tm++; if(g.rar==="SSR") P.ssr=0; else P.ssr++; }
+}
+save(); return drawn;
+}
+function unlockTmDungeon(tmGen){
+if(!tmGen || !tmGen.baseId) return;
+if(!state.tmDungeons.unlocked[tmGen.id]){ state.tmDungeons.unlocked[tmGen.id] = true; state.tmDungeons.cleared[tmGen.id] = state.tmDungeons.cleared[tmGen.id]||0; }
+}
+function buyBeads(n){
+const cost = CFG.beadPrice * n;
+if(!spendRes("yuanbao", cost)) return {ok:false,msg:"元宝不足（"+CFG.beadPrice+" 元宝/个）"};
+state.beads += n; save();
+return {ok:true,msg:"购入天命珠 ×"+n};
+}
+/* ============ 经验池与升级 ============ */
+function addExpPool(n){ if(n>0){ state.expPool += n; save(); } }
+function levelUpCost(level){ return level * CFG.expNeedPerLevel; }
+function levelUpCard(uid, times){
+const card = state.cards.find(c=>c.uid===uid); if(!card) return {ok:false,msg:"卡不存在",done:0};
+let done = 0;
+while(done < times && (card.level||1) < CFG.levelCap){
+const cost = levelUpCost(card.level||1);
+if(state.expPool < cost) break;
+state.expPool -= cost; card.level++; done++;
+}
+save();
+return { ok:done>0, done:done, msg: done>0? "升至 Lv"+card.level : ((card.level||1)>=CFG.levelCap? "已满级" : "经验池不足（本级需 "+levelUpCost(card.level||1)+")") };
+}
+/* ============ 日常副本与天命副本 ============ */
+function dailyEnemyPower(i){ return 0.40 + i*0.12; }
+function fightDaily(i){
+if(i<1 || i>CFG.dailyStages) return {ok:false,msg:"关卡不存在"};
+if(i > state.daily.cleared+1) return {ok:false,msg:"先通关前一关"};
+const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0));
+if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
+const res = battleSim(team, enemyTeam(dailyEnemyPower(i), 5));
+let rewardMsg = "";
+if(res.win){
+const first = i > state.daily.cleared;
+const expFull = CFG.dailyExpBase + i*CFG.dailyExpPer;
+const exp = first? expFull : Math.round(expFull/2);
+addExpPool(exp); rewardMsg += "经验池+"+exp+(first?"":"（复刷减半）");
+if(first || Math.random()<0.5){ addRes("tickets", 1); rewardMsg += " 招募令+1"; }
+if(first || Math.random()<0.5){ const yb = 15 + i*2; addRes("yuanbao", yb); rewardMsg += " 元宝+"+yb; }
+if(first) state.daily.cleared = i;
+save();
+}
+return {ok:true, win:res.win, log:res.log, rewardMsg:rewardMsg};
+}
+function tmBossUnit(tmGenId, power){
+const g = GEN_BY_ID[tmGenId]; if(!g) return null;
+const u = enemyUnitFromGen(g, power*1.25, "（天命）");
+u.hp = Math.round(u.hp*1.4); u.curHp = u.hp;
+return u;
+}
+function fightTmDungeon(tmGenId, stage, useAd){
+const D = state.tmDungeons;
+if(!D.unlocked[tmGenId]) return {ok:false,msg:"尚未解锁该天命副本（先在限时卡池抽到对应天命将）"};
+const cleared = D.cleared[tmGenId]||0;
+if(stage<1 || stage>10) return {ok:false,msg:"关卡不存在"};
+if(stage > cleared+1) return {ok:false,msg:"先通关前一关"};
+const key = tmGenId+"_"+stage;
+let power = 0.50 + stage*0.13;
+if(useAd){ if(!D.adRetry[key]) return {ok:false,msg:"本关没有可用的广告重打"}; D.adRetry[key]=false; power *= CFG.tmAdRetryPowerMul; }
+const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0));
+if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
+const foes = enemyTeam(power, 4); const boss = tmBossUnit(tmGenId, power); if(boss) foes.push(boss);
+const res = battleSim(team, foes);
+let rewardMsg = "";
+if(res.win){
+const first = stage > cleared;
+if(first){
+D.cleared[tmGenId] = stage;
+const half = !!D.half[tmGenId];
+const beads = half? (stage===10? CFG.tmStageBeads : 2) : CFG.tmStageBeads;
+state.beads += beads; rewardMsg += "天命珠+"+beads+(half?"（重置重刷减半）":"");
+if(stage===10 && !half){ rewardMsg += "（全通合计 50 珠）"; }
+if(stage===10 && half){ D.half[tmGenId] = false; }
+}
+addExpPool(CFG.dailyExpBase + stage*CFG.dailyExpPer);
+save();
+} else {
+D.adRetry[key] = true; save();
+}
+return {ok:true, win:res.win, log:res.log, rewardMsg:rewardMsg, canAdRetry: !res.win};
+}
+/* 每日广告重置 1 个已通天命副本：清进度、重刷减半（合计 25 珠） */
+function tmDailyReset(tmGenId){
+const D = state.tmDungeons;
+if(!D.unlocked[tmGenId]) return {ok:false,msg:"未解锁"};
+if(D.resetDate===todayStr() && D.resetUsed) return {ok:false,msg:"今日重置次数已用（每日 1 次）"};
+if(!(D.cleared[tmGenId]>0)) return {ok:false,msg:"该副本尚未通关，无需重置"};
+D.cleared[tmGenId] = 0; D.half[tmGenId] = true;
+D.resetDate = todayStr(); D.resetUsed = true;
+save();
+return {ok:true,msg:"已重置，可重刷（收益减半，全通合计 25 珠）"};
+}
+
+/* ============ 战斗模块（v2 数据驱动效果引擎） ============ */
+/* 伤害：base＝攻击方对应维（兵刃→武力面 atkW / 谋略→智力面 atkZ / 普攻→混合 atk）×倍率，
+   经克制环 ×CFG.counterMul、±10% 浮动、攻击方造成伤害修正后，减目标 def×0.4，下限 1；再过目标受伤修正/分担/护盾 */
 function calcDamage(att, def){
 let mul = 1;
 if(BEATS[att.troop]===def.troop) mul = CFG.counterMul;
@@ -525,82 +704,219 @@ return Math.max(1, Math.round(raw - def.def*0.4));
 }
 /* 减怒结算（连环计）：不低于 0 */
 function applyRageCut(u, n){ u.rage = Math.max(0, (u.rage||0) - n); return u.rage; }
-/* 索敌（前二后三）：单体目标优先对方前排（站位 0、1）存活者、同排取站位靠前者；前排全灭才及后排 */
-function pickTarget(foes){
-const alive = foes.filter(f=>f.alive);
-if(!alive.length) return null;
-const front = alive.filter(f=>f.pos<2);
-const row = front.length? front : alive;
+function aliveOf(team){ return team.filter(u=>u.alive); }
+function frontRow(team){ return aliveOf(team).filter(u=>u.pos<2); }
+function backRow(team){ return aliveOf(team).filter(u=>u.pos>=2); }
+/* 索敌（前二后三）：前排优先；嘲讽——敌方前排攻击者优先打嘲讽者 */
+function pickTarget(foes, attacker){
+const alive = aliveOf(foes); if(!alive.length) return null;
+if(attacker && attacker.pos<2){ const tz = alive.filter(u=>(u.taunt||0)>0); if(tz.length) return tz.slice().sort((x,y)=>x.pos-y.pos)[0]; }
+const front = frontRow(foes); const row = front.length? front : alive;
 return row.slice().sort((x,y)=>x.pos-y.pos)[0];
 }
-/* 触发三通道：①专属技能只认怒气（满 100 必放、消耗怒气、代替普攻；不满绝不放）②学习主动技能在普攻后按 CFG.activeBaseRate 判定 ③被动技能在 resolveUnit 常驻生效 */
-function battleSim(teamA, teamB){
-const A = teamA.map((u,i)=>Object.assign({},u,{curHp:u.hp,rage:u.rage||0,alive:true,pos:(typeof u.pos==="number"? u.pos : i)}));
-const B = teamB.map((u,i)=>Object.assign({},u,{curHp:u.hp,rage:u.rage||0,alive:true,pos:(typeof u.pos==="number"? u.pos : i)}));
-const log=[]; let skillUsed=false;
-A.concat(B).forEach(u=>{ if(u.passiveSkill) log.push(u.name+" 被动·"+u.passiveSkill+"（常驻）"); });
-function dealDamage(att, t, mul){
-const dmg = Math.max(1, Math.round(calcDamage(att,t) * (mul||1)));
-t.curHp -= dmg; t.rage = Math.min(100, (t.rage||0)+10); if(t.curHp<=0){ t.curHp=0; t.alive=false; }
+function pickBackTarget(foes){
+const alive = aliveOf(foes); if(!alive.length) return null;
+const back = backRow(foes); const row = back.length? back : alive;
+return row.slice().sort((x,y)=>x.pos-y.pos)[0];
+}
+function buffPct(u, stat){
+let p = 0;
+(u.buffs||[]).forEach(b=>{ if(b.stat===stat) p += b.pct * (b.stk||1); });
+return p;
+}
+function effSpd(u){ return u.spd * (1 + buffPct(u,"spd")/100); }
+function dmgOutMul(att, type, target){
+let p = buffPct(att,"dOut") + buffPct(att, type==="mag"? "dOutM":"dOutP");
+if(target) p += buffPct(att, target.pos<2? "atkF":"atkB");
+return (1 + p/100) * (type==="mag"? (att.magM||1) : (att.physM||1));
+}
+function dmgInMul(t, type){
+let p = buffPct(t,"dIn") + buffPct(t, type==="mag"? "dInM":"dInP");
+return Math.max(0.05, (1 + p/100)) * (t.dInM||1);
+}
+function healMul(src, t){
+return (1 + ((src&&src.healM? src.healM-1:0)) + buffPct(t,"hIn")/100);
+}
+/* 统一伤害结算：type phys/mag；返回实际伤害 */
+function dealDamageEx(att, t, base, type, log, round){
+if(!t || !t.alive) return 0;
+let counter = 1;
+if(att && BEATS[att.troop]===t.troop) counter = CFG.counterMul;
+let raw = base * counter * (0.9 + Math.random()*0.2);
+if(att) raw *= dmgOutMul(att, type, t);
+let dmg = Math.max(1, Math.round(raw - t.def*0.4));
+dmg = Math.max(1, Math.round(dmg * dmgInMul(t, type)));
+/* 分担：被保护者所受伤害按比例转给保护者 */
+if(t.share && t.share.src && t.share.src.alive && t.share.src!==t){
+const moved = Math.round(dmg * t.share.pct/100);
+if(moved>0){ dmg -= moved; hurtRaw(t.share.src, moved, log, round, "（分担自 "+t.name+"）"); }
+}
+hurtRaw(t, dmg, log, round, "");
+if(att){ att.rage = Math.min(100, (att.rage||0) + 0); }
+t.rage = Math.min(100, (t.rage||0) + Math.round(10 * (t.rageM||1)));
 return dmg;
 }
+function hurtRaw(t, dmg, log, round, suffix){
+let rest = dmg;
+if(t.shield>0){ const ab = Math.min(t.shield, rest); t.shield -= ab; rest -= ab; if(log) log.push("第"+round+"回合 "+t.name+" 护盾吸收 "+ab+" 点伤害"+suffix); }
+if(rest>0){ t.curHp -= rest; if(t.curHp<=0){ t.curHp=0; t.alive=false; } }
+}
+function healUnit(src, t, amt, log, round, label){
+if(!t || !t.alive) return 0;
+const real = Math.max(0, Math.min(t.hp - t.curHp, Math.round(amt * healMul(src, t))));
+if(real>0){ t.curHp += real; if(log) log.push("第"+round+"回合 "+(label||"")+" "+t.name+" 回复 "+real+" 兵力"); }
+return real;
+}
+/* 目标选择：F 前排单体 / B 后排单体 / A 任意单体（敌兵力最低）/ L 兵力最低后排 / R2 随机2 / E 敌全体
+   a1 友单体（兵力比最低）/ aA 友全体 / self 自身 / aC 友骑兵单体（武力最高）/ cA 友骑兵全体 */
+function selectTargets(e, u, allies, foes){
+const F = aliveOf(foes), A = aliveOf(allies);
+switch(e.t){
+case "F": { const t = pickTarget(foes, u); return t? [t]:[]; }
+case "B": { const t = pickBackTarget(foes); return t? [t]:[]; }
+case "A": return F.length? [F.slice().sort((x,y)=>x.curHp-y.curHp)[0]] : [];
+case "L": { const b = backRow(foes); const row = b.length? b : F; return row.length? [row.slice().sort((x,y)=>x.curHp-y.curHp)[0]] : []; }
+case "R2": { const s = F.slice(); const out=[]; while(s.length && out.length<2){ out.push(s.splice(Math.floor(Math.random()*s.length),1)[0]); } return out; }
+case "E": return F;
+case "a1": return A.length? [A.slice().sort((x,y)=>(x.curHp/x.hp)-(y.curHp/y.hp))[0]] : [];
+case "aA": return A;
+case "self": return [u];
+case "aC": { const c = A.filter(x=>x.troop==="骑"); return c.length? [c.slice().sort((x,y)=>y.atkW-x.atkW)[0]] : (A.length? [u] : []); }
+case "cA": return A.filter(x=>x.troop==="骑");
+}
+return [];
+}
+function statVal(u, s){ return s==="z"? u.atkZ : s==="t"? u.tongV : u.atkW; }
+/* 释放怒技：按 effects 顺序结算，日志逐条可读 */
+function castSkill(u, allies, foes, log, round){
+let used = false;
+(u.fx||[]).forEach(e=>{
+const targets = selectTargets(e, u, allies, foes);
+if(e.k==="dmg"){
+targets.forEach(t=>{
+const before = t.curHp;
+const dmg = dealDamageEx(u, t, statVal(u, e.s) * e.m, e.s==="z"? "mag":"phys", log, round);
+log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → "+t.name+" 造成 "+dmg+" "+(e.s==="z"?"谋略":"兵刃")+"伤害"+(t.alive?"":"，"+t.name+" 倒下"));
+if(e.stun){ t.stun = Math.max(t.stun||0, e.stun); log.push("　"+t.name+" 被眩晕 "+e.stun+" 回合"); }
+if(e.burn){ t.dots.push({type:"burn", amt:Math.max(1,Math.round(statVal(u,e.s)*CFG.dotMul)), rounds:e.burn}); log.push("　"+t.name+" 被灼烧（每回合 "+Math.max(1,Math.round(statVal(u,e.s)*CFG.dotMul))+"，"+e.burn+" 回合）"); }
+if(e.pois){ t.dots.push({type:"pois", amt:Math.max(1,Math.round(statVal(u,e.s)*CFG.dotMul)), rounds:e.pois}); log.push("　"+t.name+" 中毒（每回合 "+Math.max(1,Math.round(statVal(u,e.s)*CFG.dotMul))+"，"+e.pois+" 回合）"); }
+if(e.ls){ const h = Math.round(dmg * e.ls/100); if(h>0 && u.alive) healUnit(u, u, h, null, round); if(h>0) log.push("　"+u.name+" 按伤害回血 "+h); }
+used = true;
+});
+} else if(e.k==="heal"){
+targets.forEach(t=>{ healUnit(u, t, statVal(u, e.s) * e.m, log, round, u.name+" 怒技·"+u.skillName+" →"); used = true; });
+} else if(e.k==="hot"){
+targets.forEach(t=>{ t.hots.push({amt:Math.max(1,Math.round(statVal(u,e.s)*e.m)), rounds:e.tn||2}); log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → "+t.name+" 获得恢复兵力（每回合 "+Math.max(1,Math.round(statVal(u,e.s)*e.m))+"，"+(e.tn||2)+" 回合）"); used = true; });
+} else if(e.k==="shield"){
+targets.forEach(t=>{ const v = Math.max(1, Math.round(statVal(u, e.s) * e.m)); t.shield += v; log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → "+t.name+" 获得护盾 "+v); used = true; });
+} else if(e.k==="stun"){
+targets.forEach(t=>{ t.stun = Math.max(t.stun||0, e.tn||1); log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → "+t.name+" 被眩晕 "+(e.tn||1)+" 回合"); used = true; });
+} else if(e.k==="buff"){
+targets.forEach(t=>{ const ex = t.buffs.find(b=>b.stat===e.stat && b.pct===e.p);
+if(ex && (e.stk||1)>1){ ex.stk = Math.min(e.stk, (ex.stk||1)+1); ex.rounds = e.tn||2; }
+else if(ex){ ex.rounds = Math.max(ex.rounds, e.tn||2); if(e.chg) ex.chg = e.chg; }
+else t.buffs.push({stat:e.stat, pct:e.p, rounds:e.tn||2, stk:1, maxStk:e.stk||1, chg:e.chg||0});
+log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → "+t.name+" "+BUFF_LABEL[e.stat]+" "+(e.p>0?"+":"")+e.p+"%（"+(e.tn||2)+" 回合）"); used = true; });
+} else if(e.k==="taunt"){
+u.taunt = Math.max(u.taunt||0, e.tn||2); log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → 嘲讽敌方前排（"+(e.tn||2)+" 回合）"); used = true;
+} else if(e.k==="share"){
+targets.forEach(t=>{ if(t!==u){ t.share = {src:u, pct:e.p, rounds:e.tn||2}; log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → 为 "+t.name+" 分担 "+e.p+"% 伤害（"+(e.tn||2)+" 回合）"); used = true; } });
+} else if(e.k==="cleanse"){
+targets.forEach(t=>{ const n = t.dots.length; t.dots = []; log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → "+t.name+" 净化持续伤害 "+n+" 项"); used = true; });
+} else if(e.k==="haste"){
+targets.forEach(t=>{ t.haste = true; log.push("第"+round+"回合 "+u.name+" 怒技·"+u.skillName+" → "+t.name+" 出手顺序提前"); used = true; });
+}
+});
+return used;
+}
+const BUFF_LABEL = {wu:"武力", tong:"统率", zhi:"智力", spd:"速度", dOut:"造成伤害", dOutP:"兵刃伤害", dOutM:"谋略伤害", dIn:"受到伤害", dInP:"受到兵刃伤害", dInM:"受到谋略伤害", hIn:"受到治疗效果", atkF:"攻击前排伤害", atkB:"攻击后排伤害"};
+/* 触发三通道：①怒技（专属）只认怒气满 100 必放、代替普攻 ②学习主动普攻后 30% ③被动常驻（resolveUnit 已结算） */
+function battleSim(teamA, teamB){
+function prep(team){ return team.map((u,i)=>Object.assign({}, u, {curHp:u.hp, rage:u.rage||0, alive:true,
+pos:(typeof u.pos==="number"? u.pos : i), shield:0, stun:0, dots:[], hots:[], buffs:[], taunt:0, share:null, haste:false,
+physM:u.physM||1, magM:u.magM||1, dInM:u.dInM||1, healM:u.healM||1, rageM:u.rageM||1})); }
+const A = prep(teamA), B = prep(teamB);
+const log=[]; let skillUsed=false;
+A.concat(B).forEach(u=>{ if(u.passiveSkill) log.push(u.name+" 被动·"+u.passiveSkill+"（常驻）"); });
+/* 羁绊首回合回血（仅成员，resolveTeam 已算 amount 入 firstHealAmt） */
+A.concat(B).forEach(u=>{ if(u.firstHealAmt) healUnit(null, u, u.firstHealAmt, log, 0, "羁绊"); });
 for(let round=1; round<=30; round++){
-const order = A.concat(B).filter(u=>u.alive).sort((x,y)=>y.spd-x.spd);
-if(!order.length) break;
-for(const u of order){
-if(!u.alive) continue;
+/* 回合初：羁绊每回合回血 + HoT 结算 */
+A.concat(B).forEach(u=>{ if(!u.alive) return;
+if(u.roundHealAmt) healUnit(null, u, u.roundHealAmt, log, round, "羁绊");
+u.hots.slice().forEach(h=>{ healUnit(null, u, h.amt, log, round, "恢复兵力"); });
+});
+const acted = new Set();
+while(true){
+const cand = A.concat(B).filter(u=>u.alive && !acted.has(u));
+if(!cand.length) break;
+cand.sort((x,y)=>((y.haste?1e9:0)+effSpd(y)) - ((x.haste?1e9:0)+effSpd(x)));
+const u = cand[0]; acted.add(u); u.haste = false;
 const myTeam = A.indexOf(u)>=0? A : B;
 const foes = (myTeam===A? B : A);
 if(!foes.some(f=>f.alive)) break;
-if(u.rage>=100){
-const t = pickTarget(foes); if(!t) break;
-const dmg = dealDamage(u, t, u.skillMul); u.rage = 0; skillUsed = true;
-log.push("第"+round+"回合 "+u.name+" 怒气爆发·"+(u.skillName||"专属技能")+" → "+t.name+" 造成 "+dmg+" 伤害"+(t.alive?"":"，"+t.name+" 倒下"));
+if((u.stun||0)>0){ u.stun--; log.push("第"+round+"回合 "+u.name+" 被眩晕，跳过行动"); continue; }
+if(u.rage>=100 && u.fx && u.fx.length){
+u.rage = 0; skillUsed = true;
+castSkill(u, myTeam, foes, log, round);
 continue;
 }
-const t = pickTarget(foes); if(!t) break;
-const dmg = dealDamage(u, t, 1);
-u.rage = Math.min(100, u.rage+34);
+const t = pickTarget(foes, u); if(!t) break;
+const dmg = dealDamageEx(u, t, u.atk, u.troop==="弓"? "phys":"phys", log, round);
 log.push("第"+round+"回合 "+u.name+" → "+t.name+" 造成 "+dmg+" 伤害"+(t.alive?"":"，"+t.name+" 倒下"));
+u.rage = Math.min(100, u.rage + Math.round(34 * (u.rageM||1)));
 if(u.activeSkill && ACTIVE_SKILLS[u.activeSkill] && foes.some(f=>f.alive) && Math.random()*100 < CFG.activeBaseRate){
 skillUsed = true;
 const sk = ACTIVE_SKILLS[u.activeSkill];
 if(sk.scope==="all"){
-foes.filter(f=>f.alive).forEach(f=>{ const d2 = dealDamage(u, f, sk.mul); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+f.name+" 造成 "+d2+" 伤害"+(f.alive?"":"，"+f.name+" 倒下")); });
+foes.filter(f=>f.alive).forEach(f=>{ const d2 = dealDamageEx(u, f, u.atk * sk.mul, "phys", log, round); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+f.name+" 造成 "+d2+" 伤害"+(f.alive?"":"，"+f.name+" 倒下")); });
 } else if(sk.scope==="rage"){
-const t2 = pickTarget(foes);
+const t2 = pickTarget(foes, u);
 if(t2){ const before = t2.rage||0; applyRageCut(t2, CFG.lianHuanRageCut); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+t2.name+" 怒气被削减 "+(before - t2.rage)+"（现 "+t2.rage+"）"); }
 } else if(sk.scope==="heal"){
 const low = myTeam.filter(f=>f.alive).slice().sort((x,y)=>(x.curHp/x.hp)-(y.curHp/y.hp))[0];
-if(low){ const heal = Math.min(low.hp - low.curHp, Math.round(low.hp * CFG.jiJiuHealRatio)); low.curHp += heal; log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+low.name+" 回复 "+heal+" 兵力"); }
+if(low) healUnit(u, low, low.hp * CFG.jiJiuHealRatio, log, round, u.name+" 主动技能·"+u.activeSkill+" →");
 } else {
-const t2 = pickTarget(foes);
-if(t2){ const d2 = dealDamage(u, t2, sk.mul); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+t2.name+" 造成 "+d2+" 伤害"+(t2.alive?"":"，"+t2.name+" 倒下")); }
+const t2 = pickTarget(foes, u);
+if(t2){ const d2 = dealDamageEx(u, t2, u.atk * sk.mul, "phys", log, round); log.push("第"+round+"回合 "+u.name+" 主动技能·"+u.activeSkill+" → "+t2.name+" 造成 "+d2+" 伤害"+(t2.alive?"":"，"+t2.name+" 倒下")); }
 }
 }
 }
-if(!A.some(u=>u.alive) ||!B.some(u=>u.alive)) break;
+if(!A.some(u=>u.alive) || !B.some(u=>u.alive)) break;
+/* 回合末：DoT 结算 + 状态回合递减 */
+A.concat(B).forEach(u=>{ if(!u.alive) return;
+u.dots.slice().forEach(d=>{ const dmg = Math.max(1, Math.round(d.amt * dmgInMul(u, "mag"))); hurtRaw(u, dmg, null, round, ""); log.push("第"+round+"回合末 "+u.name+" "+(d.type==="burn"?"灼烧":"中毒")+" 掉血 "+dmg+(u.alive?"":"，"+u.name+" 倒下")); });
+u.dots.forEach(d=>d.rounds--); u.dots = u.dots.filter(d=>d.rounds>0);
+u.hots.forEach(h=>h.rounds--); u.hots = u.hots.filter(h=>h.rounds>0);
+u.buffs.forEach(b=>{ if(!b.chg) b.rounds--; }); u.buffs = u.buffs.filter(b=>b.chg? b.chg>0 : b.rounds>0);
+if(u.taunt>0) u.taunt--;
+if(u.share){ u.share.rounds--; if(u.share.rounds<=0) u.share = null; }
+});
+if(!A.some(u=>u.alive) || !B.some(u=>u.alive)) break;
 }
 const aAlive = A.some(u=>u.alive), bAlive = B.some(u=>u.alive);
 let win;
-if(aAlive &&!bAlive) win=true; else if(bAlive &&!aAlive) win=false;
-else { const ah=A.reduce((s,u)=>s+u.curHp/u.hp,0), bh=B.reduce((s,u)=>s+u.curHp/u.hp,0); win = ah>=bh;}
+if(aAlive && !bAlive) win = true; else if(bAlive && !aAlive) win = false;
+else { const ah = A.reduce((s,u)=>s+u.curHp/u.hp,0), bh = B.reduce((s,u)=>s+u.curHp/u.hp,0); win = ah>=bh; }
 return { win:win, log:log, skillUsed:skillUsed, A:A, B:B };
 }
-function resolveUnit(card, teamMul, bondMul){
+/* buff 叠层处理：同 stat 新 buff 与旧 buff 合并层数（霍峻式）——在 castSkill push 前处理由 applyBuff 完成 */
+function resolveUnit(card, teamMul, agg){
 const g = GEN_BY_ID[card.genId];
+agg = agg || {};
 const starMul = 1 + CFG.starMulPer*(card.star - 1);
 const wu = statAt(card,"wu"), zhi = statAt(card,"zhi"), tong = statAt(card,"tong"), spdBase = statAt(card,"spd");
-/* 装备两件制：武器=攻击（武力）/兵书=专属技能伤害倍率 */
 let eqAtk=0, eqSkillMul=1;
 for(const slot of ["wp","bs"]){ const eid=card.equip[slot]; if(!eid) continue;
 const e = state.equips.find(x=>x.uid===eid); if(!e) continue;
 if(slot==="wp") eqAtk+=CFG.eqAtkPerTier*e.tier; if(slot==="bs") eqSkillMul*=(1 + CFG.eqBsSkillMulPer*e.tier);}
-let atk = Math.round((wu*0.6 + zhi*0.4) * starMul * (bondMul?bondMul.atk:1) * (teamMul||1) + eqAtk);
-let def = Math.round((tong*0.5 + wu*0.2) * starMul * (bondMul?bondMul.def:1) * (teamMul||1));
-let spd = Math.round(spdBase * starMul);
+const tm = (teamMul||1);
+const atkW = Math.round(wu * starMul * (agg.wuM||1) * tm) + eqAtk;
+const atkZ = Math.round(zhi * starMul * (agg.zhiM||1) * tm);
+let atk = Math.round((wu*0.6 + zhi*0.4) * starMul * (agg.wuM||1) * tm + eqAtk);
+let def = Math.round((tong*0.5 + wu*0.2) * starMul * (agg.tongM||1) * tm);
+let spd = Math.round(spdBase * starMul * (agg.spdM||1));
 let hp = troopsOf(card);
-/* 被动学习技能：常驻修正，百分百生效、不进判定 */
 const pas = card.learnedPassive;
 if(pas && PASSIVE_SKILLS[pas]){
 if(PASSIVE_SKILLS[pas].stat==="atk") atk = Math.round(atk * (1 + PASSIVE_SKILLS[pas].pct));
@@ -608,35 +924,73 @@ if(PASSIVE_SKILLS[pas].stat==="def") def = Math.round(def * (1 + PASSIVE_SKILLS[
 if(PASSIVE_SKILLS[pas].stat==="spd") spd += PASSIVE_SKILLS[pas].add;
 if(PASSIVE_SKILLS[pas].stat==="troops") hp = Math.round(hp * (1 + PASSIVE_SKILLS[pas].pct));
 }
+/* 怒技倍率缩放：升星技能加成 × 极收藏 × 兵书（仅伤害类效果） */
 const hasJi = state.skillsOwned.some(x=>x && x.grade==="极" && x.name==="极·"+g.skill);
-const skillMul = g.skillMul * (1 + CFG.starSkillPer*(card.star - 1)) * (hasJi? CFG.jiSkillMul : 1) * eqSkillMul;
-return { name:g.name+(g.variant?"（天命）":""), hp: hp, troops: hp, atk:atk, def:def,
-spd: spd, troop:g.troop, skillName:g.skill, skillMul:skillMul,
-activeSkill: card.learnedActive||null, passiveSkill: card.learnedPassive||null, uid:card.uid};
+const dmgScale = (1 + CFG.starSkillPer*(card.star - 1)) * (hasJi? CFG.jiSkillMul : 1) * eqSkillMul;
+const fx = (g.fx||[]).map(e=>{ const ne = Object.assign({}, e); if(ne.k==="dmg") ne.m = Math.round(ne.m * dmgScale * 100)/100; return ne; });
+return { name:g.name+(g.variant?"（天命）":""), hp:hp, troops:hp, atk:atk, atkW:atkW, atkZ:atkZ, tongV:Math.round(tong*starMul),
+def:def, spd:spd, troop:g.troop, skillName:g.skill, fx:fx,
+physM:agg.physM||1, magM:agg.magM||1, dInM:agg.dInM||1, healM:agg.healM||1, rageM:agg.rageM||1,
+firstHealAmt:agg.firstHealAmt||0, roundHealAmt:agg.roundHealAmt||0,
+activeSkill: card.learnedActive||null, passiveSkill: card.learnedPassive||null, uid:card.uid, genId:g.id };
 }
+/* 羁绊：上阵集齐（成员按 名+阵营 匹配，天命版按本体归属）；禁用条目（成员不在名册）不参与 */
 function activeBonds(cards){
-const names = new Set(cards.map(c=>GEN_BY_ID[c.genId].name));
-const baseNames = new Set(cards.map(c=>{ const g=GEN_BY_ID[c.genId]; return GEN_BY_ID[g.baseId].name;}));
-return BONDS.filter(b=>b.members.every(m=>names.has(m)||baseNames.has(m)));
+return BONDS.filter(b=>!b.disabled && b.members.every(m=>{
+return cards.some(c=>{ const g = GEN_BY_ID[c.genId]; const bg = GEN_BY_ID[g.baseId||g.id];
+return (g.name===m[0] || bg.name===m[0]) && (!m[1] || g.fac===m[1] || bg.fac===m[1]); });
+}));
+}
+function bondFxText(b){
+const f = b.fx||{}; const parts=[];
+if(f.wu) parts.push("武力+"+f.wu+"%"); if(f.tong) parts.push("统率+"+f.tong+"%");
+if(f.zhi) parts.push("智力+"+f.zhi+"%"); if(f.spd) parts.push("速度+"+f.spd+"%");
+if(f.phys) parts.push("兵刃伤害+"+f.phys+"%"); if(f.mag) parts.push("谋略伤害+"+f.mag+"%");
+if(f.dIn) parts.push("减伤"+f.dIn+"%"); if(f.dInP) parts.push("受兵刃伤害-"+f.dInP+"%"); if(f.dInM) parts.push("受谋略伤害-"+f.dInM+"%");
+if(f.heal) parts.push("治疗效果+"+f.heal+"%"); if(f.rage) parts.push("怒气获取+"+f.rage+"%");
+(f.troops||[]).forEach(t=>{ const tp=[]; if(t.wu) tp.push("武力+"+t.wu+"%"); if(t.tong) tp.push("统率+"+t.tong+"%"); if(t.zhi) tp.push("智力+"+t.zhi+"%"); if(t.spd) tp.push("速度+"+t.spd+"%"); parts.push(t.t+"兵："+tp.join(" ")); });
+if(f.firstHeal) parts.push("首回合成员回血（最高统率×"+f.firstHeal+"）");
+if(f.roundHeal) parts.push("每回合成员回血（最高统率×"+f.roundHeal+"）");
+return parts.join("，");
 }
 function resolveTeam(cards){
 const bonds = activeBonds(cards);
 const teamMul = 1 + CFG.rankMulPer*state.rankIdx;
+/* 队内最高统率（羁绊回血基数） */
+let maxTong = 0;
+cards.forEach(c=>{ maxTong = Math.max(maxTong, statAt(c,"tong") * (1 + CFG.starMulPer*(c.star-1))); });
 return cards.map(c=>{
-let bm = {atk:1, def:1};
-const g = GEN_BY_ID[c.genId]; const baseName = GEN_BY_ID[g.baseId].name;
-bonds.forEach(b=>{ if(b.members.indexOf(g.name)>=0 || b.members.indexOf(baseName)>=0){ bm={atk:bm.atk*(1+b.atk), def:bm.def*(1+b.def)};}});
-return resolveUnit(c, teamMul, bm);
+const g = GEN_BY_ID[c.genId];
+const agg = { wuM:1, tongM:1, zhiM:1, spdM:1, physM:1, magM:1, dInM:1, healM:1, rageM:1, firstHealAmt:0, roundHealAmt:0 };
+bonds.forEach(b=>{
+const f = b.fx||{};
+agg.wuM *= 1+(f.wu||0)/100; agg.tongM *= 1+(f.tong||0)/100; agg.zhiM *= 1+(f.zhi||0)/100; agg.spdM *= 1+(f.spd||0)/100;
+agg.physM *= 1+(f.phys||0)/100; agg.magM *= 1+(f.mag||0)/100;
+agg.dInM *= 1-((f.dIn||0)+(f.dInP||0)+(f.dInM||0))/100;
+agg.healM *= 1+(f.heal||0)/100; agg.rageM *= 1+(f.rage||0)/100;
+(f.troops||[]).forEach(t=>{ if(t.t===g.troop){ agg.wuM *= 1+(t.wu||0)/100; agg.tongM *= 1+(t.tong||0)/100; agg.zhiM *= 1+(t.zhi||0)/100; agg.spdM *= 1+(t.spd||0)/100; agg.physM *= 1+(t.phys||0)/100; } });
+const isMember = b.members.some(m=>{ const bg = GEN_BY_ID[g.baseId||g.id]; return (g.name===m[0] || bg.name===m[0]) && (!m[1] || g.fac===m[1] || bg.fac===m[1]); });
+if(isMember){ if(f.firstHeal) agg.firstHealAmt += Math.round(maxTong * f.firstHeal); if(f.roundHeal) agg.roundHealAmt += Math.round(maxTong * f.roundHeal); }
 });
+return resolveUnit(c, teamMul, agg);
+});
+}
+function enemyFxScaled(g, power){
+return (g.fx||[]).map(e=>{ const ne = Object.assign({}, e); if(ne.k==="dmg") ne.m = Math.round(ne.m * power * 100)/100; return ne; });
+}
+function enemyUnitFromGen(g, power, label){
+const atkW = Math.round(g.wu * power), atkZ = Math.round(g.zhi * power);
+return { name:g.name+(label||"（敌）"), hp:Math.round((260+g.tong*8)*power), atk:Math.round((g.wu*0.6+g.zhi*0.4)*power),
+atkW:atkW, atkZ:atkZ, tongV:Math.round(g.tong*power),
+def:Math.round((g.tong*0.5+g.wu*0.2)*power), spd:g.spd, troop:g.troop, skillName:g.skill, fx:enemyFxScaled(g, power), activeSkill:null, passiveSkill:null };
 }
 function enemyTeam(power, n){
 const pool = GENS.filter(g=>!g.variant);
 const team=[];
-for(let i=0;i<(n||5);i++){ const g=randPick(pool);
-team.push({ name:g.name+"（敌）", hp:Math.round((260+g.tong*8)*power), atk:Math.round((g.wu*0.6+g.zhi*0.4)*power),
-def:Math.round((g.tong*0.5+g.wu*0.2)*power), spd:g.spd, troop:g.troop, skillName:g.skill, skillMul:g.skillMul, activeSkill:null, passiveSkill:null});}
+for(let i=0;i<(n||5);i++){ team.push(enemyUnitFromGen(randPick(pool), power, "（敌）")); }
 return team;
 }
+
 /* ============ 养成模块 ============ */
 /* 技能学习：主动位 CFG.activeUnlockLevel 级、被动位 CFG.passiveUnlockLevel 级解锁，每位 1 个；学习消耗库存技能卡 1 张，换学覆盖且旧技能不返还 */
 function learnSkill(uid, slot, invIdx){
@@ -681,7 +1035,7 @@ function fightStage(stage){
 const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0));
 if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
 const res = battleSim(team, enemyTeam(stageEnemyPower(stage), Math.min(5, 2+Math.ceil(stage/3))));
-grantTeamExp(CFG.expStageWin + stage, res.win);
+addExpPool(CFG.expStageWin + stage);
 let rewardMsg="";
 if(res.win){
 if(stage>state.stageCleared) state.stageCleared = Math.min(30, stage);
@@ -708,7 +1062,7 @@ if(state.tower.done || state.tower.layer>=CFG.towerLayers) return {ok:false,msg:
 const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0));
 if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
 const res = battleSim(team, enemyTeam(0.45 + state.tower.layer*0.09, 5));
-grantTeamExp(CFG.expTowerWin, res.win);
+addExpPool(CFG.expTowerWin);
 const before = {merit:state.merit, tickets:state.tickets};
 applyTowerResult(res.win);
 return {ok:true, win:res.win, log:res.log, meritGain:state.merit-before.merit, ticketGain:state.tickets-before.tickets};
@@ -723,7 +1077,7 @@ const team = resolveTeam(state.cards.filter(c=>state.formation.indexOf(c.uid)>=0
 if(team.length<1) return {ok:false,msg:"先上阵至少 1 名武将"};
 const myPow = team.reduce((s,u)=>s+u.atk+u.def,0);
 const res = battleSim(team, enemyTeam(0.5 + Math.random()*0.5, 5));
-grantTeamExp(CFG.expArenaWin, res.win);
+addExpPool(CFG.expArenaWin);
 addRes("arenaPts", res.win? CFG.arenaWinPts: CFG.arenaLosePts);
 return {ok:true, win:res.win, log:res.log, pts: res.win?CFG.arenaWinPts:CFG.arenaLosePts, myPow:myPow};
 }
@@ -753,6 +1107,7 @@ function fmtPool(sec){ if(sec<=0) return "未开启"; return "约 "+Math.ceil(se
 function renderRes(){
   $("resYuanbao").textContent = Math.floor(state.yuanbao);
   $("resTickets").textContent = state.tickets;
+  $("resBeads").textContent = state.beads;
   $("resMerit").textContent = state.merit;
   $("resArena").textContent = state.arenaPts;
   $("resRank").textContent = RANKS[state.rankIdx].name;
@@ -775,11 +1130,16 @@ function renderAll(){
   const grpOf = k => state.skillsOwned.filter(x=>x && x.kind===k);
   const grpHtml = (label, arr, hot) => arr.length? "<div class='stats'>"+label+"："+arr.map(x=>"<span class='tag"+(hot?" hot":"")+"'>"+x.name+"</span> "+ownedSkillDesc(x)).join("；")+"</div>" : "";
   $("skillList").innerHTML = state.skillsOwned.length? grpHtml("主动", grpOf("active"))+grpHtml("被动", grpOf("passive"))+grpHtml("极（收藏加成）", grpOf("ji"), true) : "<span class='note'>暂无技能卡。</span>";
-  $("pityInfo").textContent = "已累计 "+state.gachaPity+" 抽未出 SSR（10 连必保底 SSR）";
+  $("normPityInfo").textContent = "距 SSR 保底 "+state.pity.normal.ssr+"/100，距 SR+ 保底 "+state.pity.normal.sr+"/10。";
+  $("ybPityInfo").textContent = "距 SSR 保底 "+state.pity.yb.ssr+"/10，距性格保底 "+state.pity.yb.pers+"/100。";
+  $("tmPityInfo").textContent = "距 SSR 保底 "+state.pity.tm.ssr+"/10，距天命保底 "+state.pity.tm.tm+"/100。";
+  $("beadsInfo").textContent = state.beads;
   const tnEl = $("tianmingNews");
   if(tnEl){ if(state.tianmingNews){ tnEl.style.display="block"; tnEl.textContent = "🎉 天命卡降临：「"+state.tianmingNews+"」已入包（典藏版，去武将页看金边卡面）"; } else { tnEl.style.display="none"; } }
   $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5，战力 "+teamPower()+"（站位前二后三：前两位＝前排、后三位＝后排）。羁绊："+
-    (activeBonds(teamCards()).map(b=>b.name+"（攻+"+Math.round(b.atk*100)+"% 防+"+Math.round(b.def*100)+"%，逐人明示）").join("、") || "无");
+    (activeBonds(teamCards()).map(b=>b.name+"（"+bondFxText(b)+"）").join("、") || "无");
+  $("expPoolInfo").textContent = state.expPool;
+  renderDungeons();
   renderCards(); renderStages();
   $("towerInfo").textContent = "第 "+state.tower.layer+" 层 · 失败 "+state.tower.fails+"/3"+(state.tower.done?" · 已出局":"")+(state.tower.layer>=10?" · 已通关":"");
   showcaseAccrue();
@@ -790,7 +1150,7 @@ function renderAll(){
   const rate = enhTarget? enhRate(enhFeeds.map(u=>state.cards.find(c=>c.uid===u)).filter(Boolean), (state.cards.find(c=>c.uid===enhTarget)||{}).genId) : 0;
   $("enhInfo").textContent = enhTarget? ("强化目标："+GEN_BY_ID[state.cards.find(c=>c.uid===enhTarget).genId].name+"，已选饲料 "+enhFeeds.length+"/5，当前成功率 "+rate+"%") : "尚未选择强化目标。";
 }
-const RAR_ORDER = {SSR:0, SR:1, R:2};
+const RAR_ORDER = {SSR:0, SR:1, R:2, N:3};
 function renderCards(){
   const f = $("factionFilter").value;
   const list = state.cards.filter(c=>!f || GEN_BY_ID[c.genId].fac===f).slice().sort((a,b)=>RAR_ORDER[GEN_BY_ID[a.genId].rar]-RAR_ORDER[GEN_BY_ID[b.genId].rar] || b.star-a.star || (b.level||1)-(a.level||1));
@@ -810,7 +1170,7 @@ function renderCards(){
       return h+"</div>";
     };
     const hasJiCard = state.skillsOwned.some(x=>x && x.grade==="极" && x.name==="极·"+g.skill);
-    const skillHtml = "<div class='stats'>专属技能「"+g.skill+"」："+(SKILL_DESC[g.skill]||"")+"（怒气满释放 · 攻击×"+fmtMul(g.skillMul)+"）</div>"+
+    const skillHtml = "<div class='stats'>专属技能「"+g.skill+"」："+(SKILL_DESC[g.skill]||"")+" "+(g.skillDesc||"")+"（怒气满释放）</div>"+
       (hasJiCard? "<div class='stats'>「极·"+g.skill+"」：专属伤害 ×"+fmtMul(CFG.jiSkillMul)+"（已持收藏卡，生效中）</div>" : "")+
       slotHtml("active", c.learnedActive, CFG.activeUnlockLevel, "主动位（普攻后 "+CFG.activeBaseRate+"% 释放）")+
       slotHtml("passive", c.learnedPassive, CFG.passiveUnlockLevel, "被动位（常驻生效）");
@@ -826,11 +1186,13 @@ function renderCards(){
       (c.pers? "<span class='tag hot'>性格·"+c.pers+"（"+PERS_LABEL[c.pers]+" +0.5）</span>" : "<span class='tag'>普通卡</span>")+
       "<span class='tag'>强化 +"+c.enh+"（兵力）</span></div>"+
       "<div class='stats'>武 "+Math.round(statAt(c,'wu'))+"（成长 "+gr.wu.toFixed(2)+"）· 智 "+Math.round(statAt(c,'zhi'))+"（"+gr.zhi.toFixed(2)+"）· 统 "+Math.round(statAt(c,'tong'))+"（"+gr.tong.toFixed(2)+"）· 速 "+Math.round(statAt(c,'spd'))+"（"+gr.spd.toFixed(2)+"）</div>"+
-      "<div class='stats'>实战 攻 "+u.atk+" 防 "+u.def+" 兵力 "+u.hp+"</div>"+skillHtml+
+      "<div class='stats'>实战 攻 "+u.atk+"（武面 "+u.atkW+" / 智面 "+u.atkZ+"）防 "+u.def+" 兵力 "+u.hp+"</div>"+skillHtml+
       eqHtml+
       "<div style='margin-top:6px;display:flex;gap:6px;flex-wrap:wrap'>"+
       "<button class='btn sm "+(inForm?"sub":"dark")+"' onclick='toggleForm("+c.uid+")'>"+(inForm?"下阵":"上阵")+"</button>"+
       "<button class='btn sm sub' onclick='doStarUp("+c.uid+")' "+(c.star>=CFG.starCap?"disabled":"")+">升星（加四维）</button>"+
+      "<button class='btn sm sub' onclick='doLevelUp("+c.uid+",1)' "+(lvNow>=CFG.levelCap?"disabled":"")+">升级（经验池 "+(lvNow>=CFG.levelCap? "MAX" : levelUpCost(lvNow))+")</button>"+
+      "<button class='btn sm sub' onclick='doLevelUp("+c.uid+",99)' "+(lvNow>=CFG.levelCap?"disabled":"")+">连升</button>"+
       "<button class='btn sm sub' onclick='setEnhTarget("+c.uid+")'>设为强化目标</button>"+
       "<button class='btn sm sub' onclick='toggleShowcase("+c.uid+")'>"+(inShow?"撤下橱窗":"摆入橱窗")+"</button>"+
       "</div>"+
@@ -851,6 +1213,46 @@ function renderStages(){
   }
   $("stageList").innerHTML = html;
 }
+function renderDungeons(){
+  const dl = $("dailyList");
+  if(dl){ let h = "";
+    for(let i=1;i<=CFG.dailyStages;i++){
+      const cleared = i<=state.daily.cleared, locked = i>state.daily.cleared+1;
+      h += "<div class='card' style='display:flex;justify-content:space-between;align-items:center'><span>日常副本 第 "+i+" 关 "+(cleared?"<span class='win'>已通关（复刷经验减半）</span>":"")+"</span>"+
+        "<button class='btn sm' onclick='doDaily("+i+")' "+(locked?"disabled":"")+">出战</button></div>";
+    }
+    dl.innerHTML = h;
+  }
+  const tl = $("tmList");
+  if(tl){ let h = "";
+    TIANMING_IDS.forEach(id=>{ const g = GEN_BY_ID[id];
+      const un = !!state.tmDungeons.unlocked[id], cl = state.tmDungeons.cleared[id]||0;
+      const half = !!state.tmDungeons.half[id];
+      h += "<div class='card' style='display:flex;justify-content:space-between;align-items:center'><span><b>"+g.name+"</b> 天命副本 "+(un? ("进度 "+cl+"/10"+(half?"（重置重刷·减半）":"")) : "<span class='note'>未解锁（限时卡池抽到 "+g.name+" 解锁）</span>")+"</span><span>";
+      if(un && cl<10) h += "<button class='btn sm' onclick='doTmFight("+id+","+(cl+1)+")'>挑战第 "+(cl+1)+" 关</button> ";
+      if(un && state.tmDungeons.adRetry[id+"_"+(cl+1)]) h += "<button class='btn sm dark' onclick='doTmAd("+id+","+(cl+1)+")'>看广告重打（敌 ×0.8）</button> ";
+      if(un && cl>0 && !half) h += "<button class='btn sm sub' onclick='doTmReset("+id+")'>广告重置（每日 1 次）</button>";
+      h += "</span></div>";
+    });
+    tl.innerHTML = h;
+  }
+}
+window.doLevelUp = function(uid, times){ const r = levelUpCard(uid, times); if(!r.ok) alert(r.msg); renderAll(); };
+window.doDaily = function(i){
+  const r = fightDaily(i);
+  if(!r.ok){ alert(r.msg); return; }
+  $("battleLog").innerHTML = "日常副本第 "+i+" 关："+(r.win? "<span class='win'>胜利</span>" : "<span class='lose'>败北</span>")+(r.rewardMsg? "｜奖励："+r.rewardMsg : "")+"\n"+r.log.join("\n");
+  renderAll();
+};
+window.doTmFight = function(id, stage){ tmFightUI(id, stage, false); };
+window.doTmAd = function(id, stage){ tmFightUI(id, stage, true); };
+function tmFightUI(id, stage, useAd){
+  const r = fightTmDungeon(id, stage, useAd);
+  if(!r.ok){ alert(r.msg); return; }
+  $("battleLog").innerHTML = GEN_BY_ID[id].name+" 天命副本第 "+stage+" 关："+(r.win? "<span class='win'>胜利</span>" : "<span class='lose'>败北</span>")+(r.rewardMsg? "｜奖励："+r.rewardMsg : "")+(r.canAdRetry? "｜可点「看广告重打」再战（敌方强度 ×0.8）" : "")+"\n"+r.log.join("\n");
+  renderAll();
+}
+window.doTmReset = function(id){ const r = tmDailyReset(id); alert(r.msg); renderAll(); };
 function switchTab(t){
   curTab=t;
   document.querySelectorAll("section.page").forEach(s=>s.classList.remove("on"));
@@ -910,10 +1312,14 @@ function bind(){
   };
   $("btnHeroPool").onclick = function(){ const r=openPool("hero"); alert(r.msg); renderAll(); };
   $("btnSkillPool").onclick = function(){ const r=openPool("skill"); alert(r.msg); renderAll(); };
-  $("btnTicketDraw").onclick = function(){ const g=drawTicket(); $("gachaLog").textContent = g? "招募到："+g.name+"（"+g.rar+"）" : "招募券不足，去更多页看模拟广告领券"; renderAll(); };
-  $("btnTicketDraw10").onclick = function(){ const got=[]; for(let i=0;i<10;i++){ const g=drawTicket(); if(!g) break; got.push(g.name+"("+g.rar+")"); } $("gachaLog").textContent = got.length? "招募 10 次："+got.join("、") : "招募券不足"; renderAll(); };
-  $("btnLimit1").onclick = function(){ const d=drawLimited(1); $("gachaLog").textContent = d? "天命入驻单抽："+d[0].name+"（"+d[0].rar+(d[0].variant?"·天命":"")+"）"+(d[0].variant?" 🎉 天命卡！":"") : "元宝不足（单抽 200）"; renderAll(); };
-  $("btnLimit10").onclick = function(){ const d=drawLimited(10); $("gachaLog").textContent = d? "天命入驻 10 连："+d.map(g=>g.name+"("+g.rar+(g.variant?"·天命":"")+")").join("、")+(d.some(g=>g.variant)?" 🎉 出天命卡！":"") : "元宝不足（10 连 2000）"; renderAll(); };
+  const fmtDrawn = d => d.map(g=>g.name+"("+g.rar+(g.variant?"·天命":"")+")").join("、");
+  $("btnNorm1").onclick = function(){ const d=drawNormal(1); $("gachaLog").textContent = d.length? "普通招募："+fmtDrawn(d) : "招募令不足"; renderAll(); };
+  $("btnNorm10").onclick = function(){ const d=drawNormal(10); $("gachaLog").textContent = d.length? "普通招募 10 次："+fmtDrawn(d) : "招募令不足"; renderAll(); };
+  $("btnYb1").onclick = function(){ const d=drawYuanbao(1); $("gachaLog").textContent = d.length? "元宝卡池："+fmtDrawn(d) : "元宝不足（100/抽）"; renderAll(); };
+  $("btnYb10").onclick = function(){ const d=drawYuanbao(10); $("gachaLog").textContent = d.length? "元宝卡池 10 连："+fmtDrawn(d) : "元宝不足（10 连 1000）"; renderAll(); };
+  $("btnTm1").onclick = function(){ const d=drawLimited(1); $("gachaLog").textContent = d.length? "天命入驻："+fmtDrawn(d)+(d.some(g=>g.variant)?" 🎉 天命卡！已解锁其天命副本":"") : "天命珠不足（1 珠/抽，可点「买天命珠」200 元宝/个）"; renderAll(); };
+  $("btnTm10").onclick = function(){ const d=drawLimited(10); $("gachaLog").textContent = d.length? "天命入驻 10 连："+fmtDrawn(d)+(d.some(g=>g.variant)?" 🎉 出天命卡！已解锁其天命副本":"") : "天命珠不足（10 连 10 珠）"; renderAll(); };
+  $("btnBuyBead").onclick = function(){ const r=buyBeads(1); if(!r.ok) alert(r.msg); renderAll(); };
   $("btnTowerFight").onclick = function(){
     const r = fightTower();
     if(!r.ok){ alert(r.msg); return; }
@@ -972,7 +1378,7 @@ function init(){
   else { $("app").style.display="block"; bind(); switchTab("home"); }
 }
 if(typeof document!=="undefined"){ document.addEventListener("DOMContentLoaded", init); }
-if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GROWTH, DESTINY, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawTicket, drawLimited, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, growthOf, statAt, troopsOf, gainExp, showcaseRate, showcaseTotalRate,
+if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
   getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard }; }
 </script>
 </body>
