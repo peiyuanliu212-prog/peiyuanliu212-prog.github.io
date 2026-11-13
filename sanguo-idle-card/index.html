@@ -107,6 +107,8 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <div class="kv"><span>叠时上限</span><b>6 小时（开满不再叠加）</b></div>
     <div class="kv"><span>上次离线产出</span><b id="idleLastOffline">—</b></div>
     <div style="margin-top:8px"><button class="btn sub sm" id="btnIdleRules">离线结算规则说明</button></div>
+    <div style="margin-top:8px;display:none" id="desktopRowHome"><button class="btn dark sm" id="btnDesktopHome">添加到桌面</button>
+    <span class="note">把游戏放到桌面，回来领离线产出更方便。</span></div>
     <div id="idleRules" style="display:none;margin-top:8px">
       <p class="note">离线结算口径：关掉页面期间，已开启的池子按剩余开启时长继续产卡，产出不超过剩余时长，回来时一次性结算进卡册/技能卡。产卡节拍与在线一致（池时钟每真实秒走 12 秒）。在线期间每秒同步结算点，同一段时间不会重复结算。池子到期自动停产，回来花元宝延长即可继续；叠时最多 6 小时。</p>
     </div>
@@ -2126,9 +2128,8 @@ function bind(){
   $("btnSettingsSave").onclick = function(){ switchTab("save"); };
   $("btnSettingsRates").onclick = function(){ switchTab("pool"); setSub("pool","rates"); const el=$("rateDisclosure"); if(el) el.scrollIntoView(); };
   $("btnTourReplay").onclick = function(){ state.tour = {step:0, done:false}; save(); tourLastStep = -1; switchTab("home"); renderAll(); };
-  (function(){ var dRow = $("desktopRow"), dBtn = $("btnDesktop"); if(!dRow || !dBtn) return;
-    if(window.ColorboxAI && typeof window.ColorboxAI.addToDesktop === "function"){ dRow.style.display = ""; }
-    dBtn.onclick = function(){
+  (function(){
+    function desktopGo(){
       if(!(window.ColorboxAI && typeof window.ColorboxAI.addToDesktop === "function")) return;
       window.ColorboxAI.addToDesktop().then(function(res){
         if(!res || res.code !== 200){ alert((res && res.message) || "添加到桌面失败，请稍后重试"); return; }
@@ -2138,7 +2139,12 @@ function bind(){
         if(cb && cb.result === false){ alert(cb.errorMsg || "添加到桌面失败，请稍后重试"); }
         else if(data.platform === "android" && cb && cb.result === true){ alert("已添加"); }
       }).catch(function(){ alert("添加到桌面失败，请稍后重试"); });
-    };
+    }
+    [["desktopRow", "btnDesktop"], ["desktopRowHome", "btnDesktopHome"]].forEach(function(pair){
+      var row = $(pair[0]), btn = $(pair[1]); if(!row || !btn) return;
+      if(window.ColorboxAI && typeof window.ColorboxAI.addToDesktop === "function"){ row.style.display = ""; }
+      btn.onclick = desktopGo;
+    });
   })();
   /* ---- 存档页接线（v3.3：只剩删档重开） ---- */
   $("btnWipe1").onclick = function(){ $("wipeBox").style.display = ""; };
