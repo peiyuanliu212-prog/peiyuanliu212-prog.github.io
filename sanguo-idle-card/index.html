@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>三国天命录 · v3.6</title>
+<title>三国天命录 · v3.7</title>
 <style>
 :root{--paper:#f4eedb;--paper2:#efe6cc;--ink:#262219;--red:#b23a26;--red2:#93301f;--line:#c9bc94;--card:#fbf7ea;--mut:#6d6248;--ok:#3d6b35}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -67,7 +67,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 <body>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.6</span></h1>
+  <h1><span class="seal">三国</span>天命录 <span style="font-size:11px;color:var(--mut)">v3.7</span></h1>
   <div class="resbar">
     <span>元宝 <b id="resYuanbao">0</b></span>
     <span>招募券 <b id="resTickets">0</b></span>
@@ -298,10 +298,12 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <div class="subpane" data-pane="more-settings">
   <h2 class="sec">设置</h2>
   <div class="card" id="settingsCard">
-    <div class="kv"><span>当前版本</span><b>v3.6</b></div>
+    <div class="kv"><span>当前版本</span><b>v3.7</b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button></div>
+    <div style="margin:8px 0;display:none" id="desktopRow"><button class="btn dark" id="btnDesktop">添加到桌面</button>
+    <span class="note">把游戏放到手机桌面，下次点图标直接回来。</span></div>
     <p class="note">重置说明：本作只有一个存档；删档重开在存档页底部、两步确认，在虎扑里玩会同时清掉账号云端存档，删档不可恢复。</p>
   </div>
   </div>
@@ -320,13 +322,13 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
 </div>
 <div id="slotScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.6<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
+  <p class="sub">v3.7<br>进度自动保存 · 虎扑版与账号绑定，一人一档</p>
   <p class="note" style="text-align:center" id="bootStatus">正在进入游戏…</p>
   <div style="text-align:center;margin:10px 0"><button class="btn" id="btnBootRetry" style="display:none">重新进入</button></div>
 </div>
 <div id="starterScreen" style="display:none">
   <h1 class="big">三国天命录</h1>
-  <p class="sub">v3.6<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
+  <p class="sub">v3.7<br>开局选将：按你的选择，领一位对应性格的初始武将（性格卡，开局元宝 1000）</p>
   <div id="starterOpts"></div>
 
   <p class="note" style="text-align:center">性格＝成长辅助（每升一级对应维成长 +0.5）：刚胆 统率成长 · 鲁莽 武力成长 · 睿智 智力成长 · 谨慎 速度成长</p>
@@ -2124,6 +2126,20 @@ function bind(){
   $("btnSettingsSave").onclick = function(){ switchTab("save"); };
   $("btnSettingsRates").onclick = function(){ switchTab("pool"); setSub("pool","rates"); const el=$("rateDisclosure"); if(el) el.scrollIntoView(); };
   $("btnTourReplay").onclick = function(){ state.tour = {step:0, done:false}; save(); tourLastStep = -1; switchTab("home"); renderAll(); };
+  (function(){ var dRow = $("desktopRow"), dBtn = $("btnDesktop"); if(!dRow || !dBtn) return;
+    if(window.ColorboxAI && typeof window.ColorboxAI.addToDesktop === "function"){ dRow.style.display = ""; }
+    dBtn.onclick = function(){
+      if(!(window.ColorboxAI && typeof window.ColorboxAI.addToDesktop === "function")) return;
+      window.ColorboxAI.addToDesktop().then(function(res){
+        if(!res || res.code !== 200){ alert((res && res.message) || "添加到桌面失败，请稍后重试"); return; }
+        var data = res.data || {};
+        if(data.platform === "android" && data.alreadyAdded === true){ alert("已添加过，请勿重复添加"); return; }
+        var cb = data.bridgeResult;
+        if(cb && cb.result === false){ alert(cb.errorMsg || "添加到桌面失败，请稍后重试"); }
+        else if(data.platform === "android" && cb && cb.result === true){ alert("已添加"); }
+      }).catch(function(){ alert("添加到桌面失败，请稍后重试"); });
+    };
+  })();
   /* ---- 存档页接线（v3.3：只剩删档重开） ---- */
   $("btnWipe1").onclick = function(){ $("wipeBox").style.display = ""; };
   $("btnWipeCancel").onclick = function(){ $("wipeBox").style.display = "none"; };
