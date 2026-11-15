@@ -619,7 +619,7 @@ function newState(){
 return { ver:8, yuanbao:CFG.startYuanbao, tickets:0, beads:0, souls:0, starcoin:0, wubi:0, migrated_v4:false, migReceipt:null, lb:{dirty:true, lastAt:0, lastPower:0, lastSeason:-1}, tokens:0, merit:0, rankIdx:0, arenaPts:0,
 cards:[], skillsOwned:[], equips:[], formation:[], starterGenId:0,
 pool:{ hero:{fac:"蜀",leftSec:0,acc:0}, skill:{leftSec:0,acc:0}},
-pity:freshPity(), jt:{draws:0, firstTenDone:false, fac:""}, tmP:{period:-1, ur:0, ssr:0}, tmTickets:0, gz:{date:"", count:0}, soulAuto:false, dun:{day:"", stageUsed:{}, towerBest:0, migeCleared:0, migeRoundProg:0, migeRoundsDone:0, migeAdOpen:false, migeForce:{}}, arena:{score:0, season:-1, seasonHigh:0, lastDaily:"", shop:{}}, hulaoSes:null, hulaoBest:0, gzExtra:null, expPool:0, daily:{cleared:0}, tmDungeons:freshTmDungeons(),
+pity:freshPity(), jt:{draws:0, firstTenDone:false, fac:""}, tmP:{period:-1, ur:0, ssr:0}, tmTickets:0, gz:{date:"", count:0}, soulAuto:false, dun:{day:"", stageUsed:{}, towerBest:0, migeCleared:0, migeRoundProg:0, migeRoundsDone:0, migeAdOpen:false, migeForce:{}, migePending:{coin:0, items:{}}}, arena:{score:0, season:-1, seasonHigh:0, lastDaily:"", shop:{}}, hulaoSes:null, hulaoBest:0, gzExtra:null, expPool:0, daily:{cleared:0}, tmDungeons:freshTmDungeons(),
 yq:{cleared:0, adReady:{}}, exclFrags:{}, merchant:null, poolTs:0, lastOffline:0,
 stageCleared:0,
 tower:{date:todayStr(), layer:0, fails:0, done:false},
@@ -1000,9 +1000,12 @@ if(!state.tmP || typeof state.tmP!=="object") state.tmP={period:-1, ur:0, ssr:0}
 if(!state.gz || typeof state.gz!=="object") state.gz={date:"", count:0}; if(state.soulAuto===undefined) state.soulAuto=false;
   /* 第 3 批 normalize：副本/赛季/虎牢/演武币字段补默认（不发补偿） */
   if(typeof state.wubi !== "number" || !(state.wubi>=0)) state.wubi = 0;
-  if(!state.dun || typeof state.dun !== "object") state.dun = {day:"", stageUsed:{}, towerBest:0, migeCleared:0, migeRoundProg:0, migeRoundsDone:0, migeAdOpen:false, migeForce:{}};
+  if(!state.dun || typeof state.dun !== "object") state.dun = {day:"", stageUsed:{}, towerBest:0, migeCleared:0, migeRoundProg:0, migeRoundsDone:0, migeAdOpen:false, migeForce:{}, migePending:{coin:0, items:{}}};
   if(!state.dun.stageUsed || typeof state.dun.stageUsed !== "object") state.dun.stageUsed = {};
   if(!state.dun.migeForce || typeof state.dun.migeForce !== "object") state.dun.migeForce = {};
+  if(!state.dun.migePending || typeof state.dun.migePending !== "object") state.dun.migePending = {coin:0, items:{}};
+  if(typeof state.dun.migePending.coin !== "number" || !(state.dun.migePending.coin>=0)) state.dun.migePending.coin = 0;
+  if(!state.dun.migePending.items || typeof state.dun.migePending.items !== "object") state.dun.migePending.items = {};
   ["towerBest","migeCleared","migeRoundProg","migeRoundsDone"].forEach(k=>{ if(typeof state.dun[k] !== "number" || !(state.dun[k]>=0)) state.dun[k] = 0; });
   if(typeof state.dun.migeAdOpen !== "boolean") state.dun.migeAdOpen = false;
   if(typeof state.dun.day !== "string") state.dun.day = "";
@@ -2495,7 +2498,7 @@ function tourFinish(){
 }
 
 /* ===== 第 3 批副本数据（由 gen_dungeons.py 从定版 dungeons.json＋sim-v4/stages.json 生成，零手抄） ===== */
-const STAGES_V4 = [{"lv": 3, "coef": 1.57, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.58, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.58, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.59, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.59, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.6, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.6, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.61, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.61, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.62, "team": [135, 160, 161, 162, 163]}, {"lv": 5, "coef": 1.19, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.19, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.21, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.21, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.21, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.23, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.23, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.24, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.24, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 1.25, "team": [131, 139, 142, 145, 159]}, {"lv": 12, "coef": 1.43, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.43, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 18, "coef": 1.07, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 22, "coef": 1.8, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.8, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.8, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.82, "team": [51, 52, 54, 65, 73]}, {"lv": 25, "coef": 1.52, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.52, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.53, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.53, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.54, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.54, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.54, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.55, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.55, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.55, "team": [11, 14, 17, 22, 31]}, {"lv": 28, "coef": 1.37, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.38, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.4, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.4, "team": [92, 93, 89, 111, 108]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.19, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.19, "team": [57, 66, 67, 73, 68]}, {"lv": 35, "coef": 1.62, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.63, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.64, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.66, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.66, "team": [57, 49, 58, 66, 67]}];
+const STAGES_V4 = [{"lv": 3, "coef": 0.97, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 0.99, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.0, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.01, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.02, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.03, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.03, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.04, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.04, "team": [135, 160, 161, 162, 163]}, {"lv": 3, "coef": 1.05, "team": [135, 160, 161, 162, 163]}, {"lv": 5, "coef": 0.82, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.83, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.84, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.84, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.85, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.85, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.86, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.86, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.87, "team": [131, 139, 142, 145, 159]}, {"lv": 5, "coef": 0.88, "team": [131, 139, 142, 145, 159]}, {"lv": 12, "coef": 1.43, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.43, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.45, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 12, "coef": 1.46, "team": [132, 140, 141, 151, 153]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.41, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 15, "coef": 1.42, "team": [46, 50, 53, 72, 71]}, {"lv": 18, "coef": 1.07, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 18, "coef": 1.09, "team": [91, 88, 96, 98, 97]}, {"lv": 22, "coef": 1.8, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.8, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.8, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.81, "team": [51, 52, 54, 65, 73]}, {"lv": 22, "coef": 1.82, "team": [51, 52, 54, 65, 73]}, {"lv": 25, "coef": 1.52, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.52, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.53, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.53, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.54, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.54, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.54, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.55, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.55, "team": [11, 14, 17, 22, 31]}, {"lv": 25, "coef": 1.55, "team": [11, 14, 17, 22, 31]}, {"lv": 28, "coef": 1.37, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.38, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.39, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.4, "team": [92, 93, 89, 111, 108]}, {"lv": 28, "coef": 1.4, "team": [92, 93, 89, 111, 108]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.17, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.18, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.19, "team": [57, 66, 67, 73, 68]}, {"lv": 32, "coef": 2.19, "team": [57, 66, 67, 73, 68]}, {"lv": 35, "coef": 1.62, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.63, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.64, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.65, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.66, "team": [57, 49, 58, 66, 67]}, {"lv": 35, "coef": 1.66, "team": [57, 49, 58, 66, 67]}];
 const CHAPTERS_V4 = [{"name": "黄巾之乱", "exp": 100, "first": 20, "boss5": [50, 2], "boss10": [100, 3]}, {"name": "讨伐董卓", "exp": 160, "first": 30, "boss5": [70, 2], "boss10": [130, 3]}, {"name": "群雄割据", "exp": 220, "first": 40, "boss5": [90, 2], "boss10": [160, 3]}, {"name": "官渡之战", "exp": 280, "first": 50, "boss5": [110, 2], "boss10": [190, 3]}, {"name": "赤壁之战", "exp": 340, "first": 60, "boss5": [130, 2], "boss10": [220, 3]}, {"name": "潼关之战", "exp": 400, "first": 70, "boss5": [150, 2], "boss10": [250, 3]}, {"name": "汉中争夺", "exp": 460, "first": 80, "boss5": [170, 2], "boss10": [280, 3]}, {"name": "夷陵之战", "exp": 520, "first": 90, "boss5": [190, 2], "boss10": [310, 3]}, {"name": "五丈原", "exp": 580, "first": 100, "boss5": [210, 2], "boss10": [340, 3]}, {"name": "三分归晋", "exp": 640, "first": 110, "boss5": [230, 2], "boss10": [370, 3]}];
 const MIGE_V4 = [{"guard": "枪兵营", "rec": 5305, "coin": 70, "items": {"R": 1}, "lv": 8, "star": 1, "enh": 0, "team": [14, 4, 93, 15, 54]}, {"guard": "弓兵营", "rec": 6263, "coin": 80, "items": {"R": 1}, "lv": 12, "star": 2, "enh": 1, "team": [7, 88, 92, 57, 91]}, {"guard": "骑兵营", "rec": 8648, "coin": 95, "items": {"R": 2}, "lv": 15, "star": 2, "enh": 2, "team": [46, 49, 5, 8, 53]}, {"guard": "混编营", "rec": 8648, "coin": 110, "items": {"R": 2}, "lv": 18, "star": 3, "enh": 3, "team": [14, 46, 49, 4, 93]}, {"guard": "重甲营", "rec": 11311, "coin": 125, "items": {"SR": 1}, "lv": 22, "star": 3, "enh": 4, "team": [46, 88, 4, 7, 5]}, {"guard": "双阵营", "rec": 13748, "coin": 140, "items": {"SR": 1}, "lv": 26, "star": 4, "enh": 5, "team": [46, 50, 91, 89, 96]}, {"guard": "连环阵", "rec": 16135, "coin": 160, "items": {"SR": 2}, "lv": 29, "star": 4, "enh": 6, "team": [7, 57, 55, 58, 91]}, {"guard": "铁壁阵", "rec": 13748, "coin": 180, "items": {"SR": 2}, "lv": 32, "star": 5, "enh": 7, "team": [4, 156, 54, 52, 60]}, {"guard": "三才阵", "rec": 20255, "coin": 205, "items": {"SSR": 1}, "lv": 36, "star": 5, "enh": 8, "team": [8, 7, 6, 9, 10]}, {"guard": "武库主殿", "rec": 20255, "coin": 235, "items": {"SSR": 2}, "lv": 40, "star": 5, "enh": 8, "team": [130, 5, 46, 57, 7]}];
 const HULAO_V4 = [{"rec": 4269, "mir": 3842, "prestige": 20, "yb": 30}, {"rec": 5093, "mir": 4583, "prestige": 30, "yb": 50}, {"rec": 6074, "mir": 5467, "prestige": 45, "yb": 70}, {"rec": 7246, "mir": 6521, "prestige": 60, "yb": 90}, {"rec": 8643, "mir": 7778, "prestige": 80, "yb": 120}, {"rec": 10309, "mir": 9278, "prestige": 110, "yb": 160}, {"rec": 12297, "mir": 11067, "prestige": 150, "yb": 210}, {"rec": 14668, "mir": 13201, "prestige": 200, "yb": 280}, {"rec": 17496, "mir": 15746, "prestige": 270, "yb": 370}, {"rec": 20869, "mir": 18782, "prestige": 350, "yb": 500}];
@@ -2535,7 +2538,7 @@ function dungeonDaySync(){
   if(!state.dun) return;
   const dk = dunDayStr();
   if(state.dun.day !== dk){
-    state.dun.day = dk; state.dun.stageUsed = {}; state.dun.migeRoundProg = 0; state.dun.migeRoundsDone = 0; state.dun.migeAdOpen = false;
+    state.dun.day = dk; state.dun.stageUsed = {}; state.dun.migeRoundProg = 0; state.dun.migeRoundsDone = 0; state.dun.migeAdOpen = false; state.dun.migePending = {coin:0, items:{}};
   }
 }
 function dungeonSyncAll(){
@@ -2618,16 +2621,38 @@ function migeRoundState(){
   if(D.migeRoundsDone===1 && !D.migeAdOpen) return {round:2, open:false, why:"第 2 轮需先看视频开启"};
   return {round:D.migeRoundsDone+1, open:true, why:""};
 }
-function migeGrant(def){
-  addRes("starcoin", def.coin); const got = [];
-  Object.keys(def.items).forEach(rar=>{ for(let i=0;i<def.items[rar];i++){ const d = randGenericItem(rar); if(d){ addItemInstance(d.id); got.push(d.name); } } });
-  return got;
-}
-function migeAdvance(stage){
+/* 第 7 批防刷：产出只在整轮通关结算时发放。逐关真实胜利先计入 migePending（待结算），
+   强闯关与重打已通过关不计入；跨日未结算作废（dungeonDaySync 清空）。 */
+function migePendingOf(){
   const D = state.dun;
-  if(stage === D.migeRoundProg+1){ D.migeRoundProg = stage; if(stage>=10){ D.migeRoundsDone++; D.migeRoundProg = 0; } }
-  if(stage > D.migeCleared) D.migeCleared = stage;
+  if(!D.migePending || typeof D.migePending !== "object") D.migePending = {coin:0, items:{}};
+  if(typeof D.migePending.coin !== "number" || !(D.migePending.coin>=0)) D.migePending.coin = 0;
+  if(!D.migePending.items || typeof D.migePending.items !== "object") D.migePending.items = {};
+  return D.migePending;
 }
+function migeAccrue(def){
+  const P = migePendingOf(); P.coin += def.coin;
+  Object.keys(def.items).forEach(rar=>{ P.items[rar] = (P.items[rar]||0) + def.items[rar]; });
+}
+function migeSettle(){
+  const P = migePendingOf(); const coin = P.coin; const got = [];
+  Object.keys(P.items).forEach(rar=>{ for(let i=0;i<P.items[rar];i++){ const d = randGenericItem(rar); if(d){ addItemInstance(d.id); got.push(d.name); } } });
+  if(coin>0) addRes("starcoin", coin);
+  state.dun.migePending = {coin:0, items:{}};
+  return {coin:coin, got:got};
+}
+function migeAdvance(stage, counted){
+  const D = state.dun;
+  let settled = null;
+  if(stage === D.migeRoundProg+1){
+    if(counted) migeAccrue(MIGE_V4[stage-1]);
+    D.migeRoundProg = stage;
+    if(stage>=10){ D.migeRoundProg = 0; D.migeRoundsDone++; settled = migeSettle(); }
+  }
+  if(stage > D.migeCleared) D.migeCleared = stage;
+  return settled;
+}
+function migeSettleMsg(st){ return "整轮通关结算：将星币 +"+st.coin+(st.got.length? "、道具 "+st.got.join("、") : ""); }
 function fightMige(stage){
   const rs = migeRoundState(); if(!rs.open) return {ok:false, msg:rs.why};
   const def = MIGE_V4[stage-1]; if(!def) return {ok:false, msg:"关卡不存在"};
@@ -2637,10 +2662,12 @@ function fightMige(stage){
   const foes = def.team.map(id=>dunUnit(id, def.lv, def.star, def.enh, 1)).filter(Boolean);
   const res = battleSim(mine, foes);
   if(res.win){
-    const got = migeGrant(def); migeAdvance(stage);
+    const counted = stage === state.dun.migeRoundProg+1;
+    const st = migeAdvance(stage, counted);
     if(state.dun.migeForce) delete state.dun.migeForce[stage];
     save();
-    return {ok:true, win:true, log:res.log, rewardMsg:"将星币 +"+def.coin+(got.length? "、道具 "+got.join("、") : "")};
+    if(st) return {ok:true, win:true, log:res.log, rewardMsg:migeSettleMsg(st)};
+    return {ok:true, win:true, log:res.log, rewardMsg: counted? "本关产出已计入待结算（整轮通关时统一发放）" : "本轮该关已通过，重打无产出"};
   }
   state.dun.migeForce[stage] = true; save();
   return {ok:true, win:false, log:res.log, rewardMsg:"", canForce:true};
@@ -2649,8 +2676,9 @@ function forceMige(stage){
   const rs = migeRoundState(); if(!rs.open) return {ok:false, msg:rs.why};
   const def = MIGE_V4[stage-1]; if(!def) return {ok:false, msg:"关卡不存在"};
   if(!state.dun.migeForce || !state.dun.migeForce[stage]) return {ok:false, msg:"先挑战失败一次，才能看视频强行闯关"};
-  const got = migeGrant(def); migeAdvance(stage); delete state.dun.migeForce[stage]; save();
-  return {ok:true, msg:"强行闯关成功：将星币 +"+def.coin+(got.length? "、道具 "+got.join("、") : "")};
+  const st = migeAdvance(stage, false); delete state.dun.migeForce[stage]; save();
+  if(st) return {ok:true, msg:"强行闯关通过（本关不计掉落）；"+migeSettleMsg(st)};
+  return {ok:true, msg:"强行闯关成功（本关不计掉落；已计入的产出将在整轮通关时统一结算）"};
 }
 function openMigeRound2(){
   dungeonDaySync();
@@ -2662,6 +2690,7 @@ function openMigeRound2(){
 function sweepMige(){
   const rs = migeRoundState(); if(!rs.open) return {ok:false, msg:rs.why};
   if(state.dun.migeCleared < 10) return {ok:false, msg:"通关秘阁第 10 关后解锁全关扫荡"};
+  state.dun.migePending = {coin:0, items:{}}; /* 扫荡按整轮全额结算，未结算计入作废防双领 */
   let coin = 0; const got = [];
   MIGE_V4.forEach(def=>{ coin += def.coin; Object.keys(def.items).forEach(rar=>{ for(let i=0;i<def.items[rar];i++){ const d = randGenericItem(rar); if(d){ addItemInstance(d.id); got.push(d.name); } } }); });
   addRes("starcoin", coin);
@@ -2904,13 +2933,14 @@ function renderDungeons(){
       const st = i+1; const locked = st > D.migeCleared+1;
       rows += "<div class='kv'><span>第 "+st+" 关 · "+def.guard+"<br><span class='note'>敌方 Lv"+def.lv+" · "+def.team.map(id=>GEN_BY_ID[id].name).join("、")+"</span></span><b>推荐战力 "+def.rec+"（反推）<br>将星币 "+def.coin+" ＋ "+Object.keys(def.items).map(r=>r+"×"+def.items[r]).join("、")+"</b></div>"
       + "<div style='margin:2px 0 8px'><button class='btn sm' onclick='doMige("+st+")' "+(locked||!rs.open? "disabled":"")+">挑战</button>"
-      + (D.migeForce && D.migeForce[st]? " <button class='btn sm gold' onclick='doMigeForce("+st+")'>看视频强行闯关（全额奖励）</button>" : "")+"</div>";
+      + (D.migeForce && D.migeForce[st]? " <button class='btn sm gold' onclick='doMigeForce("+st+")'>看视频强行闯关（不计掉落）</button>" : "")+"</div>";
     });
     mEl.innerHTML = "<div class='kv'><span>今日轮次</span><b>已完成 "+D.migeRoundsDone+" / 2 轮"+(D.migeRoundsDone===1? (D.migeAdOpen? "（第 2 轮进行中）" : "（第 2 轮未开启）") : "")+"</b></div>"
     + "<div class='kv'><span>永久进度</span><b>已通关 "+D.migeCleared+" / 10 关</b></div>"
+    + (function(){ const P = (D.migePending && typeof D.migePending==="object")? D.migePending : {coin:0, items:{}}; const ni = Object.keys(P.items||{}).reduce(function(a,k){ return a+(P.items[k]||0); },0); return "<div class='kv'><span>待结算产出（整轮通关发放）</span><b>将星币 "+(P.coin||0)+" ＋ 道具 "+ni+" 件</b></div>"; })()
     + (D.migeRoundsDone===1 && !D.migeAdOpen? "<button class='btn gold' onclick='doMigeOpen2()'>看视频（15 秒）开启第 2 轮</button>" : "")
     + (D.migeCleared>=10 && rs.open? " <button class='btn sub' onclick='doMigeSweep()'>全关扫荡（一轮全额）</button>" : "")
-    + "<p class='note'>每轮全清：将星币 1,400 ＋ 通用道具 R×6、SR×6、SSR×3（每次通关全额、重复不打折）。秘阁不设兑换店——道具兑换统一在卡池页「将魂阁」用将魂结算。失败后可看视频强行闯关（不限次数、全额奖励）。</p>" + rows;
+    + "<p class='note'>每轮全清：将星币 1,400 ＋ 通用道具 R×6、SR×6、SSR×3。产出在整轮全清时统一结算：逐关真实胜利先计入待结算，重打本轮已通过的关、强行闯关的关不计掉落；未打完一轮不发放，跨日未结算作废。秘阁不设兑换店——道具兑换统一在卡池页「将魂阁」用将魂结算。失败后可看视频强行闯关（不限次数，但强闯的关不计掉落）。</p>" + rows;
   }
   const aEl = $("arenaV4Info");
   if(aEl){
@@ -2986,6 +3016,7 @@ window.doGzExtra = function(){ const r = drawGuanzhanExtra(); const m = $("gzMsg
 
 function renderAll(){
   dungeonSyncAll();
+  const _tab = (typeof curTab !== "undefined" && curTab) || "home"; /* 第 7 批 D：重活按页签门控 */
   renderRes();
   $("homeStarter").textContent = state.starterGenId? GEN_BY_ID[state.starterGenId].name : "—";
   const n7el = $("v7Notice");
@@ -2997,6 +3028,7 @@ function renderAll(){
   if(syel){ const syn = state.flags && state.flags.sysNotice; syel.textContent = ""; syel.style.display = syn? "block" : "none";
     if(syn){ const syt = document.createElement("span"); syt.textContent = syn; syel.appendChild(syt); syel.appendChild(document.createElement("br"));
       const ok2 = document.createElement("button"); ok2.className = "btn sm"; ok2.textContent = "知道了"; ok2.style.marginTop = "6px"; ok2.onclick = function(){ state.flags.sysNotice = null; save(); renderAll(); }; syel.appendChild(ok2); } }
+if(_tab==="home"){
   const qel = $("questCard");
   if(qel){ const q = questState(); qel.textContent = "";
     const qh = document.createElement("b"); qh.textContent = "今日任务"; qel.appendChild(qh);
@@ -3014,6 +3046,7 @@ function renderAll(){
       const rb = document.createElement("button"); rb.className = "btn sm"; rb.textContent = rd.done(state)? "领取" : "未完成"; rb.disabled = !rd.done(state);
       rb.onclick = function(){ const r = claimRookie(); alert(r.msg); renderAll(); }; rrow.appendChild(rb); }
     qel.appendChild(rrow); }
+  }
   const sgel = $("signTable");
   if(sgel){ const sg = state.sign || {last:"", streak:0}; const signedToday = sg.last === todayStr(); const cur = signedToday? ((sg.streak-1)%7) : ((sg.last === yesterStr()? sg.streak : 0)%7);
     sgel.textContent = ""; const st = document.createElement("span"); st.className = "note";
@@ -3023,10 +3056,12 @@ function renderAll(){
   $("homeTower").textContent = "已通关 "+(state.dun? state.dun.towerBest : 0)+" / 50 层";
   $("homePower").textContent = teamPower();
   const r = OFFICES_V4[state.rankIdx||0] || OFFICES_V4[0], nxt = OFFICES_V4[(state.rankIdx||0)+1];
+if(_tab==="home"){
   $("rankBox").innerHTML = "<div class='kv'><span>当前官职</span><b>"+r.name+"（攻击 +"+Math.round(r.atk*100)+"%／防御 +"+Math.round(r.def*100)+"%，上阵全队）</b></div>"+
     (nxt? "<div class='kv'><span>下一级 "+nxt.name+"</span><b>威望 "+state.merit+" / "+nxt.merit+"</b></div><div class='bar'><i style='width:"+Math.min(100, Math.round(state.merit/nxt.merit*100))+"%'></i></div>"
         : "<p class='note'>已至最高官职。</p>")+
     "<p class='note' style='margin-top:6px'>威望来自虎牢争锋（每日 12:00–13:00、18:00–19:00），只增不减。官职表："+OFFICES_V4.map(x=>x.name+" "+x.merit).join(" · ")+"</p>";
+  }
   $("heroPoolInfo").textContent = fmtDur(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac+(state.lastOffline? " · 离线产出 ×"+state.lastOffline : "");
   $("skillPoolInfo").textContent = fmtPool(state.pool.skill.leftSec);
   $("skillOwned").textContent = state.skillsOwned.length;
@@ -3038,16 +3073,20 @@ function renderAll(){
   const _isr = $("idleSkillRate"); if(_isr) _isr.textContent = CFG.skillCardEveryRealSec+" 秒/张";
   const grpOf = k => state.skillsOwned.filter(x=>x && x.kind===k);
   const grpHtml = (label, arr, hot) => arr.length? "<div class='stats'>"+label+"："+arr.map(x=>"<span class='tag"+(hot?" hot":"")+"'>"+x.name+"</span> "+ownedSkillDesc(x)).join("；")+"</div>" : "";
+if(_tab==="pool"){
   $("skillList").innerHTML = state.skillsOwned.length? grpHtml("主动", grpOf("active"))+grpHtml("被动", grpOf("passive"))+grpHtml("极（收藏加成）", grpOf("ji"), true) : "<span class='note'>暂无技能卡。</span>";
-  renderPools(); renderRates();
+  }
+  if(_tab==="pool"){ renderPools(); renderRates(); }
   const tnEl = $("tianmingNews");
   if(tnEl){ if(state.tianmingNews){ tnEl.style.display="block"; tnEl.textContent = "🎉 天命卡降临：「"+state.tianmingNews+"」已入包（典藏版，去武将页看金边卡面）"; } else { tnEl.style.display="none"; } }
+if(_tab==="cards"){
   $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5，战力 "+teamPower()+"（站位前二后三：前两位＝前排、后三位＝后排）。羁绊："+
     (activeBonds(teamCards()).concat(troopBonds(teamCards())).map(b=>b.name+"（"+bondFxText(b)+"）").join("、") || "无") + teamPowerBreakdownHtml();
+  }
   $("expPoolInfo").textContent = state.expPool;
-  renderDungeons(); renderDex();
-  renderSave();
-  renderCards(); renderItems(); renderStages();
+  if(_tab==="stage") renderDungeons(); if(_tab==="dex") renderDex();
+  if(_tab==="save") renderSave();
+  if(_tab==="cards"){ renderCards(); renderItems(); } if(_tab==="stage") renderStages();
   showcaseAccrue();
   $("showAcc").textContent = Math.floor(state.showcaseAcc);
   $("showcaseList").innerHTML = state.showcase.length? state.showcase.map(uid=>{ const c=state.cards.find(x=>x.uid===uid); return c? "<span class='tag hot'>"+GEN_BY_ID[c.genId].name+"（"+showcaseRate(c).toFixed(1)+" 元宝/分钟）</span>" : ""; }).join("")+"<p class='note' style='margin-top:4px'>展位 "+state.showcase.length+"/"+CFG.showcaseSlots+" · 合计产速 "+showcaseTotalRate().toFixed(1)+" 元宝/分钟</p>" : "<span class='note'>橱窗空着，去武将页把任意卡摆进来（SSR 与天命卡产得最多）。</span>";
@@ -3058,10 +3097,20 @@ function renderAll(){
   tourSync();
 }
 const RAR_ORDER = {UR:0, SSR:1, SR:2, R:3, N:4};
+let cardsPage = 1;
+function cardsPagerHtml(total, pages){
+  return "<div class='note' style='margin:6px 0'>共 " + total + " 张 · 第 " + cardsPage + "/" + pages + " 页 "
+    + "<button class='btn sm sub' onclick='cardsSetPage(-1)'" + (cardsPage <= 1? " disabled" : "") + ">上一页</button> "
+    + "<button class='btn sm sub' onclick='cardsSetPage(1)'" + (cardsPage >= pages? " disabled" : "") + ">下一页</button></div>";
+}
+window.cardsSetPage = function(d){ cardsPage += d; renderCards(); };
 function renderCards(){
   const f = $("factionFilter").value;
   const list = state.cards.filter(c=>!f || GEN_BY_ID[c.genId].fac===f).slice().sort((a,b)=>RAR_ORDER[GEN_BY_ID[a.genId].rar]-RAR_ORDER[GEN_BY_ID[b.genId].rar] || b.star-a.star || (b.level||1)-(a.level||1));
-  $("cardList").innerHTML = list.length? list.map(c=>{
+  const pages = Math.max(1, Math.ceil(list.length / DEX_PAGE_SIZE));
+  if(cardsPage > pages) cardsPage = pages; if(cardsPage < 1) cardsPage = 1;
+  const pageRows = list.slice((cardsPage - 1) * DEX_PAGE_SIZE, cardsPage * DEX_PAGE_SIZE);
+  $("cardList").innerHTML = list.length? pageRows.map(c=>{
     const g = GEN_BY_ID[c.genId]; const u = resolveUnit(c,1,null); const gr = growthOf(c);
     const inForm = state.formation.indexOf(c.uid)>=0, inShow = state.showcase.indexOf(c.uid)>=0;
     const locked = inForm || inShow;
@@ -3102,6 +3151,7 @@ function renderCards(){
       "<button class='btn sm sub' onclick='doStarUp("+c.uid+")' "+(c.star>=CFG.starCap?"disabled":"")+">升星（加四维）</button>"+
       "<button class='btn sm sub' onclick='setEnhTarget("+c.uid+")'>设为强化目标</button>"+
       "<button class='btn sm sub' onclick='toggleCardDetail("+c.uid+")'>"+(expandedCards.has(c.uid)? "收起详情":"展开详情")+"</button>"+
+      "<button class='btn sm sub' onclick='toggleShowcase("+c.uid+")'>"+(inShow?"撤下橱窗":"摆入橱窗")+"</button>"+
       "</div>"+
       "<div id='cdt-"+c.uid+"' style='display:"+(expandedCards.has(c.uid)? "block":"none")+";margin-top:6px'>"+headCardHtml(c)+
       "<div class='stats'>实战 攻 "+u.atk+"（武面 "+u.atkW+" / 智面 "+u.atkZ+"）防 "+u.def+" 兵力 "+u.hp+" · 战力 "+powerOf(c, inForm? state.cards.filter(x=>state.formation.indexOf(x.uid)>=0) : null)+"</div>"+statBreakdownHtml(c, inForm? state.cards.filter(x=>state.formation.indexOf(x.uid)>=0) : null)+skillHtml+
@@ -3109,11 +3159,10 @@ function renderCards(){
       "<div style='margin-top:6px;display:flex;gap:6px;flex-wrap:wrap'>"+
       "<button class='btn sm sub' onclick='doLevelUp("+c.uid+",1)' "+(lvNow>=CFG.levelCap?"disabled":"")+">升级（经验池 "+(lvNow>=CFG.levelCap? "MAX" : levelUpCost(lvNow))+")</button>"+
       "<button class='btn sm sub' onclick='doLevelUp("+c.uid+",99)' "+(lvNow>=CFG.levelCap?"disabled":"")+">连升</button>"+
-      "<button class='btn sm sub' onclick='toggleShowcase("+c.uid+")'>"+(inShow?"撤下橱窗":"摆入橱窗")+"</button>"+
       "</div></div>"+
       "<label class='note'><input type='checkbox' "+(enhFeeds.indexOf(c.uid)>=0?"checked":"")+" "+(locked||c.uid===enhTarget?"disabled":"")+" onchange='toggleFeed("+c.uid+",this.checked)'> 作强化饲料</label>"+
       "</div></div></div>";
-  }).join("") : "<div class='card'>暂无武将，去卡池开启挂机池或抽卡。</div>";
+  }).join("") + cardsPagerHtml(list.length, pages) : "<div class='card'>暂无武将，去卡池开启挂机池或抽卡。</div>";
 }
 function tmFightUI(id, stage, useAd){
   const r = fightTmDungeon(id, stage, useAd);
@@ -3164,6 +3213,14 @@ function renderSave(){
 }
 
 /* ---- 全局操作 ---- */
+/* 第 7 批修复：一键上阵按战力（powerOf 单一事实源）取前 5。
+   旧口径按 GEN 模板 star 排序——v4 数据模板无 star 字段，比较器出 NaN 后退化为按强化＋收集顺序，
+   玩家视角「点了不换人」。 */
+function autoFormation(){
+  const sorted = state.cards.slice().sort((a,b)=> powerOf(b) - powerOf(a)).slice(0,5);
+  state.formation = sorted.map(c=>c.uid);
+  return state.formation.slice();
+}
 window.toggleForm = function(uid){
   const i = state.formation.indexOf(uid);
   if(i>=0) state.formation.splice(i,1);
@@ -3216,11 +3273,8 @@ function doEnhanceUI(){
 function bind(){
   applySubsAll();
   document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
-  $("factionFilter").onchange = renderCards;
-  $("btnAutoForm").onclick = function(){
-    const sorted = state.cards.slice().sort((a,b)=>{ const ga=GEN_BY_ID[a.genId], gb=GEN_BY_ID[b.genId]; return (gb.star-ga.star)||(b.enh-a.enh); }).slice(0,5);
-    state.formation = sorted.map(c=>c.uid); save(); renderAll();
-  };
+  $("factionFilter").onchange = function(){ cardsPage = 1; renderCards(); };
+  $("btnAutoForm").onclick = function(){ autoFormation(); save(); renderAll(); };
   $("btnHeroPool").onclick = function(){ const r=openPool("hero"); alert(r.msg); renderAll(); };
   $("btnSkillPool").onclick = function(){ const r=openPool("skill"); alert(r.msg); renderAll(); };
   const fmtDrawn = d => d.map(g=>g.name+"("+g.rar+(g.variant?"·UR":"")+")").join("、");
@@ -3536,7 +3590,7 @@ function showDrawn(d){
 }
 
 if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, fullCardHtml, refCardOf, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
-  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE }; }
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE }; }
 </script>
 
 <script>
