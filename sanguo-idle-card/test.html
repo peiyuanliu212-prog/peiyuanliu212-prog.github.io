@@ -241,7 +241,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
     <span>阵营筛选 </span><select id="factionFilter" data-testid="faction-filter"><option value="">全部</option><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select>
     <button class="btn sm dark" id="btnAutoForm" data-testid="auto-form" style="margin-left:8px">一键上阵（战力前 5）</button>
     <p class="note" id="formationInfo" style="margin-top:6px"></p>
-    <button class="btn sm sub" onclick="toggleCardsGuide()">养成说明（升星 / 强化 / 技能 / 装备）</button><div id="cardsGuide" style="display:none"><p class="note">分工：<b>升星加四维</b>（★1–★5，每星固定加算、按品级递进，满星另有技能伤害系数加成）；<b>强化加四维与带兵</b>（≤10 级）。升星：全程消耗同名卡 5 张（升 2 星 2 张、之后每星 1 张），任意版本同名卡都可作材料（上阵/橱窗中的不作材料）。强化：先点一张卡「设为强化目标」，再勾 5 张 R/SR/SSR 卡作材料（UR 卡不可作材料，不能是上阵/橱窗中的卡），成功率＝5 张材料贡献之和（材料品级越高贡献越大，封顶 100%）；<b>失败材料照耗、强化等级 −1</b>（0 级失败不掉级）；每次尝试前可勾选<b>保级</b>：保级价按目标卡品级分档＝基数×（当前强化等级＋1）元宝（基数：SSR 100、SR 40、R 15，UR 同 SSR），尝试前扣除、无论成败不退，保级的那次失败不降级。升级吃经验池：每级需经验＝100×当前等级，满级 50 级。<b>UR 卡</b>是典藏版武将：四维与成长独立定版，怒气技能更强；当前版本获取通道尚未开启，后续版本登场。<b>技能三通道</b>：怒技（专属技能）只认怒气，满 100 必放、代替普攻，效果按卡面描述结算（眩晕/灼烧/中毒/混乱/持续回复/怒气操控等）；学来的主动技能每回合判定一次（每技能自带概率与冷却，与本回合是否放怒技无关）；被动技能按各自条件自动判定（每回合/受击时/兵力过半等）。技能位（2 位制）：1 主动＋1 被动，无等级解锁；技能卡抽到即拥有，装配不消耗，可随时卸下/转装；同名技能全队同时只能装配 1 名武将。装备两件（武器＋兵书）按定版道具的属性与效果生效；专属装备仅绑定武将的对应版本可装（UR 专属仅 UR 版、SSR 专属仅 SSR 版）；道具可升星（倍率 ×1.10/1.25/1.45/1.70）与强化（每级效果 +5%）。战力＝兵力×0.30＋四维和＋技能当量×90。布阵前二后三：普攻按兵种索敌——枪/骑优先打前排、弓优先打后排，优先的那排全倒了才打另一排（技能目标按技能说明）。</p></div>
+    <button class="btn sm sub" onclick="toggleCardsGuide()">养成说明（升星 / 强化 / 技能 / 装备）</button><div id="cardsGuide" style="display:none"><p class="note">分工：<b>升星加四维</b>（★1–★5，每星固定加算、按品级递进，满星另有技能伤害系数加成）；<b>强化加四维与带兵</b>（≤10 级）。升星：全程消耗同名卡 5 张（升 2 星 2 张、之后每星 1 张），任意版本同名卡都可作材料（上阵/橱窗中的不作材料）。强化：先点一张卡「设为强化目标」，再勾 5 张 R/SR/SSR 卡作材料（UR 卡不可作材料，不能是上阵/橱窗中的卡），成功率＝5 张材料贡献之和（材料品级越高贡献越大，封顶 100%）；<b>失败材料照耗、强化等级 −1</b>（0 级失败不掉级）；每次尝试前可勾选<b>保级</b>：保级价按目标卡品级分档＝基数×（当前强化等级＋1）元宝（基数：SSR 100、SR 40、R 15，UR 同 SSR），单次封顶 500 元宝，尝试前扣除、无论成败不退，保级的那次失败不降级。升级吃经验池：每级需经验＝100×当前等级，满级 50 级。<b>UR 卡</b>是典藏版武将：四维与成长独立定版，怒气技能更强；当前版本获取通道尚未开启，后续版本登场。<b>技能三通道</b>：怒技（专属技能）只认怒气，满 100 必放、代替普攻，效果按卡面描述结算（眩晕/灼烧/中毒/混乱/持续回复/怒气操控等）；学来的主动技能每回合判定一次（每技能自带概率与冷却，与本回合是否放怒技无关）；被动技能按各自条件自动判定（每回合/受击时/兵力过半等）。技能位（2 位制）：1 主动＋1 被动，无等级解锁；技能卡抽到即拥有，装配不消耗，可随时卸下/转装；同名技能全队同时只能装配 1 名武将。装备两件（武器＋兵书）按定版道具的属性与效果生效；专属装备仅绑定武将的对应版本可装（UR 专属仅 UR 版、SSR 专属仅 SSR 版）；道具可升星（倍率 ×1.10/1.25/1.45/1.70）与强化（每级效果 +5%）。战力＝兵力×0.30＋四维和＋技能当量×90。布阵前二后三：普攻按兵种索敌——枪/骑优先打前排、弓优先打后排，优先的那排全倒了才打另一排（技能目标按技能说明）。</p></div>
 <p class="note" id="enhInfo"></p>
   </div>
   <div class="card"><div class="kv"><span>经验池（全来源经验汇入，手动升级）</span><b id="expPoolInfo">0</b></div>
@@ -431,6 +431,7 @@ const CFG = {
   troopsPerEnh: 80,            // 【v4 已弃用】带兵改定版公式（基础 1000＋每级增量）×(1＋强化带兵%)
   enhBasePerStar: 6,           // 【v4 已弃用】强化成功率改定版贡献表 ENH_CONTRIB
   enhProtectBaseByRar: { UR: 100, SSR: 100, SR: 40, R: 15 }, // 强化保级基数按目标卡品级分档（第 11 批 R6·主人 2026-11-16 拍板；第 10 批 K 一刀切 100 改分档，SSR 档保留设计方原话「0 级 100 为基数」、UR 未开放按 SSR 档占位）：保级价 = 基数×(当前强化等级+1)，尝试前扣除、不退；失败降一级（设计方亲定，覆盖旧「失败不清零」口径）
+  enhProtectCap: 500, // 保级价单次封顶（设计方 2026-11-16 追加亲定：先提 1000 后改 500，理由「毕竟 5 个武将」都要强化保级）：实际保级价 = min(基数×(等级+1), 本封顶)
   enhRateCap: 95,
   levelCap: 50,
   expNeedPerLevel: 100,        // 升下一级所需经验 = 当前等级 ×100（定版口径：满级 50 级，满级累计 122,500）
@@ -2352,8 +2353,8 @@ let r = 0;
 feeds.forEach(f=>{ const fg = GEN_BY_ID[f.genId]; if(fg) r += table[fg.rar] || 0; });
 return Math.min(100, Math.round(r * 1000) / 10);
 }
-/* 强化保级价（第 10 批 K 立规、第 11 批 R6 改按品级分档）：基数（CFG.enhProtectBaseByRar，SSR 100/SR 40/R 15/UR 100 占位）×(当前强化等级+1) 元宝；无卡或品级未知时按 SSR 档兜底 */
-function enhProtectPrice(card){ const g = card? GEN_BY_ID[card.genId] : null; const base = (g && CFG.enhProtectBaseByRar[g.rar]) || CFG.enhProtectBaseByRar.SSR; return base * ((card? card.enh : 0) + 1); }
+/* 强化保级价（第 10 批 K 立规、第 11 批 R6 改按品级分档、2026-11-16 晚加封顶）：min(基数（CFG.enhProtectBaseByRar，SSR 100/SR 40/R 15/UR 100 占位）×(当前强化等级+1), CFG.enhProtectCap=500) 元宝；无卡或品级未知时按 SSR 档兜底 */
+function enhProtectPrice(card){ const g = card? GEN_BY_ID[card.genId] : null; const base = (g && CFG.enhProtectBaseByRar[g.rar]) || CFG.enhProtectBaseByRar.SSR; return Math.min(base * ((card? card.enh : 0) + 1), CFG.enhProtectCap); }
 function doEnhance(targetUid, feedUids, opts){
 opts = opts || {};
 const card = state.cards.find(c=>c.uid===targetUid); if(!card) return {ok:false,msg:"目标不存在"};
