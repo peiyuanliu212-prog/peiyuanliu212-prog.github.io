@@ -207,7 +207,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <div class="card">
     <div class="kv"><span>将魂余额</span><b id="soulBalance">0</b></div>
     <div class="kv"><span>将星币余额（专属道具兑换）</span><b id="soulStarBalance">0</b></div>
-    <p class="note">分解：多余武将卡转将魂（UR 3000／SSR 800／SR 150／R 40 将魂/张）；上阵、橱窗展示、已装备道具的卡不可分解。自动转化：抽到的卡若同名已留满 6 张（本体＋满星材料），盈余自动转将魂。</p>
+    <p class="note">分解：多余武将卡转将魂（UR 2400／SSR 600／SR 100／R 15 将魂/张）；上阵、橱窗展示、已装备道具的卡不可分解。自动转化：抽到的卡若同名已留满 6 张（本体＋满星材料），盈余自动转将魂。通用道具每日限购：SSR 3 件／SR 3 件／R 5 件（0 点重置）；将魂兑换的通用道具分解只返将魂、不返将星币。</p>
     <div style="margin:6px 0"><label class="note"><input type="checkbox" id="soulAutoChk"> 抽卡自动转化盈余重复卡</label>
     <button class="btn sub sm" id="btnSoulAutoAll" style="margin-left:8px">一键转化全部盈余</button></div>
     <div id="soulList" style="margin-top:6px"></div>
@@ -369,6 +369,7 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <h2 class="sec">设置</h2>
   <div class="card" id="settingsCard">
     <div class="kv"><span>当前版本</span><b>v4（开发版）</b></div>
+    <div class="kv"><span>背景音乐（古风合成）</span><b><label class="note"><input type="checkbox" id="bgmChk"> 开启</label></b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button>
@@ -490,10 +491,12 @@ const CFG = {
   poolJT: { cost:200, tenCost:1800, rates:{SSR:5, SR:45, R:50}, pitySSR:80, facFocus:0.75 }, // facFocus 第 10 批：本阵营 60%→75%（设计方定规，数字我方暂定待终确认）
   poolTM: { cost:240, tenCost:2160, rates:{UR:2, SSR:8, SR:40, R:50}, upShare:0.6, pityUR:100, pitySSR:20, openDays:7, gapDays:7, epoch:1767196800000 },
   poolTY: { hourCost:100, cardEverySec:300, capSec:43200, rates:{SR:12, R:88} },
-  soulValue: {UR:3000, SSR:800, SR:150, R:40},
+  soulValue: {UR:2400, SSR:600, SR:100, R:15}, /* 将魂系数（第 12 批下拉：原 UR 3000／SSR 800／SR 150／R 40；设计方点名 R 太多、屯营满转折魂约 7,630/日 → 约 3,600/日。手动分解与自动折魂同源读此表） */
   soulKeep: 6,
   soulItemPrice: {UR_EX:2400, SSR_EX:1600, SSR_GEN:600, SR_GEN:300, R_GEN:120}, // 通用道具将魂价（第 10 批后专属改走 starItemPrice，本表仅 GEN 三档生效；UR_EX/SSR_EX 保留作分解对账基数）
   starItemPrice: {UR_EX:2400, SSR_EX:1600}, // 专属道具将星币价（定版 dungeons.json「将星币兑换」表；第 10 批·设计方纠错：专属归将星币）
+  soulShopDailyLimit: {SSR_GEN:3, SR_GEN:3, R_GEN:5}, // 将魂阁通用道具每日限购（第 12 批：只限将魂结算的通用道具，专属走将星币不限购；计数按自然日存 state.soulShop）
+  soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
   migCardTicketRefund: 2,
@@ -539,7 +542,7 @@ const ITEM_BY_ID = {}; ITEM_DEFS.forEach(d=>ITEM_BY_ID[d.id]=d);
 const ITEM_STAR_MUL = [1, 1, 1.10, 1.25, 1.45, 1.70]; /* 道具升星倍率（按星 1..5，定版道具升星表） */
 const V0_PERS_OLD = {1:"冷静",2:"冷静",3:"刚胆",4:"刚胆",5:"鲁莽",6:"刚胆",7:"鲁莽",8:"胆小",9:"冷静",10:"刚胆",11:"刚胆",12:"鲁莽",13:"刚胆",14:"冷静",15:"冷静",16:"鲁莽",17:"鲁莽",18:"冷静",19:"胆小",20:"冷静",21:"冷静",22:"冷静",23:"刚胆",24:"刚胆",25:"鲁莽",26:"刚胆",27:"胆小",28:"鲁莽",29:"冷静",30:"胆小",31:"冷静",32:"鲁莽",33:"胆小",34:"刚胆",35:"鲁莽",36:"鲁莽",101:"刚胆",102:"鲁莽"};
 /* 学习技能表：主动＝每回合概率判定释放（第 10 批）；被动＝常驻本将。效果数值只许在此表/CFG */
-const ACTIVE_SKILLS = {"惊雷一击":{"grade":"SSR","stat":"w","troop":null,"trig":"turn","rate":45,"scope":"Fr","mul":0.95,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.95倍伤害","cd":2},"破阵冲锋":{"grade":"SSR","stat":"w","troop":"骑","trig":"turn","rate":45,"scope":"Fr","mul":0.9,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.90倍伤害","cd":2},"乱射压制":{"grade":"SSR","stat":"w","troop":"弓","trig":"turn","rate":45,"scope":"Br","mul":0.85,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.85倍伤害","cd":2},"铁骑践踏":{"grade":"SSR","stat":"w","troop":"骑","trig":"turn","rate":40,"scope":"E","mul":0.62,"desc":"每3回合判定一次，40%概率生效，未生效则该次技能空放无效；对敌方全体造成武力×0.62倍伤害","cd":3},"断粮焚仓":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":42,"scope":"E","mul":0.3,"desc":"每3回合判定一次，42%概率生效，未生效则该次技能空放无效；对敌方全体施加灼烧（每回合0.15倍，3回合），并立即造成智谋×0.30倍伤害","cd":3,"burn":3,"dotMul":0.15},"毒瘴弥漫":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":42,"scope":"Br","mul":0.28,"desc":"每3回合判定一次，42%概率生效，未生效则该次技能空放无效；对敌方后排施加中毒（每回合0.18倍，3回合），并立即造成智谋×0.28倍伤害","cd":3,"pois":3,"dotMul":0.18},"震胆怒吼":{"grade":"SSR","stat":"t","troop":null,"trig":"turn","rate":45,"scope":"Fr","mul":0.0,"desc":"每3回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方前排施加眩晕1回合","cd":3,"stun":1},"火攻连环":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":40,"scope":"E","mul":0.45,"desc":"每3回合判定一次，40%概率生效，未生效则该次技能空放无效；对敌方全体造成智谋×0.45倍伤害，并施加灼烧（每回合0.16倍，3回合）","cd":3,"burn":3,"dotMul":0.16},"鹰目识破":{"grade":"SSR","stat":"z","troop":null,"trig":"turn","rate":38,"scope":"E","mul":0.25,"desc":"每4回合判定一次，38%概率生效，未生效则该次技能空放无效；对敌方全体造成智谋×0.25倍伤害","cd":4},"仁德抚军":{"grade":"SSR","stat":"t","troop":null,"trig":"turn","rate":45,"scope":"aA","mul":0.55,"desc":"每3回合判定一次，45%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力统率×0.55倍","cd":3,"heal":true},"妙手回春":{"grade":"SSR","stat":"z","troop":null,"trig":"turn","rate":45,"scope":"aA","mul":0.52,"desc":"每3回合判定一次，45%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力智谋×0.52倍","cd":3,"heal":true},"短兵相接":{"grade":"SR","stat":"w","troop":"枪","trig":"turn","rate":35,"scope":"Fr","mul":0.65,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.65倍伤害","cd":2},"游骑袭扰":{"grade":"SR","stat":"w","troop":"骑","trig":"turn","rate":35,"scope":"Br","mul":0.6,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.60倍伤害","cd":2},"攒射齐发":{"grade":"SR","stat":"w","troop":"弓","trig":"turn","rate":35,"scope":"Br","mul":0.62,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.62倍伤害","cd":2},"阵前斩将":{"grade":"SR","stat":"w","troop":"枪","trig":"turn","rate":32,"scope":"Fr","mul":0.7,"desc":"每3回合判定一次，32%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.70倍伤害","cd":3},"血战冲锋":{"grade":"SR","stat":"w","troop":"骑","trig":"turn","rate":30,"scope":"E","mul":0.45,"desc":"每3回合判定一次，30%概率生效，未生效则该次技能空放无效；对敌方全体造成武力×0.45倍伤害","cd":3},"火把投掷":{"grade":"SR","stat":"z","troop":"弓","trig":"turn","rate":32,"scope":"E","mul":0.2,"desc":"每3回合判定一次，32%概率生效，未生效则该次技能空放无效；对敌方全体施加灼烧（每回合0.10倍，2回合），并立即造成智谋×0.20倍伤害","cd":3,"burn":2,"dotMul":0.1},"毒矢连发":{"grade":"SR","stat":"z","troop":"弓","trig":"turn","rate":32,"scope":"Br","mul":0.22,"desc":"每3回合判定一次，32%概率生效，未生效则该次技能空放无效；对敌方后排施加中毒（每回合0.12倍，2回合），并立即造成智谋×0.22倍伤害","cd":3,"pois":2,"dotMul":0.12},"鸣金扰阵":{"grade":"SR","stat":"t","troop":null,"trig":"turn","rate":35,"scope":"Fr","mul":0.0,"desc":"每3回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方前排施加眩晕1回合","cd":3,"stun":1},"军医巡营":{"grade":"SR","stat":"z","troop":null,"trig":"turn","rate":35,"scope":"aA","mul":0.4,"desc":"每3回合判定一次，35%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力智谋×0.40倍","cd":3,"heal":true},"屯田补给":{"grade":"SR","stat":"t","troop":null,"trig":"turn","rate":35,"scope":"aA","mul":0.38,"desc":"每4回合判定一次，35%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力统率×0.38倍","cd":4,"heal":true},"撞木破门":{"grade":"R","stat":"w","troop":"枪","trig":"turn","rate":25,"scope":"Fr","mul":0.4,"desc":"每3回合判定一次，25%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.40倍伤害","cd":3},"落石阻路":{"grade":"R","stat":"t","troop":null,"trig":"turn","rate":25,"scope":"Fr","mul":0.45,"desc":"每3回合判定一次，25%概率生效，未生效则该次技能空放无效；对敌方前排造成统率×0.45倍伤害","cd":3},"乱箭扰敌":{"grade":"R","stat":"w","troop":"弓","trig":"turn","rate":25,"scope":"Br","mul":0.42,"desc":"每3回合判定一次，25%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.42倍伤害","cd":3},"火把恐吓":{"grade":"R","stat":"z","troop":null,"trig":"turn","rate":22,"scope":"E","mul":0.12,"desc":"每4回合判定一次，22%概率生效，未生效则该次技能空放无效；对敌方全体施加灼烧（每回合0.08倍，1回合），并立即造成智谋×0.12倍伤害","cd":4,"burn":1,"dotMul":0.08},"草医包扎":{"grade":"R","stat":"z","troop":null,"trig":"turn","rate":25,"scope":"aA","mul":0.25,"desc":"每4回合判定一次，25%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力智谋×0.25倍","cd":4,"heal":true}};
+const ACTIVE_SKILLS = {"惊雷一击":{"grade":"SSR","stat":"w","troop":null,"trig":"turn","rate":45,"scope":"Fr","mul":0.95,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.95倍伤害","cd":2},"破阵冲锋":{"grade":"SSR","stat":"w","troop":"骑","trig":"turn","rate":45,"scope":"Fr","mul":0.9,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.90倍伤害","cd":2},"乱射压制":{"grade":"SSR","stat":"w","troop":"弓","trig":"turn","rate":45,"scope":"Br","mul":0.85,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.85倍伤害","cd":2},"铁骑践踏":{"grade":"SSR","stat":"w","troop":"骑","trig":"turn","rate":40,"scope":"E","mul":0.62,"desc":"每2回合判定一次，40%概率生效，未生效则该次技能空放无效；对敌方全体造成武力×0.62倍伤害","cd":2},"断粮焚仓":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":42,"scope":"E","mul":0.3,"desc":"每2回合判定一次，42%概率生效，未生效则该次技能空放无效；对敌方全体施加灼烧（每回合0.15倍，3回合），并立即造成智谋×0.30倍伤害","cd":2,"burn":3,"dotMul":0.15},"毒瘴弥漫":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":42,"scope":"Br","mul":0.28,"desc":"每2回合判定一次，42%概率生效，未生效则该次技能空放无效；对敌方后排施加中毒（每回合0.18倍，3回合），并立即造成智谋×0.28倍伤害","cd":2,"pois":3,"dotMul":0.18},"震胆怒吼":{"grade":"SSR","stat":"t","troop":null,"trig":"turn","rate":45,"scope":"Fr","mul":0.0,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；对敌方前排施加眩晕1回合","cd":2,"stun":1},"火攻连环":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":40,"scope":"E","mul":0.45,"desc":"每2回合判定一次，40%概率生效，未生效则该次技能空放无效；对敌方全体造成智谋×0.45倍伤害，并施加灼烧（每回合0.16倍，3回合）","cd":2,"burn":3,"dotMul":0.16},"鹰目识破":{"grade":"SSR","stat":"z","troop":null,"trig":"turn","rate":38,"scope":"E","mul":0.25,"desc":"每2回合判定一次，38%概率生效，未生效则该次技能空放无效；对敌方全体造成智谋×0.25倍伤害","cd":2},"仁德抚军":{"grade":"SSR","stat":"t","troop":null,"trig":"turn","rate":45,"scope":"aA","mul":0.55,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力统率×0.55倍","cd":2,"heal":true},"妙手回春":{"grade":"SSR","stat":"z","troop":null,"trig":"turn","rate":45,"scope":"aA","mul":0.52,"desc":"每2回合判定一次，45%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力智谋×0.52倍","cd":2,"heal":true},"短兵相接":{"grade":"SR","stat":"w","troop":"枪","trig":"turn","rate":35,"scope":"Fr","mul":0.65,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.65倍伤害","cd":2},"游骑袭扰":{"grade":"SR","stat":"w","troop":"骑","trig":"turn","rate":35,"scope":"Br","mul":0.6,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.60倍伤害","cd":2},"攒射齐发":{"grade":"SR","stat":"w","troop":"弓","trig":"turn","rate":35,"scope":"Br","mul":0.62,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.62倍伤害","cd":2},"阵前斩将":{"grade":"SR","stat":"w","troop":"枪","trig":"turn","rate":32,"scope":"Fr","mul":0.7,"desc":"每2回合判定一次，32%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.70倍伤害","cd":2},"血战冲锋":{"grade":"SR","stat":"w","troop":"骑","trig":"turn","rate":30,"scope":"E","mul":0.45,"desc":"每2回合判定一次，30%概率生效，未生效则该次技能空放无效；对敌方全体造成武力×0.45倍伤害","cd":2},"火把投掷":{"grade":"SR","stat":"z","troop":"弓","trig":"turn","rate":32,"scope":"E","mul":0.2,"desc":"每2回合判定一次，32%概率生效，未生效则该次技能空放无效；对敌方全体施加灼烧（每回合0.10倍，2回合），并立即造成智谋×0.20倍伤害","cd":2,"burn":2,"dotMul":0.1},"毒矢连发":{"grade":"SR","stat":"z","troop":"弓","trig":"turn","rate":32,"scope":"Br","mul":0.22,"desc":"每2回合判定一次，32%概率生效，未生效则该次技能空放无效；对敌方后排施加中毒（每回合0.12倍，2回合），并立即造成智谋×0.22倍伤害","cd":2,"pois":2,"dotMul":0.12},"鸣金扰阵":{"grade":"SR","stat":"t","troop":null,"trig":"turn","rate":35,"scope":"Fr","mul":0.0,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；对敌方前排施加眩晕1回合","cd":2,"stun":1},"军医巡营":{"grade":"SR","stat":"z","troop":null,"trig":"turn","rate":35,"scope":"aA","mul":0.4,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力智谋×0.40倍","cd":2,"heal":true},"屯田补给":{"grade":"SR","stat":"t","troop":null,"trig":"turn","rate":35,"scope":"aA","mul":0.38,"desc":"每2回合判定一次，35%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力统率×0.38倍","cd":2,"heal":true},"撞木破门":{"grade":"R","stat":"w","troop":"枪","trig":"turn","rate":25,"scope":"Fr","mul":0.4,"desc":"每2回合判定一次，25%概率生效，未生效则该次技能空放无效；对敌方前排造成武力×0.40倍伤害","cd":2},"落石阻路":{"grade":"R","stat":"t","troop":null,"trig":"turn","rate":25,"scope":"Fr","mul":0.45,"desc":"每2回合判定一次，25%概率生效，未生效则该次技能空放无效；对敌方前排造成统率×0.45倍伤害","cd":2},"乱箭扰敌":{"grade":"R","stat":"w","troop":"弓","trig":"turn","rate":25,"scope":"Br","mul":0.42,"desc":"每2回合判定一次，25%概率生效，未生效则该次技能空放无效；对敌方后排造成武力×0.42倍伤害","cd":2},"火把恐吓":{"grade":"R","stat":"z","troop":null,"trig":"turn","rate":22,"scope":"E","mul":0.12,"desc":"每2回合判定一次，22%概率生效，未生效则该次技能空放无效；对敌方全体施加灼烧（每回合0.08倍，1回合），并立即造成智谋×0.12倍伤害","cd":2,"burn":1,"dotMul":0.08},"草医包扎":{"grade":"R","stat":"z","troop":null,"trig":"turn","rate":25,"scope":"aA","mul":0.25,"desc":"每2回合判定一次，25%概率生效，未生效则该次技能空放无效；为我方全体恢复兵力智谋×0.25倍","cd":2,"heal":true}};
 const PASSIVE_SKILLS = {"铁壁之心":{"grade":"SSR","stat":"t","troop":"枪","trig":"hit","rate":55,"scope":"self","mul":0.35,"desc":"受击时判定，55%概率触发，未触发则该次不生效；为自身恢复兵力统率×0.35倍","heal":true},"军阵严整":{"grade":"SSR","stat":"t","troop":null,"trig":"turn","rate":50,"scope":"aA","mul":0.2,"desc":"每回合判定，50%概率触发，未触发则该次不生效；为我方全体恢复兵力统率×0.20倍","heal":true},"疾风步":{"grade":"SSR","stat":"w","troop":"骑","trig":"turn","rate":50,"scope":"self","mul":0.25,"desc":"每回合判定，50%概率触发，未触发则该次不生效；为自身恢复兵力武力×0.25倍","heal":true},"血勇回春":{"grade":"SSR","stat":"w","troop":"枪","trig":"lowhp","rate":55,"scope":"Fr","mul":0.3,"desc":"兵力≤50%时判定，55%概率触发，未触发则该次不生效；为我方前排恢复兵力武力×0.30倍","heal":true},"毒师秘传":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":45,"scope":"Br","mul":0.0,"desc":"每回合判定，45%概率触发，未触发则该次不生效；对敌方后排施加中毒（每回合0.15倍，2回合），本身不造成伤害","pois":2,"dotMul":0.15},"纵火之谋":{"grade":"SSR","stat":"z","troop":"弓","trig":"turn","rate":45,"scope":"E","mul":0.0,"desc":"每回合判定，45%概率触发，未触发则该次不生效；对敌方全体施加灼烧（每回合0.14倍，2回合），本身不造成伤害","burn":2,"dotMul":0.14},"虎威震慑":{"grade":"SSR","stat":"t","troop":"骑","trig":"turn","rate":50,"scope":"Fr","mul":0.0,"desc":"每回合判定，50%概率触发，未触发则该次不生效；对敌方前排施加眩晕1回合","stun":1},"鹰视狼顾":{"grade":"SSR","stat":"z","troop":null,"trig":"turn","rate":45,"scope":"Br","mul":0.0,"desc":"每回合判定，45%概率触发，未触发则该次不生效；对敌方后排施加眩晕1回合","stun":1},"苍天庇佑":{"grade":"SSR","stat":"t","troop":null,"trig":"lowhp","rate":55,"scope":"aA","mul":0.2,"desc":"兵力≤50%时判定，55%概率触发，未触发则该次不生效；为我方全体恢复兵力统率×0.20倍","heal":true},"严阵以待":{"grade":"SR","stat":"t","troop":"枪","trig":"hit","rate":50,"scope":"self","mul":0.25,"desc":"受击时判定，50%概率触发，未触发则该次不生效；为自身恢复兵力统率×0.25倍","heal":true},"轻骑游斗":{"grade":"SR","stat":"t","troop":"骑","trig":"turn","rate":45,"scope":"Fr","mul":0.0,"desc":"每回合判定，45%概率触发，未触发则该次不生效；对敌方前排施加眩晕1回合","stun":1},"夜袭营地":{"grade":"SR","stat":"z","troop":"弓","trig":"turn","rate":42,"scope":"Br","mul":0.0,"desc":"每回合判定，42%概率触发，未触发则该次不生效；对敌方后排施加中毒（每回合0.10倍，2回合），本身不造成伤害","pois":2,"dotMul":0.1},"强弓压制":{"grade":"SR","stat":"w","troop":"弓","trig":"turn","rate":42,"scope":"Br","mul":0.0,"desc":"每回合判定，42%概率触发，未触发则该次不生效；对敌方后排施加灼烧（每回合0.10倍，2回合），本身不造成伤害","burn":2,"dotMul":0.1},"突袭侧翼":{"grade":"SR","stat":"t","troop":"骑","trig":"turn","rate":45,"scope":"Br","mul":0.0,"desc":"每回合判定，45%概率触发，未触发则该次不生效；对敌方后排施加眩晕1回合","stun":1},"毒雾缭绕":{"grade":"SR","stat":"z","troop":"弓","trig":"turn","rate":40,"scope":"E","mul":0.0,"desc":"每回合判定，40%概率触发，未触发则该次不生效；对敌方全体施加中毒（每回合0.10倍，2回合），本身不造成伤害","pois":2,"dotMul":0.1},"火油泼洒":{"grade":"SR","stat":"z","troop":"弓","trig":"turn","rate":40,"scope":"E","mul":0.0,"desc":"每回合判定，40%概率触发，未触发则该次不生效；对敌方全体施加灼烧（每回合0.10倍，2回合），本身不造成伤害","burn":2,"dotMul":0.1},"老卒坚守":{"grade":"SR","stat":"t","troop":null,"trig":"turn","rate":45,"scope":"aA","mul":0.15,"desc":"每回合判定，45%概率触发，未触发则该次不生效；为我方全体恢复兵力统率×0.15倍","heal":true},"乡勇相助":{"grade":"SR","stat":"t","troop":null,"trig":"turn","rate":45,"scope":"self","mul":0.18,"desc":"每回合判定，45%概率触发，未触发则该次不生效；为自身恢复兵力统率×0.18倍","heal":true},"蛮力震慑":{"grade":"SR","stat":"t","troop":null,"trig":"turn","rate":42,"scope":"Fr","mul":0.0,"desc":"每回合判定，42%概率触发，未触发则该次不生效；对敌方前排施加眩晕1回合","stun":1},"投毒炊具":{"grade":"R","stat":"z","troop":"弓","trig":"turn","rate":40,"scope":"Br","mul":0.0,"desc":"每回合判定，40%概率触发，未触发则该次不生效；对敌方后排施加中毒（每回合0.08倍，1回合），本身不造成伤害","pois":1,"dotMul":0.08},"仓廪支粮":{"grade":"R","stat":"t","troop":null,"trig":"turn","rate":40,"scope":"aA","mul":0.22,"desc":"每回合判定，40%概率触发，未触发则该次不生效；为我方全体恢复兵力统率×0.22倍","heal":true},"野菜充饥":{"grade":"R","stat":"t","troop":null,"trig":"turn","rate":40,"scope":"aA","mul":0.1,"desc":"每回合判定，40%概率触发，未触发则该次不生效；为我方全体恢复兵力统率×0.10倍","heal":true},"鼓噪助威":{"grade":"R","stat":"t","troop":null,"trig":"turn","rate":38,"scope":"self","mul":0.12,"desc":"每回合判定，38%概率触发，未触发则该次不生效；为自身恢复兵力统率×0.12倍","heal":true},"短刀乱砍":{"grade":"R","stat":"t","troop":null,"trig":"turn","rate":38,"scope":"Fr","mul":0.0,"desc":"每回合判定，38%概率触发，未触发则该次不生效；对敌方前排施加眩晕1回合","stun":1}};
 const SKILL_KIND = {}; Object.keys(ACTIVE_SKILLS).forEach(n=>SKILL_KIND[n]="active"); Object.keys(PASSIVE_SKILLS).forEach(n=>SKILL_KIND[n]="passive");
 /* 专属技能描述（文本唯一来源：《技能描述表-待审-20261111.md》，逐字取用；天命版与本体同名自动复用） */
@@ -629,7 +632,7 @@ function freshPity(){ return { normal:{sr:0,ssr:0}, yb:{ssr:0,pers:0}, tm:{ssr:0
 function freshTmDungeons(){ return { unlocked:{}, cleared:{}, half:{}, adRetry:{}, resetDate:"", resetUsed:false }; }
 function newState(){
 return { ver:8, yuanbao:CFG.startYuanbao, tickets:0, beads:0, souls:0, starcoin:0, wubi:0, migrated_v4:false, migReceipt:null, lb:{dirty:true, lastAt:0, lastPower:0, lastSeason:-1}, tokens:0, merit:0, rankIdx:0, arenaPts:0,
-cards:[], skillsOwned:[], equips:[], formation:[], starterGenId:0,
+cards:[], skillsOwned:[], equips:[], formation:[], starterGenId:0, openingGift:null, bgmOn:true, soulShop:{date:"", SSR_GEN:0, SR_GEN:0, R_GEN:0},
 pool:{ hero:{fac:"蜀",leftSec:0,acc:0}, skill:{leftSec:0,acc:0}},
 pity:freshPity(), jt:{draws:0, firstTenDone:false, fac:""}, tmP:{period:-1, ur:0, ssr:0}, tmTickets:0, gz:{date:"", count:0}, soulAuto:false, dun:{day:"", stageUsed:{}, towerBest:0, migeCleared:0, migeRoundProg:0, migeRoundsDone:0, migeAdOpen:false, migeForce:{}, migePending:{coin:0, items:{}}}, arena:{score:0, season:-1, seasonHigh:0, lastDaily:"", shop:{}}, hulaoSes:null, hulaoBest:0, gzExtra:null, expPool:0, daily:{cleared:0}, tmDungeons:freshTmDungeons(),
 yq:{cleared:0, adReady:{}}, exclFrags:{}, merchant:null, poolTs:0, lastOffline:0,
@@ -851,12 +854,12 @@ function claimRookie(){
   return {ok:true, msg:"新手任务「"+d.name+"」完成："+d.rwTxt};
 }
 /* 签到 7 日循环：连续签到递进、断签重置回第 1 天；每日限领一次 */
-/* 签到 7 日循环（我方口径·模拟假设值：定版无签到数值，按经济模拟报告第七节假设落地——
-   元宝合计 630/循环＝日均 90；招募令 2 枚/循环＝日均 ≈0.29。连签逐日推进、断签回第 1 天、每日限领 1 次（doSign） */
+/* 签到 7 日循环（第 12 批上调：元宝合计 1,250/循环＝日均 ≈179；招募令 4 枚/循环。原口径 630 元宝＋2 令。
+   连签逐日推进、断签回第 1 天、每日限领 1 次（doSign） */
 const SIGN_TABLE = [
- {yuanbao:50, txt:"元宝 +50"}, {yuanbao:60, txt:"元宝 +60"}, {yuanbao:80, tickets:1, txt:"元宝 +80 · 招募令 +1"},
- {yuanbao:90, txt:"元宝 +90"}, {yuanbao:100, txt:"元宝 +100"}, {yuanbao:120, txt:"元宝 +120"},
- {yuanbao:130, tickets:1, txt:"元宝 +130 · 招募令 +1"}
+ {yuanbao:100, txt:"元宝 +100"}, {yuanbao:120, txt:"元宝 +120"}, {yuanbao:150, tickets:2, txt:"元宝 +150 · 招募令 +2"},
+ {yuanbao:180, txt:"元宝 +180"}, {yuanbao:200, txt:"元宝 +200"}, {yuanbao:240, txt:"元宝 +240"},
+ {yuanbao:260, tickets:2, txt:"元宝 +260 · 招募令 +2"}
 ];
 function yesterStr(){ const d = new Date(Date.now()-86400000); return d.getFullYear()+"-"+(d.getMonth()+1)+"-"+d.getDate(); }
 function doSign(){
@@ -1029,7 +1032,13 @@ if(!state.gz || typeof state.gz!=="object") state.gz={date:"", count:0}; if(stat
   if(!state.arena.shop || typeof state.arena.shop !== "object") state.arena.shop = {};
   if(!state.hulaoSes || typeof state.hulaoSes !== "object") state.hulaoSes = null;
   if(typeof state.hulaoBest !== "number" || !(state.hulaoBest>=0)) state.hulaoBest = 0;
-  if(!state.gzExtra || typeof state.gzExtra !== "object") state.gzExtra = null; state.equips.forEach(e=>{ if(e && !e.itemId && !e.quality) e.quality = qualityOf(e); }); state.skillsOwned = (state.skillsOwned||[]).map(normalizeSkillEntry); return true;}}catch(e){} return false;}
+  if(!state.gzExtra || typeof state.gzExtra !== "object") state.gzExtra = null; state.equips.forEach(e=>{ if(e && !e.itemId && !e.quality) e.quality = qualityOf(e); }); state.skillsOwned = (state.skillsOwned||[]).map(normalizeSkillEntry);
+  /* 第 12 批 normalize：同名上阵去重（留战力高者）；openingGift 老档按进度标 legacy（不补发）；bgmOn/soulShop 补默认 */
+  formationDedupe();
+  if(!state.openingGift && (state.starterGenId || (state.cards&&state.cards.length) || (state.stageCleared||0)>0 || state.migrated_v4)) state.openingGift = {legacy:true};
+  if(typeof state.bgmOn !== "boolean") state.bgmOn = true;
+  if(!state.soulShop || typeof state.soulShop !== "object") state.soulShop = {date:"", SSR_GEN:0, SR_GEN:0, R_GEN:0};
+  return true;}}catch(e){} return false;}
 
 const RES_FIELD = { yuanbao:"yuanbao", tickets:"tickets", merit:"merit", arenaPts:"arenaPts", souls:"souls", starcoin:"starcoin", wubi:"wubi"};
 function addRes(kind, n){ state[RES_FIELD[kind]] += n; if(state[RES_FIELD[kind]]<0) state[RES_FIELD[kind]]=0; save();}
@@ -1576,12 +1585,27 @@ if(!def) return null;
 if(def.kind==="专属"){ const p = starPriceOfItem(def); return p? {price:p, cur:"starcoin", curName:"将星币"} : null; }
 const p = soulPriceOfItem(def); return p? {price:p, cur:"souls", curName:"将魂"} : null;
 }
+/* 将魂阁限购计数（第 12 批）：按自然日存 state.soulShop，跨日自动清零；只计将魂结算的通用道具 */
+function soulShopSync(){
+if(!state.soulShop || typeof state.soulShop!=="object") state.soulShop = {date:"", SSR_GEN:0, SR_GEN:0, R_GEN:0};
+if(state.soulShop.date !== todayStr()){ state.soulShop = {date: todayStr(), SSR_GEN:0, SR_GEN:0, R_GEN:0}; }
+return state.soulShop;
+}
+function soulShopCount(key){ const s = soulShopSync(); return s[key]||0; }
 function buySoulItem(itemId){
 const def = ITEM_BY_ID[itemId]; if(!def) return {ok:false,msg:"道具不存在"};
 const po = itemPriceOf(def);
 if(!po) return {ok:false,msg:"该道具不可兑换"};
+let limitKey = null, limit = 0;
+if(po.cur==="souls"){ limitKey = def.rar+"_GEN"; limit = CFG.soulShopDailyLimit[limitKey]||0;
+  if(limit>0 && soulShopCount(limitKey) >= limit) return {ok:false,msg:"今日"+def.rar+" 通用道具已达限购上限（"+limit+" 件/日），明日 0 点重置"};
+}
 if(!spendRes(po.cur, po.price)) return {ok:false,msg:po.curName+"不足（需 "+po.price+"）"};
-state.equips.push({ uid:_uid++, itemId:def.id, star:1, enh:0 }); save();
+const e = { uid:_uid++, itemId:def.id, star:1, enh:0 };
+if(po.cur==="souls") e.shopBought = true; /* 第 12 批封漏：将魂购入的道具打标，分解只返将魂（见 itemDecompReward）；将星币购入的专属不打标、分解路径不动 */
+state.equips.push(e);
+if(limitKey){ const s = soulShopSync(); s[limitKey] = (s[limitKey]||0)+1; }
+save();
 return {ok:true,msg:"兑换成功："+def.name+"（"+po.curName+" -"+po.price+"）"};
 }
 /* 观战悟法（定版：看 1 次视频＝1 张技能卡、每日 5 次 0 点重置；50 技能全局唯一、抽出即移除、剩余池随机；抽满封池） */
@@ -1622,7 +1646,7 @@ el.innerHTML =
  "<div class='kv'><span>将魂阁（分解）</span><b>"+Object.keys(CFG.soulValue).map(k=>k+" "+CFG.soulValue[k]).join(" · ")+"</b></div>"+
  "<p class='note'>重复卡转将魂（将魂/张）：UR "+CFG.soulValue.UR+"／SSR "+CFG.soulValue.SSR+"／SR "+CFG.soulValue.SR+"／R "+CFG.soulValue.R+"。兑换道具：专属用将星币（UR 专属 "+CFG.starItemPrice.UR_EX+"／SSR 专属 "+CFG.starItemPrice.SSR_EX+" 将星币/件）；通用用将魂（SSR 通用 "+CFG.soulItemPrice.SSR_GEN+"／SR 通用 "+CFG.soulItemPrice.SR_GEN+"／R 通用 "+CFG.soulItemPrice.R_GEN+" 将魂/件）。</p>"+
  "<div class='kv'><span>招募令福利</span><b>视频 "+CFG.adReward+" 枚/次 · 每日上限 "+CFG.adDailyCap+" 次</b></div>"+
- "<p class='note'>时段领取：12:00 与 18:00 两档各可领 10 枚（领取 5＋加看 5），每日各限领 1 次。签到 7 日循环：元宝日均 90、招募令 2 枚/循环（我方口径）。</p>";
+ "<p class='note'>时段领取：12:00 与 18:00 两档各可领 10 枚（领取 5＋加看 5），每日各限领 1 次。签到 7 日循环：元宝合计 1,250（日均 ≈179）、招募令 4 枚/循环（第 12 批上调）。</p>";
 }
 /* 卡池页各池状态渲染（保底计数/屯营/天命期数/将魂阁/观战） */
 function renderPools(){
@@ -1667,7 +1691,10 @@ shop.innerHTML = groups.map(gr=>{
   const items = ITEM_DEFS.filter(gr[1]);
   if(!items.length) return "";
   const po0 = itemPriceOf(items[0]);
-  return "<p class='note' style='margin:6px 0 2px'><b>"+gr[0]+"</b>（"+(po0? po0.price+" "+po0.curName+"/件" : "不可兑换")+"）</p>" + items.map(d=>"<div class='kv'><span>"+d.name+(d.bindName? "（"+d.bindName+"专属）":"")+"</span><button class='btn sub sm' data-soulbuy='"+d.id+"'>兑换</button></div>").join("");
+  let limTxt = "";
+  if(po0 && po0.cur==="souls"){ const key = items[0].rar+"_GEN"; const lim = CFG.soulShopDailyLimit[key]||0;
+    if(lim>0) limTxt = " · 今日已购 "+soulShopCount(key)+"/"+lim+"（每日限购）"; }
+  return "<p class='note' style='margin:6px 0 2px'><b>"+gr[0]+"</b>（"+(po0? po0.price+" "+po0.curName+"/件" : "不可兑换")+"）"+limTxt+"</p>" + items.map(d=>"<div class='kv'><span>"+d.name+(d.bindName? "（"+d.bindName+"专属）":"")+"</span><button class='btn sub sm' data-soulbuy='"+d.id+"'>兑换</button></div>").join("");
 }).join("");
 shop.querySelectorAll("[data-soulbuy]").forEach(b=>b.onclick = function(){
   const r = buySoulItem(+b.dataset.soulbuy);
@@ -2870,10 +2897,12 @@ function fightArena(){
   save();
   return {ok:true, win:pts>0, pts:pts, outcome:outcome, score:A.score, promoMsg:promoMsg, log:res.log};
 }
+/* 演武商城 SSR 人工编排（第 12 批）：每季 4 席＝蜀/魏/吴/群各 1 名、三皇（刘备 4／曹操 46／孙权 88）不上架、优先有羁绊的武将；超季循环。genId 与 baseId 同值（非变体基础卡），按名核对：S1 赵云 8/张辽 49/周瑜 91/吕布 130，S2 关羽 5/夏侯惇 50/吕蒙 93/貂蝉 136，S3 黄忠 10/许褚 48/太史慈 95/袁绍 132 */
+const ARENA_SSR_TABLE = [ [8,49,91,130], [5,50,93,136], [10,48,95,132] ];
 function arenaShopLists(){
   const season = Math.max(0, arenaSeasonNow());
   const pick = (arr, n, off) => { const out = []; for(let i=0;i<n;i++) out.push(arr[(off+i)%arr.length]); return out; };
-  return { ssr: pick(BASE_IDS_BY_RAR.SSR, 4, (season*4)%BASE_IDS_BY_RAR.SSR.length), sr: pick(BASE_IDS_BY_RAR.SR, 8, (season*8)%BASE_IDS_BY_RAR.SR.length) };
+  return { ssr: ARENA_SSR_TABLE[season % ARENA_SSR_TABLE.length].slice(), sr: pick(BASE_IDS_BY_RAR.SR, 8, (season*8)%BASE_IDS_BY_RAR.SR.length) };
 }
 function buyArenaCard(genId){
   arenaSync();
@@ -2987,13 +3016,19 @@ function itemEnhance(uid){
   e.enh = en+1; save();
   return {ok:true, msg:itemDefOf(e).name+" 强化至 +"+e.enh+"（必成；属性/效果 ×"+(1+0.05*e.enh).toFixed(2)+"）"};
 }
+/* 道具分解返还（单一事实源，第 12 批封漏）：shopBought（将魂购入）只返将魂＝将魂价×soulDecompRate 取整、不返将星币；无标老物/其他来源维持将星币口径（itemDecompValue） */
+function itemDecompReward(e){
+  const d = itemDefOf(e); if(!d) return {cur:"starcoin", v:0};
+  if(e.shopBought) return {cur:"souls", v: Math.round(soulPriceOfItem(d) * CFG.soulDecompRate)};
+  return {cur:"starcoin", v: itemDecompValue(e)};
+}
 function itemDecompose(uid){
   const e = state.equips.find(x=>x.uid===uid); if(!e || !e.itemId) return {ok:false, msg:"道具不存在"};
   if(itemEquippedBy(e)) return {ok:false, msg:"已装备的道具不可分解，先卸下"};
-  const d = itemDefOf(e); const v = itemDecompValue(e);
+  const d = itemDefOf(e); const rw = itemDecompReward(e);
   state.equips.splice(state.equips.indexOf(e),1);
-  addRes("starcoin", v); save();
-  return {ok:true, msg:"分解 "+(d? d.name : "道具")+"：将星币 +"+v};
+  addRes(rw.cur, rw.v); save();
+  return {ok:true, msg:"分解 "+(d? d.name : "道具")+"："+(rw.cur==="souls"? "将魂" : "将星币")+" +"+rw.v+(e.shopBought? "（将魂兑换的道具分解返将魂）" : "")};
 }
 /* ---------- 将星币 sink（收口决定 3）：材料包＋观战付费续抽 ---------- */
 function buyMatPack(rar){
@@ -3345,14 +3380,32 @@ function renderSave(){
    旧口径按 GEN 模板 star 排序——v4 数据模板无 star 字段，比较器出 NaN 后退化为按强化＋收集顺序，
    玩家视角「点了不换人」。 */
 function autoFormation(){
-  const sorted = state.cards.slice().sort((a,b)=> powerOf(b) - powerOf(a)).slice(0,5);
-  state.formation = sorted.map(c=>c.uid);
+  /* 第 12 批：按 baseId 去重——同名武将（不同版本）不能同时上阵，战力序贪心跳过同名 */
+  const sorted = state.cards.slice().sort((a,b)=> powerOf(b) - powerOf(a));
+  const usedBase = {}, picked = [];
+  for(const c of sorted){ if(picked.length>=5) break; const g = GEN_BY_ID[c.genId]; const b = g? g.baseId : c.genId;
+    if(usedBase[b]) continue; usedBase[b] = 1; picked.push(c); }
+  state.formation = picked.map(c=>c.uid);
   return state.formation.slice();
+}
+/* 同名上阵规范化（第 12 批）：阵中同 baseId 只保留战力高者，余者下阵；load 时调用修老档 */
+function formationDedupe(){
+  if(!state.formation || !state.formation.length) return;
+  const byUid = {}; state.cards.forEach(c=>{ byUid[c.uid] = c; });
+  const best = {};
+  state.formation.forEach(uid=>{ const c = byUid[uid]; if(!c) return; const g = GEN_BY_ID[c.genId]; const b = g? g.baseId : c.genId;
+    if(!best[b] || powerOf(c) > powerOf(best[b])) best[b] = c; });
+  const keep = {}; Object.keys(best).forEach(b=>{ keep[best[b].uid] = 1; });
+  state.formation = state.formation.filter(uid=> keep[uid] && byUid[uid]);
 }
 window.toggleForm = function(uid){
   const i = state.formation.indexOf(uid);
   if(i>=0) state.formation.splice(i,1);
-  else { if(state.formation.length>=5){ alert("上阵已满 5 人"); return; } state.formation.push(uid); }
+  else { if(state.formation.length>=5){ alert("上阵已满 5 人"); return; }
+    const c = state.cards.find(x=>x.uid===uid); const g = c? GEN_BY_ID[c.genId] : null;
+    if(g){ const dup = state.formation.some(u=>{ const oc = state.cards.find(x=>x.uid===u); const og = oc? GEN_BY_ID[oc.genId] : null; return og && og.baseId===g.baseId; });
+      if(dup){ alert("同名武将不能同时上阵："+g.name+" 已有其他版本在阵中"); return; } }
+    state.formation.push(uid); }
   save(); renderAll();
 };
 window.doStarUp = function(uid){ const r=starUp(uid); alert(r.msg); renderAll(); };
@@ -3415,6 +3468,11 @@ function bind(){
   $("btnTm10").onclick = function(){ if(!CFG.tmOpen){ alert("天命所归尚未开放"); return; } const d=drawLimited(10); showDrawn(d); $("gachaLog").textContent = d.length? "天命所归 10 连："+fmtDrawn(d)+(d.some(g=>g.variant)?" 🎉 UR 天命卡！":"") : (tmPeriod().open? "元宝不足（十连 2,160）" : "当前为间隔期，天命池未开放"); renderAll(); };
   { const jf = $("jtFac"); if(jf){ jf.value = (state.jt && state.jt.fac) || ""; jf.onchange = function(){ if(!state.jt) state.jt = {draws:0, firstTenDone:false, fac:""}; state.jt.fac = jf.value; save(); }; } }
   { const sc = $("soulAutoChk"); if(sc) sc.onchange = function(){ state.soulAuto = sc.checked; save(); const m=$("soulMsg"); if(m) m.textContent = state.soulAuto? "自动转化已开启：抽卡盈余重复卡将自动转将魂" : "自动转化已关闭"; }; }
+  { const bc = $("bgmChk"); if(bc){ bc.checked = state.bgmOn!==false; bc.onchange = function(){ BGM.setEnabled(bc.checked); }; } }
+  if(!window.__bgmHook12){ window.__bgmHook12 = true; /* 首次用户交互后才起播（自动播放限制）；BGM.start 内部按 state.bgmOn 与播放中状态自门控 */
+    document.addEventListener("pointerdown", function(){ BGM.start(); });
+    document.addEventListener("keydown", function(){ BGM.start(); });
+  }
   { const sa = $("btnSoulAutoAll"); if(sa) sa.onclick = function(){
       let total = 0, cnt = 0;
       const byGen = {};
@@ -3490,6 +3548,22 @@ function bind(){
   $("tab-cards").appendChild(enhProtectWrap);
   setInterval(function(){ state.poolTs = Date.now(); const changed = poolTick(); showcaseAccrue(); if(changed || state.pool.hero.leftSec>0 || state.pool.skill.leftSec>0){ renderRes(); $("heroPoolInfo").textContent=fmtDur(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac; $("skillPoolInfo").textContent=fmtPool(state.pool.skill.leftSec); if(changed && curTab==="cards") renderCards(); } }, 1000);
 }
+/* 开局赠将（第 12 批新口径，覆盖原开局四选一）：新档创建时自动随机发放 1 张 SR 基础卡，一次性、不设选择弹窗；
+   state.openingGift 落盘标记防重复发放；老档在 load 规范化时按进度标 legacy，不触发、不补发。
+   同步写 starterGenId（主页开局武将展示与新手任务判据沿用旧字段）与首发上阵。 */
+function grantOpeningGift(){
+  if(state.openingGift) return null;
+  const pool = BASE_IDS_BY_RAR.SR || [];
+  if(!pool.length){ state.openingGift = {skipped:"empty-pool"}; save(); return null; }
+  const genId = randPick(pool);
+  const c = addCard(genId, {});
+  state.openingGift = { genId: genId, at: Date.now() };
+  state.starterGenId = genId;
+  if(!state.formation || !state.formation.length) state.formation = [c.uid];
+  state.migrated_v4 = true;
+  save();
+  return c;
+}
 function showStarter(){
   $("slotScreen").style.display="none";
   $("starterScreen").style.display="block"; $("app").style.display="none";
@@ -3525,8 +3599,8 @@ function enterGame(){
   if(state.tour && !state.tour.done && state.flags.tourVer !== 33){ state.tour.step = 0; state.flags.tourVer = 33; }
   _inGame214 = true; _booted = true;
   const bs = $("slotScreen"); if(bs) bs.style.display = "none";
-  if(!had || !state.starterGenId){ showStarter(); }
-  else { $("app").style.display = "block"; bindOnce(); switchTab("home"); }
+  grantOpeningGift(); /* 第 12 批：新档自动随机赠 1 张 SR（openingGift 未标记才发；老档已在 load 标 legacy，不会走到发放） */
+  $("app").style.display = "block"; bindOnce(); switchTab("home");
   if(_pendingNotice){ state.flags.sysNotice = _pendingNotice; _pendingNotice = ""; save(); if(state.starterGenId) renderAll(); }
   if(state.migReceipt && !state.migReceipt.seen && state.starterGenId) showMigReceipt();
 }
@@ -3664,6 +3738,76 @@ window.setSub = function(page, sub){ _lbSetSub(page, sub); if(page === "more" &&
 const _lbSwitchTab = switchTab;
 switchTab = function(t){ _lbSwitchTab(t); if(t === "more" && SUB_STATE.more === "rank") lbEnter(); };
 
+/* ============ 第 12 批 · BGM（WebAudio 程序化合成古风循环：零音频文件、零包体增重） ============
+   D 宫调五声音阶，三角波＋指数衰减包络模拟拨弦，低音部点缀根音/五度，32 步一循环。
+   自动播放限制：仅首次用户交互（pointerdown/keydown）后起播；开关 state.bgmOn 落盘持久化、切页不中断。
+   全模块 try/catch 兜底：AudioContext 不可用时静默降级，绝不影响游戏其余功能。 */
+const BGM = (function(){
+  let ac = null, master = null, timer = null, playing = false, step = 0, nextT = 0;
+  const STEP_DUR = 0.40; /* 八分音符步长（秒），约 ♩=75 */
+  const MEL = [74,0,71,69, 0,66,69,0, 71,0,69,66, 64,0,62,0, 66,0,69,71, 0,74,76,74, 71,69,66,64, 62,0,0,0]; /* 旋律（MIDI，0=休止） */
+  const BASS = {0:50, 8:45, 16:47, 24:50}; /* 每 8 步根音：D3/A2/B2/D3 */
+  function mf(m){ return 440 * Math.pow(2, (m-69)/12); }
+  function ensureCtx(){
+    if(ac) return true;
+    try{
+      const AC = (typeof window!=="undefined") && (window.AudioContext || window.webkitAudioContext);
+      if(!AC) return false;
+      ac = new AC();
+      master = ac.createGain(); master.gain.value = 0.15;
+      const lp = ac.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2600;
+      master.connect(lp); lp.connect(ac.destination);
+      return true;
+    }catch(e){ ac = null; return false; }
+  }
+  function pluck(freq, t, dur, vol){
+    try{
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.type = "triangle"; o.frequency.value = freq;
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(vol, t + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      o.connect(g); g.connect(master);
+      o.start(t); o.stop(t + dur + 0.05);
+    }catch(e){}
+  }
+  function tick(){
+    if(!playing || !ac) return;
+    try{
+      while(nextT < ac.currentTime + 0.45){
+        const s = step % MEL.length;
+        const m = MEL[s];
+        if(m) pluck(mf(m), nextT, 0.85, 0.5);
+        if(BASS[s] !== undefined){ pluck(mf(BASS[s]), nextT, 1.9, 0.34); pluck(mf(BASS[s]+7), nextT + STEP_DUR*4, 1.4, 0.12); }
+        step++; nextT += STEP_DUR;
+      }
+    }catch(e){}
+  }
+  function start(){
+    try{
+      if(typeof state==="undefined" || !state || state.bgmOn===false) return false;
+      if(!ensureCtx()) return false;
+      if(ac.state === "suspended") ac.resume();
+      if(playing) return true;
+      playing = true; step = 0; nextT = ac.currentTime + 0.08;
+      timer = setInterval(tick, 200);
+      return true;
+    }catch(e){ return false; }
+  }
+  function stop(){
+    playing = false;
+    if(timer){ clearInterval(timer); timer = null; }
+    try{ if(ac && ac.state === "running") ac.suspend(); }catch(e){}
+  }
+  function setEnabled(on){
+    try{ state.bgmOn = !!on; save(); }catch(e){}
+    if(on) start(); else stop();
+  }
+  return { start:start, stop:stop, setEnabled:setEnabled,
+    isPlaying:function(){ return playing; },
+    enabled:function(){ try{ return typeof state!=="undefined" && !!state && state.bgmOn!==false; }catch(e){ return false; } } };
+})();
+
 function init(){
   initSlots();
   const rb = $("btnBootRetry"); if(rb) rb.onclick = function(){ location.reload(); };
@@ -3723,7 +3867,7 @@ function showDrawn(d){
 }
 
 if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, starPriceOfItem:starPriceOfItem, itemPriceOf:itemPriceOf, pickBasicTarget:pickBasicTarget, tryActiveSkill:tryActiveSkill, toggleShowcaseCore:toggleShowcaseCore, showcaseNormalize:showcaseNormalize, showcaseTickValue:showcaseTickValue, showcaseCap:showcaseCap, recPower:recPower, STAGE_REC:STAGE_REC, recPowerHint:recPowerHint, enhProtectPrice:enhProtectPrice, pickBackTarget:pickBackTarget, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, fullCardHtml, refCardOf, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
-  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE }; }
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe }; }
 </script>
 </body>
 </html>
