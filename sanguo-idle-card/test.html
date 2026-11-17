@@ -139,30 +139,26 @@ body.touring section.page,body.touring #slotScreen,body.touring #starterScreen{p
   <h2 class="sec">挂机明牌（离线也照算）</h2>
   <div class="card" id="idleCard">
     <div class="kv"><span>屯营产卡速率</span><b id="idleHeroRate">—</b></div>
-    <div class="kv"><span>技能池产卡速率</span><b id="idleSkillRate">—</b></div>
     <div class="kv"><span>屯营剩余时长（仓储）</span><b id="idleHeroLeft">未开启</b></div>
-    <div class="kv"><span>技能池剩余时长（仓储）</span><b id="idleSkillLeft">未开启</b></div>
-    <div class="kv"><span>叠时上限</span><b>屯营 12 小时 · 技能池 6 小时</b></div>
+    <div class="kv"><span>叠时上限</span><b>屯营 12 小时</b></div>
     <div class="kv"><span>上次离线产出</span><b id="idleLastOffline">—</b></div>
     <div style="margin-top:8px"><button class="btn sub sm" id="btnIdleRules">离线结算规则说明</button></div>
     <div style="margin-top:8px;display:none" id="desktopRowHome"><button class="btn dark sm" id="btnDesktopHome">添加到桌面</button>
     <span class="note">把游戏放到桌面，回来领离线产出更方便。</span></div>
     <div id="idleRules" style="display:none;margin-top:8px">
-      <p class="note">离线结算口径：关掉页面期间，屯营按真实时长继续产卡（每 5 分钟 1 张），产出不超过剩余开启时长（上限 12 小时＝144 张），回来时一次性结算进卡册；未开启不计时。技能池（存量）按池时钟口径结算。在线期间每秒同步结算点，同一段时间不会重复结算。池子到期自动停产，回来花元宝延长即可继续。</p>
+      <p class="note">离线结算口径：关掉页面期间，屯营按真实时长继续产卡（每 5 分钟 1 张），产出不超过剩余开启时长（上限 12 小时＝144 张），回来时一次性结算进卡册；未开启不计时。在线期间每秒同步结算点，同一段时间不会重复结算。池子到期自动停产，回来花元宝延长即可继续。</p>
     </div>
   </div>
   </div>
   <div class="subpane" data-pane="pool-mat">
   <h2 class="sec">屯营募勇（元宝开启 · 自动出卡）</h2>
   <div class="card">
-    <p class="note"><b>屯营募勇</b>：100 元宝开启、100 元宝/小时（可叠加至 12 小时），开启后每 5 分钟自动出 1 张（上限 144 张）。构成 R/SR＝88/12，只出所选阵营基础卡（不出 SSR/UR），是喂升星/强化的材料主力。离线照常产出、未开启不计时。技能池为存量挂机池（80 元宝/小时、上限 6 小时），与屯营各开各的。</p>
+    <p class="note"><b>屯营募勇</b>：100 元宝开启、100 元宝/小时（可叠加至 12 小时），开启后每 5 分钟自动出 1 张（上限 144 张）。构成 R/SR＝88/12，只出所选阵营基础卡（不出 SSR/UR），是喂升星/强化的材料主力。离线照常产出、未开启不计时。</p>
     <div class="kv"><span>屯营阵营（选阵营）</span>
       <select id="heroFac"><option>魏</option><option>蜀</option><option>吴</option><option>群</option></select></div>
     <div class="kv"><span>屯营剩余时长</span><b id="heroPoolInfo">未开启</b></div>
     <div style="margin:8px 0"><button class="btn" id="btnHeroPool" data-testid="open-hero-pool">开启/延长 1 小时 · 100 元宝</button></div>
-    <div class="kv"><span>技能池剩余</span><b id="skillPoolInfo">未开启</b></div>
-    <div style="margin:8px 0"><button class="btn sub" id="btnSkillPool">开启/延长 1 小时 · 80 元宝</button></div>
-    <p class="note">技能池（存量）只出学习技能卡（主动/被动）：在武将页装配（2 技能位：主动位＋被动位），同名技能全队限装 1 名。技能卡的定版获取口是「观战悟法」（见观战页签：每日 5 次、抽出即移除）。已拥有技能卡：<b id="skillOwned">0</b> 张。</p>
+    <p class="note">技能卡（主动/被动）在武将页装配（2 技能位：主动位＋被动位），同名技能全队限装 1 名。技能卡的定版获取口是「观战悟法」（见观战页签：每日 5 次、抽出即移除）。已拥有技能卡：<b id="skillOwned">0</b> 张。</p>
     <div id="skillList" style="margin-top:4px"></div>
   </div>
   </div>
@@ -418,10 +414,8 @@ const CFG = {
   adReward: 5, adDailyCap: 20, /* 视频招募令：5 枚/次 × 每日上限 20 次 = 名义 100 枚/日（主人 2026-11-16 定档终版「按玩家福利上」，设计方原案、同晚认可；覆盖收口决定2 与同日晚 5×2、20×1、20×2 三版。经济复核按行为模型实算（sim-v4 扫描扩展）：玩家不看满——慢/中/快三档行为 8/14/20 次、实际 40/70/100 枚/日；图鉴集齐慢 84 天 / 中 48 天 / 快 32 天，已回到第 0 批判「过快」区间，主人知情下按福利口径执行；承接侧：重复卡走升星（全程 5 张同名）与将魂分解（回流 17.5%）、强化为高成本 sink，UR/天命池未开作后续目标层；本参数为单点 CFG，上线后若数据不对可即时回调） */
   claimReward: 5, claimAdBonus: 5,
   signReward: 80,
-  heroPoolCost: 100, skillPoolCost: 80, poolHourSec: 3600, poolMaxSec: 21600,
-  demoTickRate: 12,            // 演示加速：池时钟每真实秒走 12 秒
+  heroPoolCost: 100, /* 第 13 批：技能池下线，skillPoolCost/poolHourSec/poolMaxSec/demoTickRate/skillCardEveryRealSec 已随系统删除（存量退款口径见 skillPoolRetireNormalize） */
   heroCardEveryRealSec: 5,     // 演示加速出卡节拍（正式版 60 秒/张，页面已明示）
-  skillCardEveryRealSec: 7,
   counterMul: 1.25,
   /* v1 稀有度映射（v0 星级 → 稀有度）：5→SSR、4→SR、3 及以下→R；限定变体→SSR 限定 */
   rarityFromV0Star: {5:"SSR", 4:"SR", 3:"R", 2:"R", 1:"R"},
@@ -440,7 +434,7 @@ const CFG = {
   tianmingRate: 0.01,          // 历史未引用字段：现行天命出率走 tmRate＋tmPity、仅限时卡池出天命（见 drawLimited），此值不参与抽取
   equipRefundPerTier: 30,      // v1.2 迁移：下线装备（衣甲/马匹）每阶折算返还元宝数
   jiSkillMul: 1.6,             // 技能「极」版倍率：专属技能伤害 ×1.6（相对普通版）
-  jiChance: 0.08,              // 元宝技能池产「极」版技能卡概率（其他来源 0）
+  /* 第 13 批删除 jiChance：该字段从未被任何代码引用（死配置，注释所称产出路径不存在）；「极」版来源核查结论见 v4-dev/第13批施工交账.md */
   persGrowthBonus: 0.5,        // 【v4 已弃用】性格系统已下线
   activeBaseRate: 30,          // 学习主动技能释放概率 %（历史字段：现行判定走各技能自带 rate，第 10 批起每回合判定一次）
   activeUnlockLevel: 10,       // 主动技能位解锁等级
@@ -1009,6 +1003,19 @@ function hideMigReceipt(){
 window.showMigReceipt = showMigReceipt;
 window.hideMigReceipt = hideMigReceipt;
 
+/* 第 13 批：技能池下线的一次性存量处理——未用完的技能池时长按原开启价 80 元宝/小时比例折退（按剩余秒数比例取整），
+   退完清零池状态；skillPoolRetired 标记保证只退一次。已拥有的技能卡（skillsOwned）与已装配技能不动、不回收。
+   返回 true 表示本次执行了下线处理（调用方据此落盘）。 */
+function skillPoolRetireNormalize(s){
+  if(!s || s.skillPoolRetired) return false;
+  s.skillPoolRetired = true;
+  const sp = s.pool && s.pool.skill;
+  const left = sp? (sp.leftSec||0) : 0;
+  if(left > 0) s.yuanbao = (s.yuanbao||0) + Math.round(left * 80 / 3600);
+  if(s.pool) s.pool.skill = {leftSec:0, acc:0};
+  return true;
+}
+
 function load(){ try{ const s=localStorage.getItem(curSaveKey()); if(s){ const parsed=JSON.parse(s); if(!parsed.tour) parsed.tour={step:0,done:true}; if(parsed.ver<7){ try{ const bk=curSaveKey()+"_v6bak"; if(!localStorage.getItem(bk)) localStorage.setItem(bk, s); }catch(e){} } if(parsed.ver===7){ try{ const bk7=curSaveKey()+"_v7bak"; if(!localStorage.getItem(bk7)) localStorage.setItem(bk7, s); }catch(e){} } state=Object.assign(newState(), parsed); state.createdAtApprox = typeof parsed.createdAt!=="number"; if(state.createdAtApprox) state.createdAt = Date.now(); let migrated=false; if(state.ver<2){ state=migrateV1toV2(state); migrated=true; } if(state.ver<3){ state=migrateV2toV3(state); migrated=true; } if(state.ver<4){ state=migrateV3toV4(state); migrated=true; } if(state.ver<5){ state=migrateV4toV5(state); migrated=true; } if(state.ver<6){ state=migrateV5toV6(state); migrated=true; } if(state.ver<7){ state=migrateV6toV7(state); migrated=true; } if(state.ver<8){ if(parsed.ver===7) state=migrateV7toV8(state); state.ver=8; migrated=true; } if(migrated) save(); state.cards.forEach(c=>{ c.tianming=null; const eq=c.equip||{}; c.equip={ wp:eq.wp||0, bs:eq.bs||eq.tr||0 }; if(c.learnedActive===undefined) c.learnedActive=null; if(c.learnedPassive===undefined) c.learnedPassive=null; }); if(!state.pity) state.pity=freshPity(); ["normal","yb","tm"].forEach(k=>{ if(!state.pity[k]) state.pity[k]=freshPity()[k]; }); if(typeof state.beads!=="number") state.beads=0; if(typeof state.expPool!=="number") state.expPool=0; if(!state.daily) state.daily={cleared:0}; if(!state.tmDungeons) state.tmDungeons=freshTmDungeons(); ["unlocked","cleared","half","adRetry"].forEach(k=>{ if(!state.tmDungeons[k]) state.tmDungeons[k]={}; }); tourNormalize(state); showcaseNormalize(state); if(!state.migLog) state.migLog=[]; if(typeof state.souls!=="number") state.souls=0; if(typeof state.starcoin!=="number") state.starcoin=0; if(state.migReceipt===undefined) state.migReceipt=null; if(state.migrated_v4===undefined) state.migrated_v4 = state.ver>=8; if(!state.sign) state.sign = {last: state.signDate||"", streak: state.signDate? 1:0}; if(typeof state.tokens!=="number") state.tokens=0; if(!state.yq) state.yq={cleared:0, adReady:{}}; if(!state.yq.adReady) state.yq.adReady={}; if(!state.exclFrags) state.exclFrags={}; if(state.merchant===undefined) state.merchant=null; if(typeof state.lastOffline!=="number") state.lastOffline=0; if(!state.lb || typeof state.lb!=="object") state.lb={dirty:true,lastAt:0,lastPower:0,lastSeason:-1}; if(typeof state.lb.dirty!=="boolean") state.lb.dirty=true; if(typeof state.lb.lastAt!=="number") state.lb.lastAt=0; if(typeof state.lb.lastPower!=="number") state.lb.lastPower=0; if(typeof state.lb.lastSeason!=="number") state.lb.lastSeason=-1;
 if(!state.jt || typeof state.jt!=="object") state.jt={draws:0, firstTenDone:false, fac:""}; if(typeof state.jt.draws!=="number") state.jt.draws=0; if(state.jt.firstTenDone===undefined) state.jt.firstTenDone=false; if(typeof state.jt.fac!=="string") state.jt.fac="";
 if(!state.tmP || typeof state.tmP!=="object") state.tmP={period:-1, ur:0, ssr:0}; if(typeof state.tmTickets!=="number") state.tmTickets=0;
@@ -1038,6 +1045,8 @@ if(!state.gz || typeof state.gz!=="object") state.gz={date:"", count:0}; if(stat
   if(!state.openingGift && (state.starterGenId || (state.cards&&state.cards.length) || (state.stageCleared||0)>0 || state.migrated_v4)) state.openingGift = {legacy:true};
   if(typeof state.bgmOn !== "boolean") state.bgmOn = true;
   if(!state.soulShop || typeof state.soulShop !== "object") state.soulShop = {date:"", SSR_GEN:0, SR_GEN:0, R_GEN:0};
+  /* 第 13 批 normalize：技能池下线——存量未用时长折退元宝（只退一次） */
+  if(skillPoolRetireNormalize(state)) save();
   return true;}}catch(e){} return false;}
 
 const RES_FIELD = { yuanbao:"yuanbao", tickets:"tickets", merit:"merit", arenaPts:"arenaPts", souls:"souls", starcoin:"starcoin", wubi:"wubi"};
@@ -1352,12 +1361,9 @@ if(kind==="hero"){
   const sel=document.getElementById("heroFac"); if(sel) p.fac=sel.value;
   save(); return {ok:true,msg:"屯营募勇已开启/延长 1 小时"};
 }
-if(p.leftSec >= CFG.poolMaxSec) return {ok:false,msg:"已达 6 小时上限"};
-if(!spendRes("yuanbao", CFG.skillPoolCost)) return {ok:false,msg:"元宝不足"};
-p.leftSec = Math.min(CFG.poolMaxSec, p.leftSec + CFG.poolHourSec);
-save(); return {ok:true,msg:"已开启/延长 1 小时"};
+return {ok:false,msg:"未知卡池"}; /* 第 13 批：技能池已下线，openPool 只剩屯营（hero）一支 */
 }
-/* 技能卡产出：只出学习技卡（主动/被动）。「极」版自 v2 起停产——按设计方口径极＝天命卡自带（见施工纸一.9），存量极卡保留收藏加成 */
+/* 技能卡产出：只出学习技卡（主动/被动），恒为普通版。「极」版自 v2 起停产——按设计方口径极＝天命卡自带（见施工纸一.9），存量极卡保留收藏加成。第 13 批技能池下线后，本函数仅剩任务奖励（quest）调用 */
 function produceSkillCard(source){
 const r = Math.random()*100; const grade = r<5? "SSR" : r<30? "SR" : "R";
 const usedNames = new Set(state.skillsOwned.map(x=>x && x.name)); state.cards.forEach(c=>{ if(c.learnedActive) usedNames.add(c.learnedActive); if(c.learnedPassive) usedNames.add(c.learnedPassive); });
@@ -1381,7 +1387,7 @@ const cand = GENS.filter(g=>g.fac===fac && !g.variant && g.rar===rar);
 return gainCard(randPick(cand.length? cand : GENS.filter(g=>g.fac===fac && !g.variant)).id);
 }
 /* 离线挂机结算（查漏补缺·设计原案「可花元宝离线挂机」）：关页期间按已开时长继续出卡。
-   以 poolTs 为上次结算点、按演示时钟（demoTickRate）折算经过的真实秒数，产出受剩余开启时长封顶（即叠时上限）；
+   以 poolTs 为上次结算点、按经过的真实秒数结算，产出受剩余开启时长封顶（即叠时上限）；
    init 时调用；在线期间 setInterval 每秒刷新 poolTs，避免在线时长被重复结算 */
 function settleOffline(){
 const now = Date.now();
@@ -1398,14 +1404,7 @@ if(hp && hp.leftSec>0){
   const total = (hp.acc||0) + use; const n = Math.floor(total/CFG.poolTY.cardEverySec); hp.acc = total - n*CFG.poolTY.cardEverySec;
   for(let i=0;i<n;i++){ produceHeroCard(); produced++; }
 }
-/* 挂机技能池（存量系统，定版外）：沿用池时钟口径结算 */
-const sp = state.pool.skill;
-if(sp && sp.leftSec>0){
-  const ticks = Math.min(elapsed, Math.ceil(sp.leftSec / CFG.demoTickRate));
-  if(ticks>0){ sp.leftSec = Math.max(0, sp.leftSec - ticks*CFG.demoTickRate);
-    const total2 = (sp.acc||0) + ticks; const n2 = Math.floor(total2/CFG.skillCardEveryRealSec); sp.acc = total2 - n2*CFG.skillCardEveryRealSec;
-    for(let i=0;i<n2;i++){ state.skillsOwned.push(produceSkillCard("yuanbao")); produced++; } }
-}
+/* 第 13 批：技能池已下线，离线结算只剩屯营产卡；技能池存量时长由 load 时 skillPoolRetireNormalize 折退元宝 */
 state.lastOffline = produced;
 if(produced>0) save();
 return produced;
@@ -1417,9 +1416,7 @@ if(hp.leftSec>0){ hp.leftSec=Math.max(0,hp.leftSec-1); hp.acc=(hp.acc||0)+1;
 if(hp.acc>=CFG.poolTY.cardEverySec){ hp.acc-=CFG.poolTY.cardEverySec;
 produceHeroCard();
 changed=true;}}
-const sp = state.pool.skill;
-if(sp.leftSec>0){ sp.leftSec=Math.max(0,sp.leftSec-CFG.demoTickRate); sp.acc+=1;
-if(sp.acc>=CFG.skillCardEveryRealSec){ sp.acc=0; state.skillsOwned.push(produceSkillCard("yuanbao")); changed=true;}}
+/* 第 13 批：技能池在线结算已随系统下线移除，poolTick 只剩屯营 */
 if(changed) save();
 return changed;
 }
@@ -1620,7 +1617,7 @@ function drawGuanzhan(){
 if(!state.gz || state.gz.date !== todayStr()) state.gz = {date: todayStr(), count: 0};
 if(state.gz.count >= CFG.guanzhanDaily) return {ok:false, msg:"今日观战悟法次数已用完（"+CFG.guanzhanDaily+" 次/日）"};
 const rem = guanzhanRemaining();
-if(!rem.length) return {ok:false, sealed:true, msg:"技能池已抽满（50/50），观战悟法封池"};
+if(!rem.length) return {ok:false, sealed:true, msg:"技能已抽满（50/50），观战悟法封池"};
 const p = randPick(rem);
 state.skillsOwned.push({name:p.name, grade:"普通", kind:p.kind});
 state.gz.count++; save();
@@ -1641,7 +1638,7 @@ el.innerHTML =
  "<p class='note'>首次十连必出 SSR；此后每 "+jt.pitySSR+" 抽必出 SSR。阵营定向：可选定阵营，命中 SSR 时 "+Math.round(jt.facFocus*100)+"% 出所选阵营、其余阵营均分 "+Math.round((1-jt.facFocus)*100)+"%。</p>"+
  "<div class='kv'><span>天命所归（限时池）"+(CFG.tmOpen? "" : "（尚未开放）")+"</span><b>"+pct(tm.rates)+"</b></div>"+
  "<p class='note'>"+tm.cost+" 元宝/抽、十连 "+tm.tenCost+"（或限时招募券 1 张/抽）。UR 中当期 UP 占 "+Math.round(tm.upShare*100)+"%；"+tm.pityUR+" 抽硬保底必出当期 UP；每 "+tm.pitySSR+" 抽必出 SSR 及以上；十连必出 SR 及以上。开放节奏：每期开放 "+tm.openDays+" 天、间隔 "+tm.gapDays+" 天，9 名 UR 轮换 UP，保底计数当期结束作废。</p>"+
- "<div class='kv'><span>观战悟法（技能池）</span><b>剩余池等概率</b></div>"+
+ "<div class='kv'><span>观战悟法</span><b>剩余技能等概率</b></div>"+
  "<p class='note'>看 1 次视频得 1 张技能卡，每日 "+CFG.guanzhanDaily+" 次。50 种技能全局唯一：抽出即从池中移除，剩余技能等概率随机；抽满 50 种封池。当前已拥有 "+state.skillsOwned.length+" / 50。</p>"+
  "<div class='kv'><span>将魂阁（分解）</span><b>"+Object.keys(CFG.soulValue).map(k=>k+" "+CFG.soulValue[k]).join(" · ")+"</b></div>"+
  "<p class='note'>重复卡转将魂（将魂/张）：UR "+CFG.soulValue.UR+"／SSR "+CFG.soulValue.SSR+"／SR "+CFG.soulValue.SR+"／R "+CFG.soulValue.R+"。兑换道具：专属用将星币（UR 专属 "+CFG.starItemPrice.UR_EX+"／SSR 专属 "+CFG.starItemPrice.SSR_EX+" 将星币/件）；通用用将魂（SSR 通用 "+CFG.soulItemPrice.SSR_GEN+"／SR 通用 "+CFG.soulItemPrice.SR_GEN+"／R 通用 "+CFG.soulItemPrice.R_GEN+" 将魂/件）。</p>"+
@@ -2504,7 +2501,7 @@ function genByName(n){ return GENS.find(g=>g.name===n); }
 function teamCards(){ return state.cards.filter(c=>state.formation.indexOf(c.uid)>=0); }
 function teamPower(){ return resolveTeam(teamCards()).reduce((s,u)=>s+u.atk+u.def+Math.round(u.hp/10),0); }
 function fmtDur(sec){ if(sec<=0) return "未开启"; if(sec<3600) return "约 "+Math.ceil(sec/60)+" 分钟"; return "约 "+(Math.round(sec/360)/10)+" 小时"; }
-function fmtPool(sec){ if(sec<=0) return "未开启"; return "约 "+Math.ceil(sec/60)+" 分钟（池时钟）"; }
+/* 第 13 批：fmtPool 已删——其唯一用途是技能池时长显示，随技能池下线一并移除 */
 function renderRes(){
   $("resYuanbao").textContent = Math.floor(state.yuanbao);
   $("resTickets").textContent = state.tickets;
@@ -3043,7 +3040,7 @@ function drawGuanzhanExtra(){
   if(!state.gz || state.gz.date !== todayStr() || state.gz.count < CFG.guanzhanDaily) return {ok:false, msg:"先用完今日 "+CFG.guanzhanDaily+" 次免费观战，再用将星币续抽"};
   if(state.gzExtra.count >= CFG.gzExtraCost.length) return {ok:false, msg:"今日付费续抽已达上限（"+CFG.gzExtraCost.length+" 次）"};
   const rem = guanzhanRemaining();
-  if(!rem.length) return {ok:false, sealed:true, msg:"技能池已抽满（50/50），观战悟法封池"};
+  if(!rem.length) return {ok:false, sealed:true, msg:"技能已抽满（50/50），观战悟法封池"};
   const cost = CFG.gzExtraCost[state.gzExtra.count];
   if(!spendRes("starcoin", cost)) return {ok:false, msg:"将星币不足（本次续抽需 "+cost+"）"};
   const p = randPick(rem);
@@ -3136,7 +3133,7 @@ function renderGzExtra(){
   const el = $("gzExtraInfo"); if(!el) return;
   const used = (state.gzExtra && state.gzExtra.date===todayStr())? state.gzExtra.count : 0;
   const rem = guanzhanRemaining().length;
-  el.textContent = rem===0? "技能池已封池（50/50）" : ("今日已续抽 "+used+" / "+CFG.gzExtraCost.length+" 次 · 下次 "+(used<CFG.gzExtraCost.length? CFG.gzExtraCost[used]+" 将星币" : "—")+" · 剩余池 "+rem+" 张");
+  el.textContent = rem===0? "技能已封池（50/50）" : ("今日已续抽 "+used+" / "+CFG.gzExtraCost.length+" 次 · 下次 "+(used<CFG.gzExtraCost.length? CFG.gzExtraCost[used]+" 将星币" : "—")+" · 剩余池 "+rem+" 张");
 }
 /* ---------- 渲染：道具库存 ---------- */
 function renderItems(){
@@ -3223,14 +3220,11 @@ if(_tab==="home"){
     "<p class='note' style='margin-top:6px'>威望来自虎牢争锋（每日 12:00–13:00、18:00–19:00），只增不减。官职表："+OFFICES_V4.map(x=>x.name+" "+x.merit).join(" · ")+"</p>";
   }
   $("heroPoolInfo").textContent = fmtDur(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac+(state.lastOffline? " · 离线产出 ×"+state.lastOffline : "");
-  $("skillPoolInfo").textContent = fmtPool(state.pool.skill.leftSec);
   $("skillOwned").textContent = state.skillsOwned.length;
   /* v3.0 挂机明牌：速率从 CFG 读（与结算同源）、剩余时长与离线产出直读 state */
   const _ih = $("idleHeroLeft"); if(_ih) _ih.textContent = fmtDur(state.pool.hero.leftSec);
-  const _is = $("idleSkillLeft"); if(_is) _is.textContent = fmtPool(state.pool.skill.leftSec);
   const _io = $("idleLastOffline"); if(_io) _io.textContent = state.lastOffline? ("×"+state.lastOffline+" 张") : "—";
   const _ihr = $("idleHeroRate"); if(_ihr) _ihr.textContent = (CFG.poolTY.cardEverySec/60)+" 分钟/张";
-  const _isr = $("idleSkillRate"); if(_isr) _isr.textContent = CFG.skillCardEveryRealSec+" 秒/张";
   const grpOf = k => state.skillsOwned.filter(x=>x && x.kind===k);
   const grpHtml = (label, arr, hot) => { if(!arr.length) return ""; const cnt = {}; const first = {}; arr.forEach(x=>{ cnt[x.name] = (cnt[x.name]||0)+1; if(!first[x.name]) first[x.name] = x; }); return "<div class='stats'>"+label+"："+Object.keys(first).map(n=>"<span class='tag"+(hot?" hot":"")+"'>"+n+(cnt[n]>1? " ×"+cnt[n] : "")+"</span> "+ownedSkillDesc(first[n])).join("；")+"</div>"; };
 if(_tab==="pool"){
@@ -3458,7 +3452,6 @@ function bind(){
   $("factionFilter").onchange = function(){ cardsPage = 1; renderCards(); };
   $("btnAutoForm").onclick = function(){ autoFormation(); save(); renderAll(); };
   $("btnHeroPool").onclick = function(){ const r=openPool("hero"); alert(r.msg); renderAll(); };
-  $("btnSkillPool").onclick = function(){ const r=openPool("skill"); alert(r.msg); renderAll(); };
   const fmtDrawn = d => d.map(g=>g.name+"("+g.rar+(g.variant?"·UR":"")+")").join("、");
   $("btnNorm1").onclick = function(){ const d=drawNormal(1); showDrawn(d); $("gachaLog").textContent = d.length? "招贤纳士："+fmtDrawn(d)+(_lastSouled? " · 盈余自动转将魂 +"+_lastSouled : "") : "招募令不足"; renderAll(); };
   $("btnNorm10").onclick = function(){ const d=drawNormal(10); showDrawn(d); $("gachaLog").textContent = d.length? "招贤纳士 10 连："+fmtDrawn(d)+(_lastSouled? " · 盈余自动转将魂 +"+_lastSouled : "") : "招募令不足（10 连需 9 枚）"; renderAll(); };
@@ -3546,7 +3539,7 @@ function bind(){
   enhProtectWrap.className="note"; enhProtectWrap.style.margin="0 12px";
   enhProtectWrap.innerHTML="<input type='checkbox' id='enhProtectChk'> 本次保级（失败不降级；保级价见上方强化信息，尝试前扣除、无论成败不退）";
   $("tab-cards").appendChild(enhProtectWrap);
-  setInterval(function(){ state.poolTs = Date.now(); const changed = poolTick(); showcaseAccrue(); if(changed || state.pool.hero.leftSec>0 || state.pool.skill.leftSec>0){ renderRes(); $("heroPoolInfo").textContent=fmtDur(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac; $("skillPoolInfo").textContent=fmtPool(state.pool.skill.leftSec); if(changed && curTab==="cards") renderCards(); } }, 1000);
+  setInterval(function(){ state.poolTs = Date.now(); const changed = poolTick(); showcaseAccrue(); if(changed || state.pool.hero.leftSec>0){ renderRes(); $("heroPoolInfo").textContent=fmtDur(state.pool.hero.leftSec)+" · 阵营 "+state.pool.hero.fac; if(changed && curTab==="cards") renderCards(); } }, 1000);
 }
 /* 开局赠将（第 12 批新口径，覆盖原开局四选一）：新档创建时自动随机发放 1 张 SR 基础卡，一次性、不设选择弹窗；
    state.openingGift 落盘标记防重复发放；老档在 load 规范化时按进度标 legacy，不触发、不补发。
@@ -3867,7 +3860,7 @@ function showDrawn(d){
 }
 
 if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, starPriceOfItem:starPriceOfItem, itemPriceOf:itemPriceOf, pickBasicTarget:pickBasicTarget, tryActiveSkill:tryActiveSkill, toggleShowcaseCore:toggleShowcaseCore, showcaseNormalize:showcaseNormalize, showcaseTickValue:showcaseTickValue, showcaseCap:showcaseCap, recPower:recPower, STAGE_REC:STAGE_REC, recPowerHint:recPowerHint, enhProtectPrice:enhProtectPrice, pickBackTarget:pickBackTarget, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, fullCardHtml, refCardOf, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
-  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe }; }
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe, skillPoolRetireNormalize: skillPoolRetireNormalize }; }
 </script>
 
 <script>
