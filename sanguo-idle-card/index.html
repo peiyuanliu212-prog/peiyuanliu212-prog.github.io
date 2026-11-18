@@ -2348,7 +2348,7 @@ function fightYQ(stage, useAd){
   if(useAd && !state.yq.adReady[stage]) return {ok:false, msg:"本关尚无广告强行闯关资格（先打一次，败北后可用）"};
   const first = stage > state.yq.cleared;
   let win, log;
-  if(useAd){ win = true; log = ["（模拟广告）士气大振，强行闯关成功！"]; state.yq.adReady[stage] = false; }
+  if(useAd){ win = true; log = ["士气大振，强行闯关成功！"]; state.yq.adReady[stage] = false; }
   else { const res = battleSim(resolveTeam(myCards), yqEnemyTeam(stage)); bumpQuest("battle",1); win = res.win; log = res.log; }
   let rewardMsg = "";
   if(win){
@@ -2967,7 +2967,7 @@ function openMigeRound2(){
   if(state.dun.migeRoundsDone!==1) return {ok:false, msg:"第 1 轮尚未完成"};
   if(state.dun.migeAdOpen) return {ok:false, msg:"第 2 轮已开启"};
   state.dun.migeAdOpen = true; save();
-  return {ok:true, msg:"第 2 轮已开启（模拟观看 15 秒视频）"};
+  return {ok:true, msg:"第 2 轮已开启"};
 }
 /* 第 10 批·设计方纠错：扫荡只结算「本轮已实际通过的关」的待结算产出，不再整轮一键全额。
    第二轮与第一轮同规：逐关打、打不过看视频强闯（不计掉落）；视频只开轮次与逐关强闯，
