@@ -1,0 +1,108 @@
+{
+ "cards": {
+  "cell": [
+   512,
+   744
+  ],
+  "cols": 8,
+  "rows": 5,
+  "files": [
+   {
+    "file": "cards-0.webp",
+    "size": [
+     4096,
+     3720
+    ],
+    "bytes": 3691474,
+    "gens": [
+     1,
+     40
+    ]
+   },
+   {
+    "file": "cards-1.webp",
+    "size": [
+     4096,
+     3720
+    ],
+    "bytes": 3615144,
+    "gens": [
+     41,
+     80
+    ]
+   },
+   {
+    "file": "cards-2.webp",
+    "size": [
+     4096,
+     3720
+    ],
+    "bytes": 3733650,
+    "gens": [
+     81,
+     120
+    ]
+   },
+   {
+    "file": "cards-3.webp",
+    "size": [
+     4096,
+     3720
+    ],
+    "bytes": 3741296,
+    "gens": [
+     121,
+     160
+    ]
+   },
+   {
+    "file": "cards-4.webp",
+    "size": [
+     4096,
+     3720
+    ],
+    "bytes": 793218,
+    "gens": [
+     161,
+     169
+    ]
+   }
+  ]
+ },
+ "icons": {
+  "cell": [
+   128,
+   128
+  ],
+  "cols": 10,
+  "rows": 5,
+  "file": "skills.webp",
+  "bytes": 320408
+ },
+ "bg": {
+  "hero": {
+   "file": "hero.webp",
+   "size": [
+    1080,
+    1620
+   ],
+   "bytes": 332328
+  },
+  "battle": {
+   "file": "battle.webp",
+   "size": [
+    1080,
+    1620
+   ],
+   "bytes": 305040
+  },
+  "texture": {
+   "file": "texture.webp",
+   "size": [
+    1080,
+    1620
+   ],
+   "bytes": 79630
+  }
+ }
+}
