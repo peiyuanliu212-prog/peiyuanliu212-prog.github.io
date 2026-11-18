@@ -233,7 +233,7 @@ html.artx .skillicon{background-image:none!important}
     <div class="kv"><span>付费续抽（将星币）</span><b id="gzExtraInfo">—</b></div>
     <div style="margin-top:6px"><button class="btn sm gold" onclick="doGzExtra()">将星币续抽 1 张</button><span class="note"> 免费 5 次用完后可用，递增价 300/500/800/1200/1800 将星币，每日上限 5 次</span></div>
     <div class="kv"><span>技能收集</span><b id="gzOwn">—</b></div>
-    <div style="margin:8px 0"><button class="btn" id="btnGuanzhan">看视频（模拟）领技能卡</button></div>
+    <div style="margin:8px 0"><button class="btn" id="btnGuanzhan">看视频领技能卡</button></div>
     <p class="note">看 1 次视频（15 秒）得 1 张技能卡，每日 5 次、0 点重置。50 种技能全局唯一：抽出即从池中移除，剩余技能等概率随机；抽满 50 种封池。技能卡在武将页装配（2 技能位），与招募令视频分别计数。</p>
     <p class="note" id="gzMsg"></p>
   </div>
@@ -367,10 +367,10 @@ html.artx .skillicon{background-image:none!important}
     <div style="margin:6px 0"><button class="btn sub" id="btnSign">每日签到（7 日循环）</button>
     <span class="note">每日限领一次；连续签到奖励递进，断签回第 1 天。</span></div>
     <div id="signTable" style="margin:6px 0"></div>
-    <div style="margin:6px 0"><button class="btn sub" id="btnClaimNoon">午间领取 · 招募券 +5</button>
-    <button class="btn sub" id="btnClaimEvening">晚间领取 · 招募券 +5</button>
+    <div style="margin:6px 0"><button class="btn sub" id="btnClaimNoon">午间领取 · 招募令 +10</button>
+    <button class="btn sub" id="btnClaimEvening">晚间领取 · 招募令 +10</button>
     <span class="note">午间、晚间各可领一次，每日重置。</span></div>
-    <div style="margin:6px 0"><button class="btn dark" id="btnAd" data-testid="ad-btn">模拟广告 · 招募券 +5</button>
+    <div style="margin:6px 0"><button class="btn dark" id="btnAd" data-testid="ad-btn">看视频 · 招募令 +5</button>
     <span class="note" id="adInfo">今日 0/20 次。</span></div>
     <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档说明与删档重开</button></div>
   <div class="card" style="border-style:dashed"><span class="tag hot">待开放</span> <b>累计登录 · 11月21日开放</b> <button class="btn sm sub" style="float:right" onclick="alert('累计登录：按累计登录天数领取阶段奖励，11月21日开放，敬请期待。')">查看说明</button></div>
@@ -635,6 +635,106 @@ async function sgPost(path, data, timeoutMs){
     return { ok: httpOk && code === 0, body: (res && res.data !== undefined) ? res.data : res, code: code };
   }catch(e){ return { ok:false, body:null, code:null }; }
 }
+/* ---- 激励广告（第 19 批 · vatask 技能重配） ----
+   依据 colorbox-vatask / vatask-completeRewardVideo / vatask-getActivityTaskState 原文：
+   · 只能由用户点击触发；同一时间只允许一个激励流程，进行中禁用触发按钮；
+   · 仅 res.code===200 且 res.data.rewarded===true 才算奖励到账，才发放游戏内奖励；
+   · 成功后调用 getActivityTaskState 刷新状态；失败用 res.message 提示，禁止自行补发；
+   · 活动 id 由底座自动注入，调用不传任何参数；只经 window.ColorboxAI.vatask.* 调用。
+   防丢口径（不与技能冲突的部分）：点前落盘 adPending（含点前平台剩余次数基线）并 save；
+   流程被中断（Promise 抛错/未决）保留 adPending，下次进入/点击时用平台
+   availableChanceCount 的差量对账——差量≥1 才补发那一笔；查询失败则保留标记下次再对。
+   壳外（无 vatask，如 GitHub Pages 试玩站）：本地发放，保持试玩可玩（与 sgPost 壳外降级同惯例）。 */
+let _adFlowBusy = false;
+let _adReconciling = false;
+function vataskApi(){
+  const v = (typeof window!=="undefined") ? (window.ColorboxAI && window.ColorboxAI.vatask) : null;
+  return (v && typeof v.completeRewardVideo==="function") ? v : null;
+}
+async function vataskRefresh(){
+  const v = vataskApi(); if(!v || typeof v.getActivityTaskState!=="function") return null;
+  try{
+    const res = await v.getActivityTaskState();
+    if(res && res.code===200 && res.data && typeof res.data.availableChanceCount==="number") return res.data;
+    return null;
+  }catch(e){ return null; }
+}
+function adPendingOf(){
+  const p = state.adPending;
+  return (p && typeof p==="object" && (p.kind==="ad" || p.kind==="gz")) ? p : null;
+}
+function grantAdTickets(){
+  if(state.adUsed.date!==todayStr()) state.adUsed={date:todayStr(),count:0};
+  state.adUsed.count++; addRes("tickets", CFG.adReward);
+}
+function gzShowMsg(msg){ if(typeof document==="undefined") return; const m=$("gzMsg"); if(m) m.textContent=msg; }
+function grantAdByKind(kind){
+  if(kind==="gz"){ const r = drawGuanzhan(); gzShowMsg(r.msg); }
+  else grantAdTickets();
+}
+function guanzhanBlockMsg(){
+  const gz = (state.gz && state.gz.date===todayStr()) ? state.gz : {count:0};
+  if(gz.count >= CFG.guanzhanDaily) return "今日观战悟法次数已用完（"+CFG.guanzhanDaily+" 次/日）";
+  if(!guanzhanRemaining().length) return "技能已抽满（50/50），观战悟法封池";
+  return null;
+}
+function setAdButtonsDisabled(dis){
+  if(typeof document==="undefined") return;
+  ["btnAd","btnGuanzhan"].forEach(function(id){ const b=$(id); if(b) b.disabled = !!dis; });
+}
+async function reconcileAdPending(){
+  const p = adPendingOf(); if(!p) return true;
+  if(_adReconciling) return false;
+  if(!vataskApi()){ state.adPending = null; save(); return true; }
+  _adReconciling = true;
+  try{
+    const data = await vataskRefresh();
+    if(!data) return false; /* 查询失败：保留标记，下次再对 */
+    let owed = false;
+    if(typeof p.before==="number" && data.availableChanceCount > p.before) owed = true;
+    if(!owed && typeof p.before!=="number"){
+      const t = (data.tasks||[]).find(function(x){ return x.taskCode==="reward"; });
+      if(t && t.status==="completed") owed = true;
+    }
+    state.adPending = null;
+    if(owed) grantAdByKind(p.kind);
+    save();
+    return true;
+  } finally { _adReconciling = false; }
+}
+async function runRewardAd(kind){
+  if(_adFlowBusy) return;
+  const v = vataskApi();
+  if(!v){ grantAdByKind(kind); save(); if(typeof document!=="undefined") renderAll(); return; }
+  const ok = await reconcileAdPending();
+  if(!ok){ alert("上次广告奖励正在核对中，请稍后再试"); return; }
+  _adFlowBusy = true; setAdButtonsDisabled(true);
+  try{
+    const base = await vataskRefresh();
+    state.adPending = { kind: kind, date: todayStr(), before: base ? base.availableChanceCount : null };
+    save(); /* 点前落盘 PENDING */
+    let res = null, threw = false;
+    try{ res = await v.completeRewardVideo(); }catch(e){ threw = true; }
+    if(!threw && res && res.code===200 && res.data && res.data.rewarded===true){
+      state.adPending = null;
+      grantAdByKind(kind);
+      save();
+      await vataskRefresh(); /* 成功后刷新平台任务状态（技能要求） */
+    } else if(!threw && res){
+      state.adPending = null; save();
+      alert(res.message || "未完成观看，未发放奖励");
+    }
+    /* threw（流程中断/桥异常）：保留 adPending，下次进入/点击时差量对账 */
+  } finally {
+    _adFlowBusy = false; setAdButtonsDisabled(false);
+    if(typeof document!=="undefined") renderAll();
+  }
+}
+function adInitHook(){
+  if(!vataskApi()) return;
+  vataskRefresh();
+  if(adPendingOf()){ reconcileAdPending().then(function(){ if(typeof document!=="undefined") renderAll(); }, function(){}); }
+}
 async function acctGet(){
   const r = await sgPost("/acctsave/get", {});
   if(!r.ok) return { ok:false };
@@ -668,7 +768,7 @@ yq:{cleared:0, adReady:{}}, exclFrags:{}, merchant:null, poolTs:0, lastOffline:0
 stageCleared:0,
 tower:{date:todayStr(), layer:0, fails:0, done:false},
 showcase:[], showcaseAcc:0, showcaseTs:Date.now(), showcaseSince:{}, showcasePaid:{},
-signDate:"", sign:null, quests:null, tour:{step:0, done:false}, adUsed:{date:todayStr(),count:0}, claims:{noon:"",evening:""},
+signDate:"", sign:null, quests:null, tour:{step:0, done:false}, adUsed:{date:todayStr(),count:0}, adPending:null, claims:{noon:"",evening:""},
 createdAt:Date.now(), tianmingNews:"", migLog:[]};
 }
 let state = newState();
@@ -3521,16 +3621,16 @@ function bind(){
       const m = $("soulMsg"); if(m) m.textContent = cnt? ("一键转化 "+cnt+" 张盈余卡，将魂 +"+total) : "没有可转化的盈余卡（每名保留 "+CFG.soulKeep+" 张）";
       renderAll();
     }; }
-  { const gb = $("btnGuanzhan"); if(gb) gb.onclick = function(){ const r = drawGuanzhan(); const m = $("gzMsg"); if(m) m.textContent = r.msg; renderAll(); }; }
+  { const gb = $("btnGuanzhan"); if(gb) gb.onclick = function(){ const bm = guanzhanBlockMsg(); if(bm){ const m = $("gzMsg"); if(m) m.textContent = bm; renderAll(); return; } runRewardAd("gz"); }; }
   { const _br = $("btnIdleRules"); if(_br) _br.onclick = function(){ const r = $("idleRules"); if(r) r.style.display = (r.style.display==="none")? "" : "none"; }; }
   $("btnClaimShow").onclick = function(){ showcaseAccrue(); const n=Math.floor(state.showcaseAcc); if(n>0){ state.showcaseAcc-=n; addRes("yuanbao",n); state.flags = Object.assign({}, state.flags, {poolClaimedOnce:true}); bumpQuest("claim",1); alert("领取橱窗元宝 +"+n); } else alert("暂无可领取元宝"); renderAll(); };
   $("btnSign").onclick = function(){ const r = doSign(); alert(r.msg); renderAll(); };
-  $("btnClaimNoon").onclick = function(){ if(state.claims.noon===todayStr()){ alert("午间奖励今日已领取（每日 1 次）"); return; } state.claims.noon=todayStr(); addRes("tickets", CFG.claimReward+CFG.claimAdBonus); alert("12 点领取：招募令 +"+CFG.claimReward+"，加看再 +"+CFG.claimAdBonus); renderAll(); };
-  $("btnClaimEvening").onclick = function(){ if(state.claims.evening===todayStr()){ alert("晚间奖励今日已领取（每日 1 次）"); return; } state.claims.evening=todayStr(); addRes("tickets", CFG.claimReward+CFG.claimAdBonus); alert("18 点领取：招募令 +"+CFG.claimReward+"，加看再 +"+CFG.claimAdBonus); renderAll(); };
+  $("btnClaimNoon").onclick = function(){ if(state.claims.noon===todayStr()){ alert("午间奖励今日已领取（每日 1 次）"); return; } state.claims.noon=todayStr(); addRes("tickets", CFG.claimReward+CFG.claimAdBonus); alert("午间奖励：招募令 +"+(CFG.claimReward+CFG.claimAdBonus)); renderAll(); };
+  $("btnClaimEvening").onclick = function(){ if(state.claims.evening===todayStr()){ alert("晚间奖励今日已领取（每日 1 次）"); return; } state.claims.evening=todayStr(); addRes("tickets", CFG.claimReward+CFG.claimAdBonus); alert("晚间奖励：招募令 +"+(CFG.claimReward+CFG.claimAdBonus)); renderAll(); };
   $("btnAd").onclick = function(){
     if(state.adUsed.date!==todayStr()) state.adUsed={date:todayStr(),count:0};
     if(state.adUsed.count>=CFG.adDailyCap){ alert("今日视频招募令次数已达上限 "+CFG.adDailyCap+" 次"); return; }
-    state.adUsed.count++; addRes("tickets", CFG.adReward); renderAll();
+    runRewardAd("ad");
   };
   $("btnReset").onclick = function(){ switchTab("save"); };
   $("btnSettingsSave").onclick = function(){ switchTab("save"); };
@@ -3619,7 +3719,7 @@ let _inGame214 = false;   /* 是否已进过游戏（pickStarter 等沿用） */
 let _bound214 = false;
 let _booted = false;
 let _pendingNotice = "";
-function bindOnce(){ if(_bound214) return; _bound214 = true; bind(); }
+function bindOnce(){ if(_bound214) return; _bound214 = true; bind(); adInitHook(); }
 function afterLoad214(had){
   if(had) settleOffline();
   let mx = 0; state.cards.forEach(c=>mx=Math.max(mx,c.uid)); state.equips.forEach(e=>mx=Math.max(mx,e.uid)); _uid = mx+1;
@@ -4081,7 +4181,7 @@ function showDrawn(d){
 }
 
 if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, starPriceOfItem:starPriceOfItem, itemPriceOf:itemPriceOf, pickBasicTarget:pickBasicTarget, tryActiveSkill:tryActiveSkill, toggleShowcaseCore:toggleShowcaseCore, showcaseNormalize:showcaseNormalize, showcaseTickValue:showcaseTickValue, showcaseCap:showcaseCap, recPower:recPower, STAGE_REC:STAGE_REC, recPowerHint:recPowerHint, enhProtectPrice:enhProtectPrice, pickBackTarget:pickBackTarget, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, ART, artCellOf, artDivHtml, skillIconHtml, fullCardHtml, refCardOf, sgPost, ACCT_MODE, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
-  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe, skillPoolRetireNormalize: skillPoolRetireNormalize, snapBuild: snapBuild, snapClamp: snapClamp, snapPrepareFoe: snapPrepareFoe, snapCacheFoe: snapCacheFoe, snapFoeState: snapFoeState, snapUpload: snapUpload, snapPrefetchFoe: snapPrefetchFoe, lbFetch: lbFetch, lbReport: lbReport, lbEsc: lbEsc, snapClientId: snapClientId, hulaoPickFoes: hulaoPickFoes }; }
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe, skillPoolRetireNormalize: skillPoolRetireNormalize, snapBuild: snapBuild, snapClamp: snapClamp, snapPrepareFoe: snapPrepareFoe, snapCacheFoe: snapCacheFoe, snapFoeState: snapFoeState, snapUpload: snapUpload, snapPrefetchFoe: snapPrefetchFoe, lbFetch: lbFetch, lbReport: lbReport, lbEsc: lbEsc, snapClientId: snapClientId, hulaoPickFoes: hulaoPickFoes, runRewardAd: runRewardAd, reconcileAdPending: reconcileAdPending, vataskApi: vataskApi, vataskRefresh: vataskRefresh, grantAdTickets: grantAdTickets, guanzhanBlockMsg: guanzhanBlockMsg, adInitHook: adInitHook }; }
 </script>
 
 <script>
