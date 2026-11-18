@@ -612,20 +612,38 @@ function initSlots(){
 /* ---- 账号云存（acctsave 契约 v1）：身份只认平台注入，客户端不传任何身份字段 ---- */
 const SG_API = "https://app-bb176180ad-d6g0p672y89143628-1252166086.ap-shanghai.app.tcloudbase.com/api"; /* acctsave 应用侧 env（2026-11-12 对账确认：路由部署在应用侧 env，非共用 env） */
 const ACCT_MODE = (typeof window !== "undefined" && window.ColorboxAI && window.ColorboxAI.cloud && typeof window.ColorboxAI.cloud.request === "function")? "shell" : "local";
-async function acctGet(){
+const SG_ENV_ID = "app-bb176180ad-d6g0p672y89143628"; /* 活动 envId（hupu-skills-pack/credentials.json）：cloud.request 的 auth 登录用 */
+/* ---- 统一网关请求（第 18 批 · 安全门禁修复） ----
+   壳内：经 window.ColorboxAI.cloud.request 发起（技能 colorbox-cloud-request 原文：
+   url 必填、POST 时 data 作 JSON body；auth:true＋envId 让 SDK 自动登录并附加 Bearer，
+   网关据此注入 puid，body 不带任何身份字段，见 acctsave 契约 v1）。
+   壳外（无 ColorboxAI.cloud.request，如 GitHub Pages 试玩站）：不发请求，静默返回失败，
+   调用方走既有降级路径（本机存档／AI 对手），绝不弹框。
+   cloud.request 返回 {statusCode, code, message, data}，与 fetch 的 Response 形状不同，
+   故统一归一化为 {ok, body, code}；兼容返回 fetch 式 Response 的 SDK 版本（带 .json 时解析）。 */
+async function sgPost(path, data, timeoutMs){
+  if(ACCT_MODE !== "shell") return { ok:false, body:null, code:null };
   try{
-    const res = await fetch(SG_API + "/acctsave/get", { method:"POST", headers:{ "Content-Type":"application/json" }, body:"{}" });
-    const j = await res.json().catch(()=>null);
-    if(!res.ok || !j || j.code !== 0) return { ok:false };
-    return { ok:true, payload: (j.data && typeof j.data.payload === "string")? j.data.payload : null };
-  }catch(e){ return { ok:false }; }
+    const p = window.ColorboxAI.cloud.request({ url: SG_API + path, method: "POST", data: data || {}, envId: SG_ENV_ID, auth: true });
+    const res = timeoutMs ? await Promise.race([p, new Promise(function(_, rej){ setTimeout(function(){ rej(new Error("sgPost timeout")); }, timeoutMs); })]) : await p;
+    if(res && typeof res.json === "function" && typeof res.code === "undefined"){
+      const j = await res.json().catch(function(){ return null; });
+      return { ok: !!(res.ok && j && j.code === 0), body: (j ? j.data : null), code: (j ? j.code : null) };
+    }
+    const code = (res && typeof res.code === "number") ? res.code : ((res && res.data && typeof res.data.code === "number") ? res.data.code : null);
+    const httpOk = (res && typeof res.statusCode === "number") ? (res.statusCode >= 200 && res.statusCode < 300) : true;
+    return { ok: httpOk && code === 0, body: (res && res.data !== undefined) ? res.data : res, code: code };
+  }catch(e){ return { ok:false, body:null, code:null }; }
+}
+async function acctGet(){
+  const r = await sgPost("/acctsave/get", {});
+  if(!r.ok) return { ok:false };
+  const b = r.body;
+  return { ok:true, payload: (b && typeof b.payload === "string")? b.payload : null };
 }
 async function acctPut(payload){
-  try{
-    const res = await fetch(SG_API + "/acctsave/put", { method:"POST", headers:{ "Content-Type":"application/json" }, body: JSON.stringify({ payload }) });
-    const j = await res.json().catch(()=>null);
-    return !!(res.ok && j && j.code === 0);
-  }catch(e){ return false; }
+  const r = await sgPost("/acctsave/put", { payload: payload });
+  return !!r.ok;
 }
 let _acctTimer = null;
 function scheduleAcctPush(){
@@ -1006,8 +1024,8 @@ function migrateV7toV8(old){
 function showMigReceipt(){
   const r = state.migReceipt; if(!r) return;
   const el = $("migLines");
-  if(el) el.innerHTML = r.lines.map(x=>"<div class='kv'><span>"+x+"</span></div>").join("") +
-    "<div class='kv'><span>合计到账</span><b>元宝 +"+r.totals.yuanbao+" · 将星币 +"+r.totals.starcoin+" · 将魂 +"+r.totals.souls+"</b></div>";
+  if(el) el.innerHTML = r.lines.map(x=>"<div class='kv'><span>"+lbEsc(x)+"</span></div>").join("") +
+    "<div class='kv'><span>合计到账</span><b>元宝 +"+lbEsc(r.totals.yuanbao)+" · 将星币 +"+lbEsc(r.totals.starcoin)+" · 将魂 +"+lbEsc(r.totals.souls)+"</b></div>";
   const ms = $("migScreen"); if(ms) ms.style.display = "block";
   const app = $("app"); if(app) app.style.display = "none";
   const ss = $("starterScreen"); if(ss) ss.style.display = "none";
@@ -3690,23 +3708,19 @@ async function lbReport(){
   _lbTryAt = now;
   const m = lbMetrics();
   try{
-    const res = await fetch(SG_API + "/leaderboard/report", { method: "POST", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: lbName(), metrics: { power: m.power, tower: m.tower, stage: m.stage, arena: m.arena }, snapshot: lbSnapshot() }) });
-    const j = await res.json().catch(() => null);
-    if(!res.ok || !j || j.code !== 0) return false; /* 失败保留 dirty，下次进榜页再试 */
+    const r = await sgPost("/leaderboard/report", { name: lbName(), metrics: { power: m.power, tower: m.tower, stage: m.stage, arena: m.arena }, snapshot: lbSnapshot() });
+    if(!r.ok) return false; /* 失败保留 dirty，下次进榜页再试 */
     state.lb.dirty = false; state.lb.lastAt = Date.now(); state.lb.lastPower = m.power; state.lb.lastSeason = m.season;
     save();
     return true;
   }catch(e){ return false; }
 }
 async function lbFetch(board){
-  try{
-    const res = await fetch(SG_API + "/leaderboard/list", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ board }) });
-    const j = await res.json().catch(() => null);
-    if(!res.ok || !j || j.code !== 0 || !j.data) return false;
-    _lbCache[board] = { list: j.data.list || [], me: j.data.me || null, total: j.data.total || 0, season: j.data.season, ts: Date.now() };
-    return true;
-  }catch(e){ return false; }
+  const r = await sgPost("/leaderboard/list", { board: board });
+  if(!r.ok || !r.body) return false;
+  const b = r.body;
+  _lbCache[board] = { list: b.list || [], me: b.me || null, total: b.total || 0, season: b.season, ts: Date.now() };
+  return true;
 }
 function lbEsc(s){ return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;"); }
 function lbFmt(n){ return String(Math.round(n || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ","); }
@@ -3858,7 +3872,6 @@ function hulaoPickFoes(layer){
 function snapHashOf(s){ let h = 0; for(let i = 0; i < s.length; i++){ h = (h * 31 + s.charCodeAt(i)) | 0; } return h; }
 async function snapUpload(){
   try{
-    if(typeof fetch !== "function") return false;
     const snap = snapBuild(); if(!snap) return false;
     const js = JSON.stringify(snap);
     const h = snapHashOf(js);
@@ -3866,20 +3879,10 @@ async function snapUpload(){
     if(now - _snapUpAt < SNAP_UP_MIN_GAP_MS) return false;
     if(h === _snapUpHash && now - _snapUpAt < SNAP_UP_SAME_GAP_MS) return false;
     _snapUpAt = now;
-    const res = await fetch(SG_API + "/snapshot/put", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clientId: snapClientId(), snapshot: snap }) });
-    const j = await res.json().catch(() => null);
-    if(res.ok && j && j.code === 0){ _snapUpHash = h; return true; }
+    const r = await sgPost("/snapshot/put", { clientId: snapClientId(), snapshot: snap });
+    if(r.ok){ _snapUpHash = h; return true; }
     return false;
   }catch(e){ return false; }
-}
-function snapFetch(url, opts, ms){
-  if(typeof AbortController === "function" && ms){
-    const ctl = new AbortController();
-    const to = setTimeout(() => { try{ ctl.abort(); }catch(e){} }, ms);
-    const o = Object.assign({}, opts, { signal: ctl.signal });
-    return fetch(url, o).then(r => { clearTimeout(to); return r; }, e => { clearTimeout(to); throw e; });
-  }
-  return fetch(url, opts);
 }
 function snapFoeTargetLayer(){
   const w = hulaoWindow();
@@ -3898,9 +3901,8 @@ async function snapPrefetchFoe(){
     if(_snapFoeTryTarget === target && Date.now() - _snapFoeTryAt < 60000) return false;
     _snapFoeBusy = true; _snapFoeTryAt = Date.now(); _snapFoeTryTarget = target;
     try{
-      const res = await snapFetch(SG_API + "/snapshot/get", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clientId: snapClientId(), target }) }, 3000);
-      const j = res ? await res.json().catch(() => null) : null;
-      if(res && res.ok && j && j.code === 0 && j.data && j.data.snapshot) return snapCacheFoe(target, j.data.snapshot);
+      const r = await sgPost("/snapshot/get", { clientId: snapClientId(), target: target }, 3000);
+      if(r.ok && r.body && r.body.snapshot) return snapCacheFoe(target, r.body.snapshot);
       return false;
     }catch(e){ return false; }
     finally{ _snapFoeBusy = false; }
@@ -4078,8 +4080,8 @@ function showDrawn(d){
   document.querySelectorAll(".drawResults").forEach(el=>{ el.innerHTML = h; });
 }
 
-if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, starPriceOfItem:starPriceOfItem, itemPriceOf:itemPriceOf, pickBasicTarget:pickBasicTarget, tryActiveSkill:tryActiveSkill, toggleShowcaseCore:toggleShowcaseCore, showcaseNormalize:showcaseNormalize, showcaseTickValue:showcaseTickValue, showcaseCap:showcaseCap, recPower:recPower, STAGE_REC:STAGE_REC, recPowerHint:recPowerHint, enhProtectPrice:enhProtectPrice, pickBackTarget:pickBackTarget, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, ART, artCellOf, artDivHtml, skillIconHtml, fullCardHtml, refCardOf, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
-  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe, skillPoolRetireNormalize: skillPoolRetireNormalize, snapBuild: snapBuild, snapClamp: snapClamp, snapPrepareFoe: snapPrepareFoe, snapCacheFoe: snapCacheFoe, snapFoeState: snapFoeState, snapUpload: snapUpload, snapPrefetchFoe: snapPrefetchFoe, snapClientId: snapClientId, hulaoPickFoes: hulaoPickFoes }; }
+if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, starPriceOfItem:starPriceOfItem, itemPriceOf:itemPriceOf, pickBasicTarget:pickBasicTarget, tryActiveSkill:tryActiveSkill, toggleShowcaseCore:toggleShowcaseCore, showcaseNormalize:showcaseNormalize, showcaseTickValue:showcaseTickValue, showcaseCap:showcaseCap, recPower:recPower, STAGE_REC:STAGE_REC, recPowerHint:recPowerHint, enhProtectPrice:enhProtectPrice, pickBackTarget:pickBackTarget, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, ART, artCellOf, artDivHtml, skillIconHtml, fullCardHtml, refCardOf, sgPost, ACCT_MODE, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
+  getState:function(){ return state; }, setState:function(s){ state=s; }, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, ACCT_MODE:ACCT_MODE, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe, skillPoolRetireNormalize: skillPoolRetireNormalize, snapBuild: snapBuild, snapClamp: snapClamp, snapPrepareFoe: snapPrepareFoe, snapCacheFoe: snapCacheFoe, snapFoeState: snapFoeState, snapUpload: snapUpload, snapPrefetchFoe: snapPrefetchFoe, lbFetch: lbFetch, lbReport: lbReport, lbEsc: lbEsc, snapClientId: snapClientId, hulaoPickFoes: hulaoPickFoes }; }
 </script>
 </body>
 </html>
