@@ -1069,7 +1069,7 @@ if(!state.gz || typeof state.gz!=="object") state.gz={date:"", count:0}; if(stat
 const RES_FIELD = { yuanbao:"yuanbao", tickets:"tickets", merit:"merit", arenaPts:"arenaPts", souls:"souls", starcoin:"starcoin", wubi:"wubi"};
 function addRes(kind, n){ state[RES_FIELD[kind]] += n; if(state[RES_FIELD[kind]]<0) state[RES_FIELD[kind]]=0; save();}
 function spendRes(kind, n){ if(state[RES_FIELD[kind]] < n) return false; state[RES_FIELD[kind]] -= n; save(); return true;}
-/* 出处规则（知白守黑定版，v1.2）：性格卡只出自天命入驻卡池（每抽必带，调用方传 persMode:"always"）与开局选将（传 pers 指定，建档例外）；
+/* 出处规则（v1.2）：性格卡只出自天命入驻卡池（每抽必带，调用方传 persMode:"always"）与开局选将（传 pers 指定，建档例外）；
    挂机英雄池/招募券池/推关掉落等一律普通卡。天命卡是独立典藏武将条目（TIANMING_IDS），由卡池产卡前的 1% 覆盖判定产生，本函数不摇任何 trait。 */
 function addCard(genId, opts){
 opts = opts || {};
