@@ -201,6 +201,162 @@ html.artx .bp-art{display:none}
 .bp-settle-btns{display:flex;gap:10px;justify-content:center;margin-top:14px}
 .bp-log{position:absolute;left:0;right:0;bottom:0;max-height:46%;overflow:auto;background:rgba(12,9,5,.93);color:#d8cdb2;font-size:12px;line-height:1.65;padding:10px 12px;white-space:pre-wrap;z-index:7;border-top:1px solid #4a3a20}
 
+/* ============ v4 第 27 批 · 玄铁重甲视觉换装（纯呈现层，对标 ui-dirs/dirB-ai 样张） ============ */
+:root{--paper:#14161a;--paper2:#1e2127;--ink:#e8e4da;--red:#c03a2e;--red2:#e0685a;--line:#3a3f47;--card:#1e2127;--mut:#9a958a;--ok:#8fc46a;--gold:#c9a86a}
+body{background-color:#14161a;color:#e8e4da;background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.022) 0 1px,transparent 1px 14px),repeating-linear-gradient(-45deg,rgba(255,255,255,.022) 0 1px,transparent 1px 14px)}
+header{background:#101216;border-bottom:2px solid #000;box-shadow:0 1px 0 #3a3f47}
+header h1{color:#e8e4da}
+header h1 .seal{background:linear-gradient(#c03a2e,#8e241c)}
+.resbar{color:#9a958a}
+.resbar b{color:#e8e4da}
+.respill{background:linear-gradient(#23262d,#1a1d22);border:1px solid #0c0d10;border-top:3px solid #9a958a;border-radius:5px;box-shadow:inset 0 1px 0 #3a3f47;padding:3px 9px 3px 5px;color:#9a958a}
+.respill .ri{background:#2c3037;color:#e8e4da;border-radius:3px}
+.respill:nth-child(1){border-top-color:#e8b64c}.respill:nth-child(2){border-top-color:#7fa8d9}.respill:nth-child(3){border-top-color:#6fc7a5}.respill:nth-child(4){border-top-color:#e07b4c}.respill:nth-child(5){border-top-color:#8fa3bf}.respill:nth-child(6){border-top-color:#c9a86a}.respill:nth-child(7){border-top-color:#c03a2e}.respill:nth-child(8){border-top-color:#9a958a}
+#resYuanbao{color:#e8b64c}#resTickets{color:#7fa8d9}#resStarcoin{color:#6fc7a5}#resMerit{color:#e07b4c}#resWubi{color:#8fa3bf}#resRank{color:#c9a86a}#resTmTickets{color:#e0685a}#resCards{color:#e8e4da}
+nav.tabs{background:#0e1013;border-top:1px solid #3a3f47}
+nav.tabs button{background:transparent;color:#9a958a;border-top:3px solid transparent}
+nav.tabs button.on{background:#1a1d22;color:#ff7a52;border-top:3px solid #c03a2e}
+.subtabs button{background:linear-gradient(#23262d,#1a1d22);color:#e8e4da;border:1px solid #0c0d10;box-shadow:inset 0 1px 0 #3a3f47;border-radius:5px}
+.subtabs button.on{background:linear-gradient(#c03a2e,#8e241c);color:#fff;border-color:#5f130c}
+h2.sec{background:linear-gradient(90deg,#262a31,#1b1e23);border-left:4px solid #c03a2e;color:#fff;font-weight:800;letter-spacing:1px;font-size:15px;padding:6px 16px 6px 10px;clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.card{position:relative;background:linear-gradient(#202329,#1b1e23);border:1px solid #0c0d10;box-shadow:inset 0 1px 0 #3a3f47,0 2px 6px rgba(0,0,0,.35);border-radius:6px}
+.card::before{content:"";position:absolute;inset:3px;pointer-events:none;background-image:radial-gradient(circle,#565d66 1.6px,#14161a 2.8px,transparent 3.2px),radial-gradient(circle,#565d66 1.6px,#14161a 2.8px,transparent 3.2px),radial-gradient(circle,#565d66 1.6px,#14161a 2.8px,transparent 3.2px),radial-gradient(circle,#565d66 1.6px,#14161a 2.8px,transparent 3.2px);background-size:11px 11px;background-position:0 0,100% 0,0 100%,100% 100%;background-repeat:no-repeat;opacity:.55}
+.btn{background:linear-gradient(#c03a2e,#8e241c);color:#fff;border:1px solid #5f130c;box-shadow:inset 0 1px 0 rgba(255,255,255,.25);border-radius:5px;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%);font-weight:700}
+.btn.sub{background:linear-gradient(#262a31,#1b1e23);color:#e8e4da;border:1px solid #3a3f47;box-shadow:inset 0 1px 0 #3a3f47;clip-path:none;font-weight:400}
+.btn.dark{background:linear-gradient(#2c3037,#17191d);color:#e8e4da;border:1px solid #000}
+.btn:disabled{background:#2a2d33;color:#6d6a61;border-color:#101216;clip-path:none}
+.tag{background:#23262d;border-color:#3a3f47;color:#9a958a}
+.tag.hot{border-color:#c03a2e;color:#ff9a86}
+.avatar{background:#23262d;border-color:#4a5058;color:#e8e4da}
+select,input{background:#121317;color:#e8e4da;border-color:#3a3f47}
+.log{background:#0e1013;color:#d8d2c2;border:1px solid #2c3037}
+.bar{background:#0e1013}
+.bar i{background:linear-gradient(90deg,#c03a2e,#e0685a)}
+.kv{border-bottom-color:#2c3037}
+.win{color:#8fc46a}.lose{color:#e0685a}
+.brk{border-color:#3a3f47;background:#1b1e23}
+.tmcard{background:#1e2127;border-color:#c9a86a}
+.gcard{background:#17191d;box-shadow:0 4px 12px rgba(0,0,0,.5)}
+.gstats{background:#1b1e23;color:#cbbfa4}
+.gstats .gpw{color:#ff8a70}
+.signCell{background:#1b1e23;border-color:#2c3037;color:#9a958a;position:relative;padding-bottom:15px}
+.signCell b{color:#e8e4da}
+.signCell.today{border-color:#c03a2e;color:#e8e4da}
+.signCell.done{background:#14161a;color:#8a8578}
+.signCell>div:last-child{position:absolute;right:4px;bottom:2px;font-size:10px;color:#c9a86a}
+.slotbox,.showSlot{background:#1b1e23;border-color:#3a3f47;color:#e8e4da}
+.slotbox.full,.showSlot.full{background:#202329;border-color:#565d66}
+.slotbox.pick{border-color:#c03a2e}
+.slotbox .pos{color:#ff8a70}
+#enhSticky{background:#1e2127;border-color:#c9a86a;color:#e8e4da}
+.dexpager{background:#1e2127;border-color:#3a3f47}
+#sgNoticeBox{background:#1e2127;border-color:#3a3f47;color:#e8e4da}
+.sgToast{border-color:#565d66}
+#tab-stage{background-image:linear-gradient(rgba(16,17,20,.88),rgba(16,17,20,.94)),url("assets/battle.webp")}
+.heroKv{border-color:#3a3f47}
+.lthumb{border-color:#3a3f47}
+details.rules>summary{color:#ff8a70}
+.hubRow{border-bottom-color:#2c3037}
+.bp-top{background:#1e2127;border-bottom-color:#3a3f47}
+.bp-settle{background:rgba(24,26,31,.96);border-color:#565d66}
+.bp-enemy .bp-fig{filter:brightness(1.15)}
+.bp-enemy .bp-unit.dead .bp-fig{filter:grayscale(1) brightness(1.15)}
+/* ===== 第 27b 批：小图标整合（纯呈现；图标走 assets/icons/ 相对路径） ===== */
+body{padding-bottom:96px}
+.respill .ric{width:24px;height:24px;flex:0 0 24px;object-fit:contain}
+.ricS{width:15px;height:15px;vertical-align:-2px;margin-right:3px;object-fit:contain}
+.signCell .ricS{width:14px;height:14px}
+.kvR{display:inline-flex;align-items:center;gap:2px}
+.kvR .ricS{margin-right:0}
+nav.tabs button .tabIc{width:22px;height:22px;display:block;margin:0 auto 2px;object-fit:contain}
+/* ============ v4 第 28 批 · 玄铁重甲真纹理（死命令对标 ui-dirs/dirB-ai 样张） ============ */
+body{background-color:#0b0b0d;background-image:linear-gradient(rgba(8,8,10,.58),rgba(8,8,10,.58)),url("assets/skin/tex-iron-bg.webp");background-size:auto,220px 220px;background-attachment:scroll;color:#e8e4da}
+header{background:linear-gradient(rgba(9,9,11,.66),rgba(9,9,11,.66)),url("assets/skin/tex-iron-bg.webp");background-size:auto,220px 220px;border-bottom:2px solid #000;box-shadow:0 1px 0 #3a3f47,0 4px 14px rgba(0,0,0,.5);padding:10px 12px 9px}
+.hdrTop{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.hdrId{display:flex;gap:10px;align-items:center;min-width:0}
+header .seal{background:url("assets/skin/tex-lacquer.webp") center top/cover no-repeat,#a02718;color:#fff;font-size:19px;font-weight:900;letter-spacing:2px;padding:7px 5px;border:1px solid #4d0f08;border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(0,0,0,.5);writing-mode:vertical-rl;line-height:1.15;text-shadow:0 1px 2px rgba(40,0,0,.8)}
+.hdrTtx h1{font-size:23px;letter-spacing:3px;color:#ece5d3;text-shadow:0 2px 4px #000;line-height:1.2}
+.hdrSub{font-size:11.5px;color:#9a958a;letter-spacing:2px;margin-top:2px}
+.hdrRank{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#22252b;border:1px solid #060607;border-left:5px solid #c03a2e;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 2px 6px rgba(0,0,0,.4);padding:6px 12px 7px 10px;flex:0 0 auto}
+.hdrRankName{color:#e8b64c;font-size:16.5px;font-weight:800;letter-spacing:1px;line-height:1.25}
+.hdrRankSub{color:#b9b2a2;font-size:11.5px;margin-top:1px}
+.hdrRankSub b{color:#e8e4da}
+.resbar{display:flex;gap:6px;flex-wrap:nowrap;margin-top:9px}
+.resbar2{margin-top:6px}
+.respill{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#22252b;border:1px solid #060607;border-top:3px solid #9a958a;border-radius:4px;box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 2px 5px rgba(0,0,0,.4);padding:5px 7px;color:#9a958a;position:relative}
+.respill::before{content:"";position:absolute;inset:2px;pointer-events:none;background-image:radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px),radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px),radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px),radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px);background-size:10px 10px;background-position:0 0,100% 0,0 100%,100% 100%;background-repeat:no-repeat}
+.resbar2 .respill{flex:0 0 calc((100% - 24px)/5)}
+.respill.rp-yb{border-top-color:#e8b64c}.respill.rp-tk{border-top-color:#7fa8d9}.respill.rp-sc{border-top-color:#6fc7a5}.respill.rp-mr{border-top-color:#e07b4c}.respill.rp-wb{border-top-color:#8fa3bf}.respill.rp-tm{border-top-color:#e0685a}.respill.rp-cd{border-top-color:#c9a86a}
+.respill .rpTx{display:flex;flex-direction:column;min-width:0}
+.respill .rpName{font-size:10.5px;color:#a49d8d;line-height:1.15;white-space:nowrap}
+.respill b{font-size:16.5px;line-height:1.2;white-space:nowrap}
+.respill .ric{width:24px;height:24px;flex:0 0 24px}
+.respill .ri{width:24px;height:24px;flex:0 0 24px;font-size:12px;border-radius:4px}
+.drawRow{display:flex;align-items:center;gap:10px;margin-top:9px}
+.drawRow .btn{font-size:15.5px;padding:8px 18px;flex:0 0 auto}
+.drawNote{color:#b9b2a2;font-size:12.5px;line-height:1.45}
+.drawNote b{color:#e8e4da}
+h2.sec{background-image:linear-gradient(90deg,#c03a2e 0,#8e241c 6px,transparent 7px),url("assets/skin/tex-steel.webp");background-size:auto,cover;background-position:0 0,left center;background-color:#22252b;border:1px solid #060607;border-left:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.13),0 2px 5px rgba(0,0,0,.4);color:#fff;font-weight:800;letter-spacing:1px;font-size:15.5px;padding:7px 16px 7px 14px;clip-path:polygon(0 0,100% 0,calc(100% - 12px) 100%,0 100%)}
+.secNote{color:#c9a86a;font-size:12px;font-weight:400;letter-spacing:0;margin-left:9px}
+.card{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#1e2127;border:1px solid #060607;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 -14px 24px rgba(0,0,0,.28),0 3px 8px rgba(0,0,0,.45);border-radius:6px}
+.card::before{content:"";position:absolute;inset:3px;pointer-events:none;background-image:radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px),radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px),radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px),radial-gradient(circle,#a7b0ba 1.5px,#0a0a0c 2.7px,transparent 3.2px);background-size:10px 10px;background-position:0 0,100% 0,0 100%,100% 100%;background-repeat:no-repeat;opacity:1}
+.btn{background:url("assets/skin/tex-lacquer.webp") center top/cover no-repeat,#a02718;color:#fff;border:1px solid #4d0f08;box-shadow:inset 0 1px 0 rgba(255,255,255,.35),inset 0 -8px 14px rgba(60,5,0,.45),0 2px 6px rgba(0,0,0,.45);text-shadow:0 1px 2px rgba(40,0,0,.8);border-radius:5px;clip-path:polygon(0 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%);font-weight:700}
+.btn.sub{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#22252b;color:#e8e4da;border:1px solid #060607;box-shadow:inset 0 1px 0 rgba(255,255,255,.14);text-shadow:none;clip-path:none;font-weight:400}
+.btn.dark{background:linear-gradient(rgba(0,0,0,.38),rgba(0,0,0,.38)),url("assets/skin/tex-steel.webp") center/cover no-repeat,#17191d;color:#e8e4da;border:1px solid #000;text-shadow:none}
+.btn:disabled{background:#26282e;color:#6d6a61;border-color:#101216;clip-path:none;box-shadow:none;text-shadow:none}
+.subtabs button{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#22252b;color:#e8e4da;border:1px solid #060607;box-shadow:inset 0 1px 0 rgba(255,255,255,.12);border-radius:5px}
+.subtabs button.on{background:url("assets/skin/tex-lacquer.webp") center top/cover no-repeat,#a02718;color:#fff;border-color:#4d0f08;text-shadow:0 1px 2px rgba(40,0,0,.7)}
+nav.tabs{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#141518;border-top:1px solid #060607;box-shadow:0 -2px 10px rgba(0,0,0,.5)}
+nav.tabs button{background:transparent;color:#9a958a;border-top:none;padding:7px 0 9px}
+nav.tabs button.on{background:url("assets/skin/tex-lacquer.webp") center top/cover no-repeat,#a02718;color:#fff;border-top:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.3);text-shadow:0 1px 2px rgba(40,0,0,.7);font-weight:700}
+.signCell{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#1b1e23;border:1px solid #060607;box-shadow:inset 0 1px 0 rgba(255,255,255,.1);color:#9a958a}
+.signCell b{color:#e8e4da;font-size:12px}
+.signCell.today{border:1.5px solid #c03a2e;color:#e8e4da;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),inset 0 0 12px rgba(192,58,46,.35),0 0 0 1px rgba(192,58,46,.3)}
+.signCell.done{background:#121316;color:#8a8578}
+#questCard>b:first-child{display:none}
+#claimHubCard>b:first-child{display:none}
+.mainPanel{position:relative;overflow:hidden;display:flex;gap:12px;padding:12px}
+.mainPanel .mpBg{position:absolute;top:0;right:0;bottom:0;width:64%;background:url("assets/battle.webp") right center/cover no-repeat;opacity:.34;-webkit-mask-image:linear-gradient(90deg,transparent,#000 55%);mask-image:linear-gradient(90deg,transparent,#000 55%);pointer-events:none}
+.mpArt{position:relative;flex:0 0 118px;width:118px;aspect-ratio:512/744;border:1.5px solid #0a0a0c;outline:1px solid #6d5426;outline-offset:2px;box-shadow:0 4px 12px rgba(0,0,0,.55);background:#14100a;overflow:hidden}
+.mpPh{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:"KaiTi","STKaiti",serif;font-size:24px;color:#e6cf8f;letter-spacing:4px}
+.mpArt .grar{position:absolute;top:5px;right:5px;z-index:2}
+.mpPlate{position:absolute;left:0;right:0;bottom:0;z-index:2;background:linear-gradient(transparent,rgba(10,8,5,.94) 45%);color:#ecd28a;font-family:"KaiTi","STKaiti",serif;font-size:16.5px;letter-spacing:3px;text-align:center;padding:13px 0 4px}
+.mpInfo{position:relative;flex:1;min-width:0;display:flex;flex-direction:column}
+.mpChap{color:#c9a86a;font-size:12.5px;letter-spacing:1px}
+.mpTitle{font-size:23px;font-weight:900;letter-spacing:1px;color:#f2ead2;margin:2px 0 4px;text-shadow:0 2px 4px #000}
+.mpDesc{font-size:12.5px;color:#c9c2b0;line-height:1.55}
+.mpSegs{display:flex;gap:4px;margin:9px 0}
+.mpSegs i{flex:1;height:9px;background:#101114;border:1px solid #000;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
+.mpSegs i.on{background:linear-gradient(#d84a38,#9c2418);box-shadow:inset 0 1px 0 rgba(255,255,255,.3)}
+.mpRow{display:flex;align-items:center;gap:12px;margin-top:auto;flex-wrap:wrap}
+.mpGo{font-size:16.5px;padding:9px 26px}
+.mpPower{color:#d8d2c2;font-size:13px;display:inline-flex;align-items:center;gap:3px}
+.mpPower b{color:#fff}
+.showSlot{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#1b1e23;border:1.5px solid #3a3f47;border-radius:8px;padding:6px 4px}
+.showSlot.full{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#202329;border-color:#565d66}
+.showArt{position:relative;width:100%;aspect-ratio:512/744;overflow:hidden;border:1px solid #0a0a0c;background:#14100a}
+.showArt .gart{position:absolute;inset:0}
+.showPh{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#e6cf8f;font-family:"KaiTi","STKaiti",serif;font-size:15px;letter-spacing:2px;text-align:center}
+.showArt.empty{display:flex;align-items:center;justify-content:center}
+.showArt .emp{color:#9a958a;font-size:22px}
+.showNm{margin-top:5px;font-weight:700;font-size:13px;text-align:center;color:#e8e4da}
+.showRate{color:#c9a86a;font-size:11.5px;text-align:center;margin:1px 0 5px}
+.showSlot .btn{display:block;margin:0 auto}
+.slotbox,.showSlot{color:#e8e4da}
+#sgNoticeBox{background:linear-gradient(rgba(16,17,20,.93),rgba(16,17,20,.93)),url("assets/skin/tex-steel.webp") center/cover no-repeat;border-color:#3a3f47}
+.bp-settle{background:linear-gradient(rgba(16,17,20,.93),rgba(16,17,20,.93)),url("assets/skin/tex-steel.webp") center/cover no-repeat;border-color:#565d66}
+.dexpager{background:linear-gradient(rgba(16,17,20,.9),rgba(16,17,20,.9)),url("assets/skin/tex-steel.webp") center/cover no-repeat;border-color:#3a3f47}
+#enhSticky{background:linear-gradient(rgba(16,17,20,.9),rgba(16,17,20,.9)),url("assets/skin/tex-steel.webp") center/cover no-repeat;border-color:#c9a86a}
+.tmcard{background:url("assets/skin/tex-steel.webp") center/cover no-repeat,#1e2127;border-color:#c9a86a}
+.brk{border-color:#3a3f47;background:linear-gradient(rgba(16,17,20,.88),rgba(16,17,20,.88)),url("assets/skin/tex-steel.webp") center/cover no-repeat}
+/* ============ v4 第 28 批 · 补丁：资源格紧凑（图标 21px/数字 15px，防窄屏溢出） ============ */
+.respill{gap:5px;padding:5px 6px}
+.respill .ric{width:21px;height:21px;flex:0 0 21px}
+.respill b{font-size:15px;letter-spacing:-.3px}
+/* ============ v4 第 28 批 · 补丁2：面板钢面暗罩（防亮区发白） ============ */
+.card{background:linear-gradient(rgba(12,13,16,.52),rgba(12,13,16,.52)),url("assets/skin/tex-steel.webp") center/cover no-repeat,#1e2127}
+.showSlot{background:linear-gradient(rgba(12,13,16,.45),rgba(12,13,16,.45)),url("assets/skin/tex-steel.webp") center/cover no-repeat,#1b1e23}
+.showSlot.full{background:linear-gradient(rgba(12,13,16,.45),rgba(12,13,16,.45)),url("assets/skin/tex-steel.webp") center/cover no-repeat,#202329}
 </style>
 </head>
 <body>
@@ -213,37 +369,59 @@ html.artx .bp-art{display:none}
 </div>
 <div id="app" style="display:none">
 <header>
-  <h1><span class="seal">三国</span>逐鹿定鼎</h1>
-  <div class="resbar">
-    <span class="respill"><i class="ri">元</i>元宝 <b id="resYuanbao">0</b></span>
-    <span class="respill"><i class="ri">令</i>招募令 <b id="resTickets">0</b></span>
-    <span class="respill"><i class="ri">星</i>将星币 <b id="resStarcoin">0</b></span>
-    <span class="respill"><i class="ri">望</i>威望 <b id="resMerit">0</b></span>
-    <span class="respill"><i class="ri">武</i>演武币 <b id="resWubi">0</b></span>
-    <span class="respill"><i class="ri">职</i>官职 <b id="resRank">白身</b></span>
-    <span class="respill"><i class="ri">券</i>限时券 <b id="resTmTickets">0</b></span>
-    <span class="respill"><i class="ri">卡</i>卡 <b id="resCards">0</b></span>
-    <button class="btn sm gdraw" id="btnGoDraw">去抽卡</button>
+  <div class="hdrTop">
+    <div class="hdrId"><span class="seal">逐鹿</span><div class="hdrTtx"><h1>逐鹿定鼎</h1><div class="hdrSub">三国挂机 · 推关养成</div></div></div>
+    <div class="hdrRank"><div class="hdrRankName" id="hdrRankName">白身</div><div class="hdrRankSub">官职 · 威望 <b id="hdrMerit">0</b></div></div>
   </div>
+  <div class="resbar">
+    <span class="respill rp-yb"><img class="ric" src="assets/icons/icon-yuanbao.png" alt=""><span class="rpTx"><span class="rpName">元宝</span><b id="resYuanbao">0</b></span></span>
+    <span class="respill rp-tk"><img class="ric" src="assets/icons/icon-zhaomu.png" alt=""><span class="rpTx"><span class="rpName">招募令</span><b id="resTickets">0</b></span></span>
+    <span class="respill rp-sc"><img class="ric" src="assets/icons/icon-xingbi.png" alt=""><span class="rpTx"><span class="rpName">将星币</span><b id="resStarcoin">0</b></span></span>
+    <span class="respill rp-mr"><img class="ric" src="assets/icons/icon-weiwang.png" alt=""><span class="rpTx"><span class="rpName">威望</span><b id="resMerit">0</b></span></span>
+    <span class="respill rp-wb"><img class="ric" src="assets/icons/icon-yanwu.png" alt=""><span class="rpTx"><span class="rpName">演武币</span><b id="resWubi">0</b></span></span>
+  </div>
+  <div class="resbar resbar2">
+    <span class="respill rp-tm"><i class="ri">券</i><span class="rpTx"><span class="rpName">限时券</span><b id="resTmTickets">0</b></span></span>
+    <span class="respill rp-cd"><i class="ri">卡</i><span class="rpTx"><span class="rpName">卡</span><b id="resCards">0</b></span></span>
+  </div>
+  <div class="drawRow"><button class="btn gdraw" id="btnGoDraw">去抽卡</button><span class="drawNote">金台拜将十连 1,800 元宝 · 招贤纳士余 <b id="drawTk">0</b> 令</span></div>
 </header>
 <main>
 <section class="page" id="tab-home">
-  <h2 class="sec">主页</h2>
+  <h2 class="sec" id="claimHubHead" style="display:none">待领取<span class="secNote" id="claimHubCnt"></span></h2>
+  <div class="card" id="claimHubCard" style="display:none"></div>
+  <h2 class="sec">每日签到<span class="secNote" id="homeSignNote"></span></h2>
+  <div class="card" id="homeSignCard">
+    <div class="signGrid" id="homeSignGrid"></div>
+    <div style="margin-top:6px"><button class="btn sm" id="btnHomeSign">签到领奖</button> <span class="note" id="homeSignState"></span></div>
+  </div>
+  <h2 class="sec">主线推关<span class="secNote" id="mainPanelNote"></span></h2>
+  <div class="card mainPanel" id="mainPanel">
+    <div class="mpBg"></div>
+    <div class="mpArt" id="mpArt"></div>
+    <div class="mpInfo">
+      <div class="mpChap" id="mpChap">—</div>
+      <div class="mpTitle" id="mpTitle">—</div>
+      <div class="mpDesc" id="mpDesc">—</div>
+      <div class="mpSegs" id="mpSegs"></div>
+      <div class="mpRow"><button class="btn mpGo" id="btnMpGo">出战</button><span class="mpPower"><img class="ricS" src="assets/icons/icon-zhanli.png" alt="">战力 <b id="mpPower">0</b> · 通天塔 <b id="mpTower">0</b> 层</span></div>
+    </div>
+  </div>
+  <h2 class="sec">今日任务</h2>
+  <div class="card" id="questCard"></div>
+  <div class="card" id="v7Notice" style="display:none"></div>
+  <div class="card" id="sysNotice" style="display:none"></div>
+  <div class="card" id="opsTodayCard" style="display:none"></div>
+  <div class="card" id="newsCard" style="display:none"></div>
+  <h2 class="sec" style="cursor:pointer" onclick="toggleRank()">官职（威望来自虎牢争锋）<span class="note" id="rankToggleHint"> · 已收起，点开查看</span></h2>
+  <div class="card" id="rankBox" style="display:none"></div>
   <div class="card">
     <div class="kv"><span>初始武将</span><b id="homeStarter">—</b></div>
     <div class="kv"><span>已推关</span><b id="homeStage">0 / 100 关</b></div>
     <div class="kv"><span>通天塔</span><b id="homeTower">第 0 层</b></div>
-    <div class="kv"><span>上阵战力</span><b id="homePower">0</b></div>
+    <div class="kv"><span>上阵战力</span><span class="kvR"><img class="ricS" src="assets/icons/icon-zhanli.png" alt=""><b id="homePower">0</b></span></div>
     <details style="margin-top:8px"><summary style="cursor:pointer;color:var(--red2);font-weight:700;font-size:13px">玩法说明（点开）</summary><p class="note" style="margin-top:4px">挂机/抽卡拿卡 → 组 5 人上阵 → 全自动推关 → 升星强化升官 → 饭点爬塔。纯系统挂机，无剧情线。各池的产出节拍都在卡池页明示。</p></details>
   </div>
-  <div class="card" id="v7Notice" style="display:none"></div>
-  <div class="card" id="sysNotice" style="display:none"></div>
-  <div class="card" id="newsCard" style="display:none"></div>
-  <div class="card" id="opsTodayCard" style="display:none"></div>
-  <div class="card" id="claimHubCard" style="display:none"></div>
-  <div class="card" id="questCard"></div>
-  <h2 class="sec" style="cursor:pointer" onclick="toggleRank()">官职（威望来自虎牢争锋）<span class="note" id="rankToggleHint"> · 已收起，点开查看</span></h2>
-  <div class="card" id="rankBox" style="display:none"></div>
 </section>
 <section class="page" id="tab-pool">
   <div class="subtabs" data-subtabs="pool"><button data-sub="idle" class="on" onclick="setSub('pool','idle')">挂机明牌<span class="sc">自动产卡</span></button><button data-sub="mat" onclick="setSub('pool','mat')">屯营募勇<span class="sc">元宝开启</span></button><button data-sub="norm" onclick="setSub('pool','norm')">招贤纳士<span class="sc">招募令</span></button><button data-sub="yb" onclick="setSub('pool','yb')">金台拜将<span class="sc">元宝</span></button><button data-sub="tm" onclick="setSub('pool','tm')">天命所归<span class="sc">元宝／限时券</span></button><button data-sub="soul" onclick="setSub('pool','soul')">将魂阁<span class="sc">将魂／将星币</span></button><button data-sub="watch" onclick="setSub('pool','watch')">观战悟法<span class="sc">看视频得令</span></button><button data-sub="rates" onclick="setSub('pool','rates')">概率公示<span class="sc">出率与保底</span></button></div>
@@ -510,11 +688,11 @@ html.artx .bp-art{display:none}
 </section>
 </main>
 <nav class="tabs">
-  <button data-tab="home" class="on">主页</button>
+  <button data-tab="home" class="on"><img class="tabIc" src="assets/icons/icon-zhanli.png" alt="">主页</button>
   <button data-tab="pool">卡池</button>
-  <button data-tab="cards">武将</button>
-  <button data-tab="stage">副本</button>
-  <button data-tab="dex">图鉴</button>
+  <button data-tab="cards"><img class="tabIc" src="assets/icons/icon-zhaomu.png" alt="">武将</button>
+  <button data-tab="stage"><img class="tabIc" src="assets/icons/icon-fuben.png" alt="">副本</button>
+  <button data-tab="dex"><img class="tabIc" src="assets/icons/icon-tujian.png" alt="">图鉴</button>
   <button data-tab="save">存档</button>
   <button data-tab="more">更多</button>
 </nav>
@@ -629,7 +807,7 @@ const CFG = {
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b26", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b27", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1354,9 +1532,10 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（战斗演出上线＋存档同步加固）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（界面换装「玄铁重甲」＋战斗演出＋存档同步加固）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 战斗演出上线：逐鹿主线出战进入演出页——武将站位对决、出手与怒技全程有画面（UR/SSR 怒技带全屏特写），血条怒气实时变化；1 倍/3 倍速可切，已通关关卡可看视频跳过，文字战报在演出页随时可查；不爱看演出可在「更多 → 设置」切极速模式。</p>"
+       + "<p class='note'>· 界面换装·玄铁重甲：全站换上深铁钢板新装——军牌分节、漆面红钮、资源格按资源着色、签到印记归位，排版一并收拾利落（纯界面，不影响玩法与存档）。</p>"
        + "<p class='note'>· 存档同步加固：虎扑版云存档改为切到后台立即同步、同步失败自动重试并提醒，换设备接着打更稳、不容易掉档；开局元宝提到 2000，够先来一次金台十连。</p>"
        + "<p class='note'>· 抽卡直达：顶栏与主页任务行都有「去抽卡」，卡池打开直接落到招贤纳士，各页签下都标了花什么货币。</p>"
        + "<p class='note'>· 挂机明牌加进度条：下一张卡攒到哪、还剩多久、未开启怎么开，一页看清（产出自动进卡册，不用领取）。</p>"
@@ -3077,7 +3256,9 @@ function renderRes(){
   $("resStarcoin").textContent = state.starcoin||0;
   $("resMerit").textContent = state.merit;
   $("resWubi").textContent = state.wubi||0;
-  $("resRank").textContent = (OFFICES_V4[state.rankIdx||0]||OFFICES_V4[0]).name;
+  const _hr28 = $("hdrRankName"); if(_hr28) _hr28.textContent = (OFFICES_V4[state.rankIdx||0]||OFFICES_V4[0]).name; /* 第 28 批：官职移入页眉钢板牌（原 resRank 资源格已撤） */
+  const _hm28 = $("hdrMerit"); if(_hm28) _hm28.textContent = state.merit;
+  const _dt28 = $("drawTk"); if(_dt28) _dt28.textContent = state.tickets;
   const _tt = $("resTmTickets"); if(_tt) _tt.textContent = state.tmTickets||0; /* 第 24 批：限时券入资源条（到期口径见天命池页）；官职加成移出顶栏，官职卡/武将页阵型信息内同源明示 */
   $("resCards").textContent = state.cards.length;
 }
@@ -3765,6 +3946,20 @@ window.doItemDec = function(uid){ const r = itemDecompose(uid); showToast(r.msg)
 window.doMatPack = function(rar){ const r = buyMatPack(rar); showToast(r.msg); renderAll(); };
 window.doGzExtra = function(){ const r = drawGuanzhanExtra(); const m = $("gzMsg"); if(m) m.textContent = r.msg; renderAll(); };
 
+/* 第 27b 批：小图标内联助手（纯呈现）——把文案中的 元宝/招募令/将星币 替换为「图标＋原词」，
+   img 的 alt 为空、文本走 span 承载（与全站 DOM 构造口径一致）、textContent 与原文逐字一致，不改任何文案口径 */
+const RIC_MAP27B = [["元宝","icon-yuanbao.png"],["招募令","icon-zhaomu.png"],["将星币","icon-xingbi.png"]];
+function ricImg27b(file){ const im = document.createElement("img"); im.className = "ricS"; im.src = "assets/icons/"+file; im.alt = ""; return im; }
+function ricText27b(el, s){ if(!s) return; const sp = document.createElement("span"); sp.textContent = s; el.appendChild(sp); }
+function setIconText27b(el, text){ el.textContent = ""; let rest = String(text);
+  while(rest){ let hit = null, at = -1;
+    RIC_MAP27B.forEach(function(p){ const i = rest.indexOf(p[0]); if(i >= 0 && (at < 0 || i < at)){ at = i; hit = p; } });
+    if(!hit){ ricText27b(el, rest); break; }
+    if(at > 0) ricText27b(el, rest.slice(0, at));
+    el.appendChild(ricImg27b(hit[1]));
+    ricText27b(el, hit[0]);
+    rest = rest.slice(at + hit[0].length); } }
+
 /* 第 24 批 A4：主页「可领取」汇总卡——签到/午间/晚间/橱窗/累计登录/任务可领一处汇总，领取复用既有按钮与逻辑 */
 function claimHubItems(){
   const items = [];
@@ -3787,13 +3982,60 @@ function renderClaimHub(){
   let items = [];
   try{ items = claimHubItems(); }catch(e){ items = []; }
   el.textContent = "";
-  if(!items.length){ el.style.display = "none"; return; }
+  const _chHead28 = $("claimHubHead"); /* 第 28 批：待领取军牌头与卡同显隐、计数同步 */
+  if(!items.length){ el.style.display = "none"; if(_chHead28) _chHead28.style.display = "none"; return; }
   el.style.display = "block";
+  if(_chHead28){ _chHead28.style.display = ""; const _cc28 = $("claimHubCnt"); if(_cc28) _cc28.textContent = items.length + " 项"; }
   const h = document.createElement("b"); h.textContent = "可领取（"+items.length+"）"; el.appendChild(h);
   items.forEach(function(it){ const row = document.createElement("div"); row.className = "hubRow";
-    const s = document.createElement("span"); s.textContent = it.label; row.appendChild(s);
+    const s = document.createElement("span"); setIconText27b(s, it.label); row.appendChild(s);
     const b = document.createElement("button"); b.className = "btn sm"; b.textContent = it.btn; b.onclick = it.fn; row.appendChild(b);
     el.appendChild(row); });
+}
+/* ============ v4 第 28 批 · 主页签到卡＋主线大面板（呈现层；数据走现行单一事实源，签到复用 doSign/SIGN_TABLE） ============ */
+function renderHomeSign28(){
+  const grid = $("homeSignGrid"); if(!grid) return;
+  const sg = state.sign || {last:"", streak:0}; const signedToday = sg.last === todayStr(); const cur = signedToday? ((sg.streak-1)%7) : ((sg.last === yesterStr()? sg.streak : 0)%7);
+  grid.textContent = "";
+  SIGN_TABLE.forEach((x,i)=>{ const isDone = i < cur || (i===cur && signedToday); const cell = document.createElement("div"); cell.className = "signCell" + (isDone? " done" : (i===cur? " today" : ""));
+    const cd2 = document.createElement("b"); setIconText27b(cd2, x.txt); cell.appendChild(cd2);
+    const cd1 = document.createElement("div"); cd1.textContent = "第"+(i+1)+"天"; cell.appendChild(cd1);
+    const cd3 = document.createElement("div"); cd3.textContent = i===cur? (signedToday? "已领" : "今日") : (isDone? "✓" : ""); cell.appendChild(cd3);
+    grid.appendChild(cell); });
+  const note = $("homeSignNote"); if(note) note.textContent = signedToday? "今日已签" : "今日待签";
+  const st = $("homeSignState"); if(st) st.textContent = "7 日循环 · 连续 "+(sg.streak||0)+" 天"+(signedToday? " · 今日已签到" : " · 今日未签到");
+  const btn = $("btnHomeSign"); if(btn){ btn.disabled = signedToday; btn.textContent = signedToday? "今日已签到" : "签到领奖"; btn.onclick = function(){ const r = doSign(); showToast(r.msg); renderAll(); }; }
+}
+function guardOfStage28(idx){
+  const def = STAGES_V4[idx-1]; if(!def) return null;
+  const order = {UR:4, SSR:3, SR:2, R:1}; let best = null;
+  def.team.forEach(id=>{ const g = GEN_BY_ID[id]; if(g && (!best || (order[g.rar]||0) > (order[best.rar]||0))) best = g; });
+  return best;
+}
+function renderMainPanel28(){
+  const art = $("mpArt"); if(!art) return;
+  const cleared = state.stageCleared||0;
+  const cur = Math.min(100, cleared+1);
+  const def = STAGES_V4[cur-1]; if(!def) return;
+  const chI = Math.floor((cur-1)/10), ch = CHAPTERS_V4[chI], sInCh = (cur-1)%10+1;
+  const g = guardOfStage28(cur);
+  art.innerHTML = (g? "<div class='mpPh'>"+g.name+"</div>" + artDivHtml(g.id) : "");
+  $("mpChap").textContent = "第 "+(chI+1)+" 章 · "+ch.name;
+  $("mpTitle").textContent = cleared>=100? "主线已通关" : "第 "+cur+" 关"+(sInCh===5? " · 小 BOSS" : sInCh===10? " · 关底 BOSS" : "");
+  if(cleared>=100){ $("mpDesc").textContent = "100 关已全部通关，可在逐鹿页扫荡已通关关卡（只给经验卡）。"; }
+  else { const names = def.team.map(id=>GEN_BY_ID[id].name).join("、");
+    let rw = "经验卡 ×"+ch.exp;
+    if(sInCh===5) rw += " · 元宝 "+ch.boss5[0]+" ＋ 招募令 ×"+ch.boss5[1];
+    else if(sInCh===10) rw += " · 元宝 "+ch.boss10[0]+" ＋ 招募令 ×"+ch.boss10[1];
+    else rw += " · 元宝 "+ch.first;
+    $("mpDesc").textContent = "敌方 Lv"+def.lv+" · "+names+"。首通奖励："+rw+"。"; }
+  const segs = $("mpSegs"); segs.textContent = "";
+  const filled = Math.round(cleared/100*8);
+  for(let i=0;i<8;i++){ const s = document.createElement("i"); if(i<filled) s.className = "on"; segs.appendChild(s); }
+  $("mpPower").textContent = teamPower();
+  $("mpTower").textContent = state.dun? state.dun.towerBest : 0;
+  const note = $("mainPanelNote"); if(note) note.textContent = "已推 "+cleared+" / 100 关";
+  const btn = $("btnMpGo"); if(btn) btn.onclick = function(){ switchTab("stage"); setSub("stage","main"); };
 }
 function renderAll(){
   const _sy20 = (typeof window !== "undefined" && typeof window.scrollY === "number")? window.scrollY : 0; /* 第 20 批 P3：重画前记滚动位，画完恢复（浏览器自动钳制到新内容最大高度） */
@@ -3817,7 +4059,7 @@ if(_tab==="home"){
     const qh = document.createElement("b"); qh.textContent = "今日任务"; qel.appendChild(qh);
     const QUEST_GO24 = { stage:["stage","main"], battle:["stage","main"], draw:["pool","norm"], grow:["cards",null], claim:["more","show"] };
     QUEST_DAILY.forEach(d=>{ const row = document.createElement("div"); row.className = "kv";
-      const nm = document.createElement("span"); nm.textContent = d.name+" "+Math.min(q.dProg[d.k]||0, d.target)+"/"+d.target+"（"+d.rwTxt+"）"; row.appendChild(nm);
+      const nm = document.createElement("span"); setIconText27b(nm, d.name+" "+Math.min(q.dProg[d.k]||0, d.target)+"/"+d.target+"（"+d.rwTxt+"）"); row.appendChild(nm);
       const done24 = (q.dProg[d.k]||0) >= d.target, claimed24 = q.dClaimed.indexOf(d.k)>=0;
       if(claimed24){ const bb = document.createElement("button"); bb.className = "btn sm"; bb.textContent = "已领取"; bb.disabled = true; row.appendChild(bb); }
       else if(done24){ const bb = document.createElement("button"); bb.className = "btn sm"; bb.textContent = "领取"; bb.onclick = function(){ const r = claimDaily(d.k); showToast(r.msg); renderAll(); }; row.appendChild(bb); }
@@ -3827,25 +4069,25 @@ if(_tab==="home"){
     const ri = q.rookieClaimed||0; const rrow = document.createElement("div"); rrow.className = "kv";
     const rnm = document.createElement("span");
     if(ri >= QUEST_ROOKIE.length){ rnm.textContent = "新手任务：已全部完成"; rrow.appendChild(rnm); }
-    else { const rd = QUEST_ROOKIE[ri]; rnm.textContent = "新手任务 "+(ri+1)+"/"+QUEST_ROOKIE.length+"："+rd.name+"（"+rd.rwTxt+"）"; rrow.appendChild(rnm);
+    else { const rd = QUEST_ROOKIE[ri]; setIconText27b(rnm, "新手任务 "+(ri+1)+"/"+QUEST_ROOKIE.length+"："+rd.name+"（"+rd.rwTxt+"）"); rrow.appendChild(rnm);
       const ROOKIE_GO24 = [["home",null],["cards",null],["stage","main"],["pool","norm"],["cards",null],["more","show"]];
       if(rd.done(state)){ const rb = document.createElement("button"); rb.className = "btn sm"; rb.textContent = "领取"; rb.onclick = function(){ const r = claimRookie(); showToast(r.msg); renderAll(); }; rrow.appendChild(rb); }
       else { const gb2 = document.createElement("button"); gb2.className = "btn sm sub"; gb2.textContent = "前往"; gb2.onclick = function(){ const t = ROOKIE_GO24[ri]; if(t){ switchTab(t[0]); if(t[1]) setSub(t[0], t[1]); } }; rrow.appendChild(gb2); } }
     qel.appendChild(rrow);
     const crow = document.createElement("div"); crow.className = "kv";
     const cnm = document.createElement("span"); const cc = cumLoginState();
-    if(!cumLoginOpen()){ cnm.textContent = "累计登录：11月21日开启（满 3/5/7 天领元宝＋招募令）"; crow.appendChild(cnm);
+    if(!cumLoginOpen()){ setIconText27b(cnm, "累计登录：11月21日开启（满 3/5/7 天领元宝＋招募令）"); crow.appendChild(cnm);
       const cb0 = document.createElement("button"); cb0.className = "btn sm sub"; cb0.textContent = "查看"; cb0.onclick = function(){ switchTab("more"); setSub("more","sign"); }; crow.appendChild(cb0); }
     else { const ct = cumClaimableTier();
-      if(ct){ cnm.textContent = "累计登录：已累计 "+(cc.days||0)+" 天，满 "+ct.days+" 天奖励可领（"+ct.txt+"）"; crow.appendChild(cnm);
+      if(ct){ setIconText27b(cnm, "累计登录：已累计 "+(cc.days||0)+" 天，满 "+ct.days+" 天奖励可领（"+ct.txt+"）"); crow.appendChild(cnm);
         const cb1 = document.createElement("button"); cb1.className = "btn sm"; cb1.textContent = "领取"; cb1.onclick = function(){ const r = claimCumLogin(ct.days); showToast(r.msg); renderAll(); }; crow.appendChild(cb1); }
       else { const nt = CFG.cumLoginTiers.find(t=>cc.claimed.indexOf(t.days)<0);
-        cnm.textContent = nt? ("累计登录：已累计 "+(cc.days||0)+" 天，满 "+nt.days+" 天领 "+nt.txt) : "累计登录：奖励已全部领取"; crow.appendChild(cnm);
+        setIconText27b(cnm, nt? ("累计登录：已累计 "+(cc.days||0)+" 天，满 "+nt.days+" 天领 "+nt.txt) : "累计登录：奖励已全部领取"); crow.appendChild(cnm);
         const cb2 = document.createElement("button"); cb2.className = "btn sm sub"; cb2.textContent = "查看"; cb2.onclick = function(){ switchTab("more"); setSub("more","sign"); }; crow.appendChild(cb2); } }
     qel.appendChild(crow);
     const pv = tomorrowPreview();
     if(pv.length){ const ph = document.createElement("b"); ph.textContent = "明日预告"; ph.style.display = "block"; ph.style.marginTop = "8px"; qel.appendChild(ph);
-      pv.forEach(x=>{ const pd = document.createElement("div"); pd.className = "note"; pd.textContent = "· " + x; qel.appendChild(pd); }); }
+      pv.forEach(x=>{ const pd = document.createElement("div"); pd.className = "note"; setIconText27b(pd, "· " + x); qel.appendChild(pd); }); }
     }
   }
   const sgel = $("signTable");
@@ -3855,14 +4097,16 @@ if(_tab==="home"){
     const grid24 = document.createElement("div"); grid24.className = "signGrid";
     SIGN_TABLE.forEach((x,i)=>{ const isDone = i < cur || (i===cur && signedToday); const cell = document.createElement("div"); cell.className = "signCell" + (isDone? " done" : (i===cur? " today" : ""));
       const cd1 = document.createElement("b"); cd1.textContent = "第"+(i+1)+"天"; cell.appendChild(cd1);
-      const cd2 = document.createElement("div"); cd2.textContent = x.txt; cell.appendChild(cd2);
+      const cd2 = document.createElement("div"); setIconText27b(cd2, x.txt); cell.appendChild(cd2);
       const cd3 = document.createElement("div"); cd3.textContent = i===cur? (signedToday? "已领" : "今日") : (isDone? "✓" : ""); cell.appendChild(cd3);
       grid24.appendChild(cell); });
     sgel.appendChild(grid24); }
+  renderHomeSign28(); /* 第 28 批：主页签到卡与签到页同源同数据 */
   renderCumLogin(); renderNewsCard(); renderOpsToday(); /* 第 21 批 */
   $("homeStage").textContent = state.stageCleared+" / 100 关";
   $("homeTower").textContent = "已通关 "+(state.dun? state.dun.towerBest : 0)+" / 50 层";
   $("homePower").textContent = teamPower();
+  renderMainPanel28(); /* 第 28 批：主页主线大面板 */
   const r = OFFICES_V4[state.rankIdx||0] || OFFICES_V4[0], nxt = OFFICES_V4[(state.rankIdx||0)+1];
 if(_tab==="home"){
   $("rankBox").innerHTML = "<div class='kv'><span>当前官职</span><b>"+r.name+"（攻击 +"+Math.round(r.atk*100)+"%／防御 +"+Math.round(r.def*100)+"%，上阵全队）</b></div>"+
@@ -3902,8 +4146,8 @@ if(_tab==="cards"){
   const _scEl24 = $("showcaseList");
   if(_scEl24){ let _sh24 = "<div class='showSlots'>";
     for(let _si24=0; _si24<CFG.showcaseSlots; _si24++){ const _suid = state.showcase[_si24]; const _sc24 = _suid? state.cards.find(x=>x.uid===_suid) : null; const _sg24 = _sc24? GEN_BY_ID[_sc24.genId] : null;
-      _sh24 += _sc24? "<div class='showSlot full'><b>"+_sg24.name+"</b><br>"+showcaseRate(_sc24).toFixed(1)+" 元宝/小时<br><button class='btn sm sub' onclick='toggleShowcase("+_sc24.uid+")'>撤下</button></div>"
-                    : "<div class='showSlot'><div class='emp'>＋</div>空展位<br><button class='btn sm' onclick='openShowPick()'>摆入</button></div>"; }
+      _sh24 += _sc24? "<div class='showSlot full'><div class='showArt'><div class='showPh'>"+_sg24.name+"</div>"+artDivHtml(_sc24.genId)+"</div><div class='showNm'>"+_sg24.name+"</div><div class='showRate'>"+showcaseRate(_sc24).toFixed(1)+" 元宝/时</div><button class='btn sm sub' onclick='toggleShowcase("+_sc24.uid+")'>撤下</button></div>"
+                    : "<div class='showSlot'><div class='showArt empty'><div class='emp'>＋</div></div><div class='showNm'>空展位</div><div class='showRate'>&nbsp;</div><button class='btn sm' onclick='openShowPick()'>摆入</button></div>"; }
     _sh24 += "</div><p class='note'>展位 "+state.showcase.length+"/"+CFG.showcaseSlots+" · 合计 "+showcaseTotalRate().toFixed(1)+" 元宝/小时 · 待领取上限 "+Math.floor(showcaseCap())+" 元宝（72 小时产量，超了不再累积）· 每 15 分钟结算一笔，满 15 分钟才计第 1 笔</p>";
     _scEl24.innerHTML = _sh24; }
   const _sp24 = $("showPick"); if(_sp24) _sp24.style.display = "none";
