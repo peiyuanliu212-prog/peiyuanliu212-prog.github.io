@@ -357,6 +357,103 @@ nav.tabs button.on{background:url("assets/skin/tex-lacquer.webp") center top/cov
 .card{background:linear-gradient(rgba(12,13,16,.52),rgba(12,13,16,.52)),url("assets/skin/tex-steel.webp") center/cover no-repeat,#1e2127}
 .showSlot{background:linear-gradient(rgba(12,13,16,.45),rgba(12,13,16,.45)),url("assets/skin/tex-steel.webp") center/cover no-repeat,#1b1e23}
 .showSlot.full{background:linear-gradient(rgba(12,13,16,.45),rgba(12,13,16,.45)),url("assets/skin/tex-steel.webp") center/cover no-repeat,#202329}
+/* ============ v4 第 29 批 · 赤壁夜江（横屏场景风竖屏版，对标 ui-dirs/dirP2 定版样稿） ============ */
+:root{--paper:#0d120f;--paper2:#16211c;--ink:#f2e7cf;--red:#c8402f;--red2:#ff9d8a;--line:#8a6a2f;--card:#101a16;--mut:#cdbd93;--ok:#9fd08a;--gold:#eec27a}
+body{background-color:#0a0d0c;background-image:linear-gradient(180deg,rgba(5,10,9,.80),rgba(5,10,9,.38) 22%,rgba(5,10,9,.48) 55%,rgba(5,10,9,.90)),url("assets/bg-scene.webp");background-size:cover;background-position:center top;background-attachment:fixed;color:#f2e7cf}
+header{background:linear-gradient(rgba(5,10,9,.88),rgba(5,10,9,.94));border-bottom:1px solid rgba(176,141,79,.85);box-shadow:0 4px 14px rgba(0,0,0,.5)}
+.hdrTtx h1{font-family:"Noto Serif SC","Songti SC","STSong",serif;font-size:22px;font-weight:900;letter-spacing:3px;color:#f4dc9a;text-shadow:0 2px 4px #000,0 0 14px rgba(236,210,140,.35)}
+.hdrSub{color:#cdbd93;letter-spacing:2px}
+header .seal{background:linear-gradient(160deg,#c8402f,#8e1f1a);color:#ffe9c9;border:1px solid #eec27a;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.6);text-shadow:0 1px 2px rgba(40,0,0,.7)}
+.hdrRank{background:rgba(16,26,22,.92);border:1px solid #b08d4f;border-left:3px solid #c8402f;box-shadow:0 2px 6px rgba(0,0,0,.45);border-radius:4px}
+.hdrRankName{font-family:"Noto Serif SC","Songti SC","STSong",serif;color:#ffe9ad}
+.hdrRankSub{color:#cdbd93}.hdrRankSub b{color:#f6ecd2}
+.respill{background:rgba(10,18,15,.88);border:1px solid rgba(176,141,79,.85);border-radius:999px;box-shadow:inset 0 1px 0 rgba(255,240,200,.15);color:#cdbd93}
+.respill::before{display:none}
+.respill .rpName{color:#cdbd93}
+.respill .ri{background:linear-gradient(180deg,#f0d48a,#c39a45);color:#2e1f05;border-radius:3px;font-weight:900}
+.respill b{color:#f6ecd2}
+#resYuanbao{color:#ffe9ad}#resTickets{color:#f6ecd2}#resStarcoin{color:#f6ecd2}#resMerit{color:#f6ecd2}#resWubi{color:#f6ecd2}#resTmTickets{color:#f6ecd2}#resCards{color:#f6ecd2}
+.drawNote{color:#cdbd93}.drawNote b{color:#ffe9ad}
+h2.sec{font-family:"Noto Serif SC","Songti SC","STSong",serif;background:linear-gradient(90deg,rgba(176,141,79,.22),rgba(176,141,79,0) 72%);border-left:3px solid #b08d4f;color:#ecd28c;font-weight:800;letter-spacing:2px;font-size:15.5px;padding:7px 12px;clip-path:none;box-shadow:none;text-shadow:0 1px 3px #000}
+.secNote{color:#c9a86a}
+.card{position:relative;background:rgba(16,26,22,.93);border:1px solid #b08d4f;outline:1px solid rgba(236,210,140,.35);outline-offset:-5px;border-radius:6px;box-shadow:0 4px 14px rgba(0,0,0,.55),inset 0 0 24px rgba(0,0,0,.45);color:#f2e7cf}
+.card::before{content:"";position:absolute;inset:3px;pointer-events:none;background-image:radial-gradient(circle,#eec27a 1.6px,#8a6a2f 2.8px,transparent 3.2px),radial-gradient(circle,#eec27a 1.6px,#8a6a2f 2.8px,transparent 3.2px),radial-gradient(circle,#eec27a 1.6px,#8a6a2f 2.8px,transparent 3.2px),radial-gradient(circle,#eec27a 1.6px,#8a6a2f 2.8px,transparent 3.2px);background-size:10px 10px;background-position:0 0,100% 0,0 100%,100% 100%;background-repeat:no-repeat;opacity:.9}
+.btn{font-family:"Noto Serif SC","Songti SC","STSong",serif;background:linear-gradient(180deg,#c8402f,#8e1f1a);color:#ffeec4;border:1px solid #eec27a;box-shadow:0 0 12px rgba(216,64,42,.35),inset 0 1px 0 rgba(255,220,160,.5);text-shadow:0 1px 2px rgba(40,0,0,.6);border-radius:5px;clip-path:none;font-weight:700;letter-spacing:1px}
+.btn.sub{background:rgba(10,18,15,.92);color:#ffe9ad;border:1px solid #eec27a;box-shadow:inset 0 0 10px rgba(238,194,122,.12);text-shadow:none;font-weight:400}
+.btn.dark{background:linear-gradient(180deg,rgba(60,44,16,.95),rgba(34,25,10,.95));color:#ffe9ad;border:1px solid #b08d4f;box-shadow:0 2px 6px rgba(0,0,0,.45);text-shadow:none}
+.btn:disabled{background:#22262a;color:#6d6a61;border:1px solid #33373c;box-shadow:none;text-shadow:none}
+.subtabs button{font-family:"Noto Serif SC","Songti SC","STSong",serif;background:rgba(16,26,22,.93);color:#e6d9b8;border:1px solid #b08d4f;border-radius:5px;box-shadow:0 2px 6px rgba(0,0,0,.4)}
+.subtabs button .sc{color:#cdbd93}
+.subtabs button.on{background:linear-gradient(180deg,#c8402f,#8e1f1a);color:#ffeec4;border-color:#eec27a;text-shadow:0 1px 2px rgba(40,0,0,.6)}
+.subtabs button.on .sc{color:#ffd9a8}
+nav.tabs{background:rgba(7,13,11,.96);border-top:1px solid rgba(176,141,79,.85);box-shadow:0 -4px 16px rgba(0,0,0,.6)}
+nav.tabs button{font-family:"Noto Serif SC","Songti SC","STSong",serif;background:transparent;color:#e6d9b8;border-top:none;letter-spacing:2px;padding:10px 0 11px}
+nav.tabs button.on{background:linear-gradient(180deg,#c8402f,#8e1f1a);color:#ffeec4;font-weight:700;box-shadow:inset 0 1px 0 rgba(255,220,160,.5)}
+.signCell{background:rgba(0,0,0,.35);border:1px solid rgba(176,141,79,.65);border-radius:4px;color:#cdbd93;box-shadow:none}
+.signCell b{color:#f2e7cf}
+.signCell.done{background:rgba(0,0,0,.35);color:#8fa383}
+.signCell.done b{color:#a9bd97}
+.signCell.today{border:1.5px solid #e05240;box-shadow:0 0 9px rgba(216,64,42,.5);color:#ffb59f}
+.signCell>div:last-child{color:#eec27a}
+.bar{background:rgba(0,0,0,.5);border:1px solid rgba(176,141,79,.8);border-radius:99px}
+.bar i{background:linear-gradient(90deg,#a5762c,#eec27a)}
+.kv{border-bottom:1px dashed rgba(176,141,79,.3)}
+.kv b{color:#ffe9ad}
+.note{color:#b3a67f}
+select,input{background:rgba(10,18,15,.92);color:#f2e7cf;border:1px solid #8a6a2f}
+.log{background:rgba(5,8,7,.94);border:1px solid rgba(176,141,79,.5);color:#d8cdb2}
+.log .r{color:#ff9d8a}
+.tag{background:rgba(10,18,15,.85);border-color:#8a6a2f;color:#cdbd93}
+.tag.hot{border-color:#e05240;color:#ff9d8a}
+.avatar{background:rgba(16,26,22,.95);border:2px solid #b08d4f;color:#ecd28c}
+.slotbox{background:rgba(16,26,22,.9);border-color:#8a6a2f;color:#f2e7cf}
+.slotbox.full{background:rgba(22,33,28,.95);border-color:#d9b96a}
+.slotbox.pick{border-color:#e05240}
+.slotbox .pos{color:#ff9d8a}
+.showSlot{background:rgba(16,26,22,.93);border:1.5px solid #8a6a2f;color:#f2e7cf}
+.showSlot.full{background:rgba(22,33,28,.95);border-color:#d9b96a}
+.showNm{color:#f6ecd2}.showRate{color:#eec27a}
+#enhSticky{background:rgba(16,26,22,.96);border:1.5px solid #b08d4f;color:#f2e7cf}
+.dexpager{background:rgba(16,26,22,.96);border:1px solid #b08d4f;color:#f2e7cf}
+#sgNoticeBox{background:rgba(16,26,22,.98);border:1.5px solid #b08d4f;color:#f2e7cf;box-shadow:0 12px 32px rgba(0,0,0,.6)}
+.sgToast{background:rgba(10,18,15,.96);border:1px solid #b08d4f;color:#f6ecd2}
+.tmcard{background:rgba(16,26,22,.95);border:2px solid #b08d4f}
+.brk{border:1px dashed rgba(176,141,79,.6);background:rgba(16,26,22,.88)}
+.hubRow{border-bottom:1px dashed rgba(176,141,79,.3)}
+#tab-stage{background-image:linear-gradient(rgba(5,10,9,.86),rgba(5,10,9,.93)),url("assets/bg-scene.webp");background-size:cover;background-position:center top}
+.heroKv{border:2px solid #b08d4f;box-shadow:0 6px 18px rgba(0,0,0,.5)}
+.lthumb{border-color:#8a6a2f}
+.win{color:#9fd08a}.lose{color:#ff9d8a}
+details.rules>summary{color:#ff9d8a}
+/* 主线大面板＝英雄带（半透透景＋章节牌＋大字关号＋守将整卡＋朱红出战钮） */
+.mainPanel{background:linear-gradient(rgba(16,26,22,.80),rgba(16,26,22,.88)),url("assets/bg-scene.webp") center/cover no-repeat}
+.mainPanel .mpBg{opacity:.5}
+.mpArt{border:1.5px solid #d9b96a;outline:1px solid rgba(236,210,140,.4);border-radius:4px}
+.mpChap{align-self:flex-start;background:linear-gradient(180deg,rgba(60,44,16,.9),rgba(34,25,10,.9));border:1px solid #b08d4f;border-radius:3px;padding:3px 10px;color:#ffe9ad;font-size:12.5px;letter-spacing:2px;font-family:"Noto Serif SC","Songti SC","STSong",serif}
+.mpTitle{font-family:"Noto Serif SC","Songti SC","STSong",serif;font-size:30px;font-weight:900;letter-spacing:3px;color:#fdf3d0;text-shadow:0 2px 5px #000,0 0 16px rgba(255,190,80,.3)}
+.mpDesc{color:#e0d0a8}
+.mpSegs i{background:rgba(255,255,255,.14);border:1px solid rgba(176,141,79,.55);transform:skewX(-14deg);box-shadow:none}
+.mpSegs i.on{background:linear-gradient(180deg,#d84a3a,#9c241c);border-color:#e8b96a;box-shadow:none}
+.mpGo{font-size:19px;padding:11px 34px;letter-spacing:6px}
+.mpPower{color:#d8c9a3}.mpPower b{color:#ffe9ad}
+/* 战斗演出页换装（只配色/面板，播放逻辑不动） */
+#battleView{background:#070a09}
+.bp-top{background:rgba(7,13,11,.95);border-bottom:1px solid #b08d4f}
+.bp-title{font-family:"Noto Serif SC","Songti SC","STSong",serif;color:#ffe9ad;letter-spacing:2px}
+.bp-hp{border-color:rgba(176,141,79,.5)}
+.bp-hp .hpf{background:linear-gradient(90deg,#7fb069,#a8d08a)}
+.bp-rg{border-color:rgba(176,141,79,.4)}
+.bp-rg .rgf{background:linear-gradient(90deg,#3f7fbf,#7db8e8)}
+.bp-rg.full{box-shadow:0 0 7px 2px rgba(255,215,106,.8);border-color:#ffd76a}
+.bp-fig{border:1px solid rgba(217,185,106,.85);background:#101613}
+.bp-plate{color:#cdbd93}
+.bp-name{color:#f6ecd2}
+.bp-st{background:rgba(10,18,15,.8);border-color:rgba(236,210,140,.5);color:#ffe9a8}
+.bp-skill{background:rgba(16,26,22,.92);border:1.5px solid #d9b96a;color:#ffeec2}
+.bp-banner{color:#ffe9ad}
+.bp-cutin{background:rgba(5,8,7,.8)}
+.bp-settle{background:rgba(16,26,22,.97);border:1.5px solid #b08d4f;outline:1px solid rgba(236,210,140,.35);outline-offset:-5px;color:#f2e7cf}
+.bp-log{background:rgba(5,8,7,.94);border-top:1px solid rgba(176,141,79,.6);color:#d8cdb2}
 </style>
 </head>
 <body>
@@ -388,13 +485,6 @@ nav.tabs button.on{background:url("assets/skin/tex-lacquer.webp") center top/cov
 </header>
 <main>
 <section class="page" id="tab-home">
-  <h2 class="sec" id="claimHubHead" style="display:none">待领取<span class="secNote" id="claimHubCnt"></span></h2>
-  <div class="card" id="claimHubCard" style="display:none"></div>
-  <h2 class="sec">每日签到<span class="secNote" id="homeSignNote"></span></h2>
-  <div class="card" id="homeSignCard">
-    <div class="signGrid" id="homeSignGrid"></div>
-    <div style="margin-top:6px"><button class="btn sm" id="btnHomeSign">签到领奖</button> <span class="note" id="homeSignState"></span></div>
-  </div>
   <h2 class="sec">主线推关<span class="secNote" id="mainPanelNote"></span></h2>
   <div class="card mainPanel" id="mainPanel">
     <div class="mpBg"></div>
@@ -407,12 +497,19 @@ nav.tabs button.on{background:url("assets/skin/tex-lacquer.webp") center top/cov
       <div class="mpRow"><button class="btn mpGo" id="btnMpGo">出战</button><span class="mpPower"><img class="ricS" src="assets/icons/icon-zhanli.png" alt="">战力 <b id="mpPower">0</b> · 通天塔 <b id="mpTower">0</b> 层</span></div>
     </div>
   </div>
+  <h2 class="sec" id="claimHubHead" style="display:none">待领取<span class="secNote" id="claimHubCnt"></span></h2>
+  <div class="card" id="claimHubCard" style="display:none"></div>
+  <h2 class="sec">每日签到<span class="secNote" id="homeSignNote"></span></h2>
+  <div class="card" id="homeSignCard">
+    <div class="signGrid" id="homeSignGrid"></div>
+    <div style="margin-top:6px"><button class="btn sm" id="btnHomeSign">签到领奖</button> <span class="note" id="homeSignState"></span></div>
+  </div>
   <h2 class="sec">今日任务</h2>
   <div class="card" id="questCard"></div>
+  <div class="card" id="newsCard" style="display:none"></div>
   <div class="card" id="v7Notice" style="display:none"></div>
   <div class="card" id="sysNotice" style="display:none"></div>
   <div class="card" id="opsTodayCard" style="display:none"></div>
-  <div class="card" id="newsCard" style="display:none"></div>
   <h2 class="sec" style="cursor:pointer" onclick="toggleRank()">官职（威望来自虎牢争锋）<span class="note" id="rankToggleHint"> · 已收起，点开查看</span></h2>
   <div class="card" id="rankBox" style="display:none"></div>
   <div class="card">
@@ -807,7 +904,7 @@ const CFG = {
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b27", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b29", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1532,9 +1629,10 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（界面换装「玄铁重甲」＋战斗演出＋存档同步加固）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（界面全新改版「赤壁夜江」＋战斗演出＋存档同步加固）</span>";
   if(_newsOpen21){
-    h += "<p class='note' style='margin-top:4px'>· 战斗演出上线：逐鹿主线出战进入演出页——武将站位对决、出手与怒技全程有画面（UR/SSR 怒技带全屏特写），血条怒气实时变化；1 倍/3 倍速可切，已通关关卡可看视频跳过，文字战报在演出页随时可查；不爱看演出可在「更多 → 设置」切极速模式。</p>"
+    h += "<p class='note' style='margin-top:4px'>· 主界面全新改版：赤壁夜江场景打底、墨绿描金新装上线，阵容陈列与副本吊牌一目了然，战斗演出同步换装（纯界面，不影响玩法与存档）。</p>"
+       + "<p class='note'>· 战斗演出上线：逐鹿主线出战进入演出页——武将站位对决、出手与怒技全程有画面（UR/SSR 怒技带全屏特写），血条怒气实时变化；1 倍/3 倍速可切，已通关关卡可看视频跳过，文字战报在演出页随时可查；不爱看演出可在「更多 → 设置」切极速模式。</p>"
        + "<p class='note'>· 界面换装·玄铁重甲：全站换上深铁钢板新装——军牌分节、漆面红钮、资源格按资源着色、签到印记归位，排版一并收拾利落（纯界面，不影响玩法与存档）。</p>"
        + "<p class='note'>· 存档同步加固：虎扑版云存档改为切到后台立即同步、同步失败自动重试并提醒，换设备接着打更稳、不容易掉档；开局元宝提到 2000，够先来一次金台十连。</p>"
        + "<p class='note'>· 抽卡直达：顶栏与主页任务行都有「去抽卡」，卡池打开直接落到招贤纳士，各页签下都标了花什么货币。</p>"
