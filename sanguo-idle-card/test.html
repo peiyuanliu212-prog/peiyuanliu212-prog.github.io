@@ -925,7 +925,7 @@ const CFG = {
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b32", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b33", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1650,9 +1650,10 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 存档同步大修：退出游戏或切到后台时立即把进度同步上云，同步失败自动重试并弹出提醒，告别丢档；换设备时用同一个虎扑账号登录即可接着打。</p>"
+       + "<p class='note'>· 秘阁视频口径修正：兵甲秘阁「看视频开启第 2 轮」「看视频强行闯关」已接入真实激励视频，看完才开启/生效（与战斗跳过同一口径）；一骑当先强行闯关、天命副本每日重置同步接闸。</p>"
        + "<p class='note'>· 开局福利：主页「可领取」卡里可领开服福利——元宝 +2000、招募令 +10，每个存档限领一次；老玩家同样可领，就当这阵子丢档的补偿。</p>"
        + "<p class='note'>· 主界面全新改版：赤壁夜江场景打底、墨绿描金新装上线，阵容陈列与副本吊牌一目了然，战斗演出同步换装（纯界面，不影响玩法与存档）。</p>"
        + "<p class='note'>· 卡图显示修复：站位配图、卡面不再变形——武将页站位条加上卡图，主线守将卡与全站卡面按原图比例呈现、卡内字牌对位归正；资源胶囊标签与底部导航的贴边、遮挡一并收拾。</p>"
@@ -3189,7 +3190,7 @@ function renderYQ(){
   }
 }
 window.doYQ = function(i){ yqFightUI(i, false); };
-window.doYQAd = function(i){ yqFightUI(i, true); };
+window.doYQAd = function(i){ bpRunSkipAd(function(ok){ if(!ok){ showToast("广告未完成，强行闯关未生效"); return; } yqFightUI(i, true); }); }; /* 第 33 批：强闯接真广告闸（复用 bpRunSkipAd，rewarded 才执行；第 19 批登记的模拟广告遗留就此销账） */
 function yqFightUI(i, useAd){
   const r = fightYQ(i, useAd);
   if(!r.ok){ showToast(r.msg); return; }
@@ -4063,8 +4064,8 @@ window.toggleChap = function(ch){ const b = $("chapBody"+ch); if(!b) return; con
 window.doSweepStage = function(idx){ const r = sweepStage(idx); showToast(r.msg); renderAll(); };
 window.doTowerV4 = function(){ const r = fightTower(); if(!r.ok){ showToast(r.msg); return; } BGM.setScene(BGM.sceneFor("tower", r.floor)); $("towerV4Log").innerHTML = "第 "+r.floor+" 层："+(r.win? "<span class='win'>成功</span>" : "<span class='lose'>失败</span>")+(r.rewardMsg? "｜"+r.rewardMsg : "")+"\n"+r.log.join("\n"); if(bpRoute32(r, { title:"通天塔 · 第 "+r.floor+" 层", logEl:"towerV4Log" })) return; renderAll(); };
 window.doMige = function(st){ const r = fightMige(st); if(!r.ok){ showToast(r.msg); return; } BGM.setScene(BGM.sceneFor("mige")); $("migeLog").innerHTML = "秘阁第 "+st+" 关："+(r.win? "<span class='win'>通关</span>｜"+r.rewardMsg : "<span class='lose'>失败</span>｜可点「看视频强行闯关」（不计掉落）")+"\n"+r.log.join("\n"); if(bpRoute32(r, { title:"兵甲秘阁 · 第 "+st+" 关", logEl:"migeLog" })) return; renderAll(); };
-window.doMigeForce = function(st){ const r = forceMige(st); showToast(r.msg); renderAll(); };
-window.doMigeOpen2 = function(){ const r = openMigeRound2(); showToast(r.msg); renderAll(); };
+window.doMigeForce = function(st){ bpRunSkipAd(function(ok){ if(!ok){ showToast("广告未完成，强行闯关未生效"); return; } const r = forceMige(st); showToast(r.msg); renderAll(); }); }; /* 第 33 批：强闯接真广告闸（复用 bpRunSkipAd） */
+window.doMigeOpen2 = function(){ bpRunSkipAd(function(ok){ if(!ok){ showToast("广告未完成，第 2 轮未开启"); return; } const r = openMigeRound2(); showToast(r.msg); renderAll(); }); }; /* 第 33 批：开第 2 轮接真广告闸（复用 bpRunSkipAd） */
 window.doMigeSweep = function(){ const r = sweepMige(); showToast(r.msg); renderAll(); };
 window.doArenaV4 = function(){ const r = fightArena(); if(!r.ok){ showToast(r.msg); return; } BGM.setScene(BGM.sceneFor("arena")); $("arenaV4Log").innerHTML = "演武"+r.outcome+"：积分 "+(r.pts>=0? "+":"")+r.pts+"（当前 "+r.score+" 分 · "+arenaTierName(arenaTierOf(r.score))+"）"+(r.promoMsg? "｜"+r.promoMsg : "")+"\n"+r.log.slice(0,14).join("\n"); if(bpRoute32(r, { title:"铜雀演武", logEl:"arenaV4Log", rewardMsg:"积分 "+(r.pts>=0? "+":"")+r.pts+"（"+r.outcome+"）"+(r.promoMsg? "｜"+r.promoMsg : "") })) return; renderAll(); };
 window.doArenaBuy = function(id){ const r = buyArenaCard(id); showToast(r.msg); renderAll(); };
@@ -4394,6 +4395,7 @@ function renderCards(){
       "</div></div></div>";
   }).join("") + cardsPagerHtml(list.length, pages) : "<div class='card'>暂无武将，去卡池开启挂机池或抽卡。</div>";
 }
+/* 第 33 批登记：天命副本 UI 当前无入口（tmFightUI 无调用点）；日后恢复入口时，useAd 广告重打必须先经 bpRunSkipAd 闸，不许直达 fightTmDungeon(…, true)。 */
 function tmFightUI(id, stage, useAd){
   const r = fightTmDungeon(id, stage, useAd);
   if(!r.ok){ showToast(r.msg); return; }
@@ -4402,7 +4404,7 @@ function tmFightUI(id, stage, useAd){
   if(bpRoute32(r, { title:GEN_BY_ID[id].name+" 天命副本 · 第 "+stage+" 关", logEl:"battleLog" })) return;
   renderAll();
 }
-window.doTmReset = function(id){ const r = tmDailyReset(id); showToast(r.msg); renderAll(); };
+window.doTmReset = function(id){ bpRunSkipAd(function(ok){ if(!ok){ showToast("广告未完成，重置未生效"); return; } const r = tmDailyReset(id); showToast(r.msg); renderAll(); }); }; /* 第 33 批：每日重置接真广告闸（复用 bpRunSkipAd） */
 window.doLevelUp = function(uid, times){ const r = levelUpCard(uid, times); if(!r.ok) showToast(r.msg); renderAll(); };
 function switchTab(t){
   curTab=t;
