@@ -457,6 +457,21 @@ details.rules>summary{color:#ff9d8a}
 .h34On{color:#9fd08a;font-size:12px;font-weight:400}
 /* 战斗演出页换装（只配色/面板，播放逻辑不动） */
 #battleView{background:#070a09}
+/* 第38批：全屏安全距消费（--safe-top 由文末探针写一处；body 与战斗层是两个独立表面、各计一次不叠加） */
+body{padding-top:var(--safe-top,0px)}
+#battleView{padding-top:var(--safe-top,0px)}
+/* 第38批：抽卡动画（仿足坛/篮坛开包：逐张翻开＋高稀有全屏揭晓） */
+@keyframes sgFlipIn{from{transform:perspective(700px) rotateY(88deg) scale(.94);opacity:0}to{transform:none;opacity:1}}
+.gcard.pop{animation:sgFlipIn .38s cubic-bezier(.2,.8,.3,1.12) both;animation-delay:var(--d,0ms)}
+.gcard.popRare{box-shadow:0 0 16px rgba(232,201,106,.5)}
+#drawReveal{position:fixed;inset:0;z-index:1200;display:none;align-items:center;justify-content:center;flex-direction:column;background:radial-gradient(620px 480px at 50% 40%,var(--rcGlow,rgba(232,201,106,.30)),rgba(5,6,9,.985) 72%),#05060a;overflow:hidden}
+#drawReveal.show{display:flex}
+#drawReveal::before{content:"";position:absolute;inset:-40%;background:conic-gradient(from 0deg,transparent 0deg,var(--rcGlow,rgba(232,201,106,.30)) 20deg,transparent 44deg,transparent 180deg,var(--rcGlow,rgba(232,201,106,.22)) 202deg,transparent 228deg);animation:sgSweep 2.6s linear infinite;pointer-events:none}
+@keyframes sgSweep{to{transform:rotate(360deg)}}
+#drawReveal .drvRar{position:relative;font-size:32px;font-weight:900;letter-spacing:4px;color:var(--rc,#e8c96a);text-shadow:0 0 26px var(--rc,#e8c96a);margin-bottom:12px;animation:sgFlipIn .4s both;text-align:center;padding:0 16px}
+#drawReveal .drvCard{position:relative;width:min(64vw,250px);animation:sgFlipIn .5s .08s both}
+#drawReveal .drvCard .gcard{width:100%}
+#drawReveal .drvTip{position:relative;margin-top:16px;color:#cfc4a5;font-size:13px;letter-spacing:2px}
 .bp-top{background:rgba(7,13,11,.95);border-bottom:1px solid #b08d4f}
 .bp-title{font-family:"Noto Serif SC","Songti SC","STSong",serif;color:#ffe9ad;letter-spacing:2px}
 .bp-hp{border-color:rgba(176,141,79,.5)}
@@ -948,7 +963,7 @@ const CFG = {
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b37", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b38", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1676,12 +1691,13 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 存档同步大修：退出游戏或切到后台时立即把进度同步上云，同步失败自动重试并弹出提醒，告别丢档；换设备时用同一个虎扑账号登录即可接着打。</p>"
        + "<p class='note'>· 存档加固：个别设备本地存储被限制时，进游戏自动改从账号云端找回进度，不再一进游戏就重新开局；本地存不进的进度也会照常同步上云。</p>"
        + "<p class='note'>· 战斗提示不挡手：战斗演出中不再弹出挡住整个屏幕的提示——个别设备上存档提示盖住倍速、暂停按钮的问题已修；演出中的提示改为一闪而过的小条，战斗操作不会被打断。</p>"
        + "<p class='note'>· 战斗倍速加档：倍速按钮改为 1→2→3 循环切换，设置里也能选默认倍速；嫌 3 倍太快、看不清打点时，2 倍刚刚好。</p>"
+       + "<p class='note'>· 抽卡动画＋全屏适配：抽卡时卡牌逐张翻开，抽到 SSR／UR 还有全屏亮相；全屏模式下顶部按钮已避开状态栏，不再被遮挡。</p>"
        + "<p class='note'>· 主页改版：出战阵容、五大副本、屯营橱窗一屏直达——主页新增出战阵容陈列（前军/后军一目了然）、五大副本场景入口与屯营/橱窗双卡，签到与待领取顺延其后，不用再翻页找。</p>"
        + "<p class='note'>· 秘阁视频口径修正：兵甲秘阁「看视频开启第 2 轮」「看视频强行闯关」已接入真实激励视频，看完才开启/生效（与战斗跳过同一口径）；一骑当先强行闯关、天命副本每日重置同步接闸。</p>"
        + "<p class='note'>· 开局福利：主页「可领取」卡里可领开服福利——元宝 +2000、招募令 +10，每个存档限领一次；老玩家同样可领，就当这阵子丢档的补偿。</p>"
@@ -5320,8 +5336,47 @@ function headCardHtml(c){
 }
 function showDrawn(d){
   if(typeof document === "undefined" || !document.querySelectorAll) return;
-  const h = (d || []).map(g=>fullCardHtml(g, { card: refCardOf(g, 1, 1, 0), tag: g.variant? "典藏" : "" })).join("");
-  document.querySelectorAll(".drawResults").forEach(el=>{ el.innerHTML = h; });
+  d = d || [];
+  const h = d.map(g=>fullCardHtml(g, { card: refCardOf(g, 1, 1, 0), tag: g.variant? "典藏" : "" })).join("");
+  /* 第38批：抽卡动画纯呈现（逻辑未动）——逐张翻开入场；SSR/UR 先全屏揭晓，网格延迟顺延；引导中不弹揭晓层 */
+  const RAR_W = { R:1, SR:2, SSR:3, UR:4 };
+  let best = null;
+  d.forEach(g=>{ if(!best || (RAR_W[g.rar] || 0) > (RAR_W[best.rar] || 0)) best = g; });
+  const touring = !!(document.body && document.body.classList && document.body.classList.contains("touring"));
+  const reveal = !!(best && (best.rar === "SSR" || best.rar === "UR") && !touring);
+  const baseDelay = reveal? 1500 : 0;
+  document.querySelectorAll(".drawResults").forEach(el=>{
+    el.innerHTML = h;
+    if(el.querySelectorAll) el.querySelectorAll(".gcard").forEach((c, i)=>{
+      c.classList.add("pop");
+      c.style.setProperty("--d", (baseDelay + i * 70) + "ms");
+      if(d[i] && (d[i].rar === "SSR" || d[i].rar === "UR")) c.classList.add("popRare");
+    });
+  });
+  if(reveal) showDrawReveal(best);
+}
+let _drvTimer38 = 0;
+function showDrawReveal(g){
+  try{
+    let ov = document.getElementById("drawReveal");
+    if(!ov){
+      ov = document.createElement("div"); ov.id = "drawReveal";
+      ov.innerHTML = "<div class='drvRar'></div><div class='drvCard'></div><div class='drvTip'>点击任意处继续</div>";
+      ov.addEventListener("click", hideDrawReveal);
+      document.body.appendChild(ov);
+    }
+    const ur = g.rar === "UR";
+    ov.style.setProperty("--rc", ur? "#ff7a5c" : "#e8c96a");
+    ov.style.setProperty("--rcGlow", ur? "rgba(255,90,78,.32)" : "rgba(232,201,106,.30)");
+    ov.querySelector(".drvRar").textContent = g.rar + " · " + g.name;
+    ov.querySelector(".drvCard").innerHTML = fullCardHtml(g, { card: refCardOf(g, 1, 1, 0), tag: g.variant? "典藏" : "" });
+    ov.classList.add("show");
+    if(_drvTimer38) clearTimeout(_drvTimer38);
+    _drvTimer38 = setTimeout(hideDrawReveal, 1500);
+  }catch(e){}
+}
+function hideDrawReveal(){
+  try{ const ov = document.getElementById("drawReveal"); if(ov) ov.classList.remove("show"); if(_drvTimer38){ clearTimeout(_drvTimer38); _drvTimer38 = 0; } }catch(e){}
 }
 
 /* ============ v4 第 26 批 · 可视化战斗演出（一期） ============
@@ -5817,6 +5872,23 @@ if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS,
   getState:function(){ return state; }, setState:function(s){ state=s; }, claimLaunchGift:claimLaunchGift, claimShowcase:claimShowcase, home34Data:home34Data, renderHome34:renderHome34, home34GoScene:home34GoScene, launchGiftAvailable:launchGiftAvailable, claimHubItems:claimHubItems, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe, skillPoolRetireNormalize: skillPoolRetireNormalize, snapBuild: snapBuild, snapClamp: snapClamp, snapPrepareFoe: snapPrepareFoe, snapCacheFoe: snapCacheFoe, snapFoeState: snapFoeState, snapUpload: snapUpload, snapPrefetchFoe: snapPrefetchFoe, lbFetch: lbFetch, lbReport: lbReport, lbEsc: lbEsc, snapClientId: snapClientId, hulaoPickFoes: hulaoPickFoes, runRewardAd: runRewardAd, reconcileAdPending: reconcileAdPending, setAdPromiseTimeoutMs: function(ms){ if(typeof ms==="number" && ms>0) _adPromiseTimeoutMs = ms; }, adFlowBusy: function(){ return _adFlowBusy; }, vataskApi: vataskApi, vataskRefresh: vataskRefresh, grantAdTickets: grantAdTickets, guanzhanBlockMsg: guanzhanBlockMsg, adInitHook: adInitHook, cumLoginState: cumLoginState, cumLoginOpen: cumLoginOpen, cumLoginSync: cumLoginSync, cumClaimableTier: cumClaimableTier, claimCumLogin: claimCumLogin, tomorrowPreview: tomorrowPreview, weiGateActive: weiGateActive, todayOpsLines: todayOpsLines, showcaseDateMul: showcaseDateMul, dateStrOfMs: dateStrOfMs, addDaysStr: addDaysStr, dateNumOf: dateNumOf, showToast: showToast, showNotice: showNotice, toastLog: SG_TOAST_LOG, save: save, saveFailStreak: function(){ return _saveFailStreak; }, flushAcctPush: flushAcctPush, acctSyncHook: acctSyncHook, acctCloudWins: acctCloudWins, acctBuildPayload: acctBuildPayload, acctPushFails: function(){ return _acctPushFails; }, acctDirty: function(){ return _acctDirty; }, acctLastBytes: function(){ return _acctLastBytes; }, BattlePlayer: BattlePlayer, bootEnter: bootEnter, load: load, battleFastMode: battleFastMode, bpRoute32: bpRoute32, bpBuildPlan: bpBuildPlan, artPortraitHtml: artPortraitHtml, bpElemColorOf: bpElemColorOf, bpRunSkipAd: bpRunSkipAd }; }
 /* 第 20 批 P1 测试兼容：ACCT_MODE 不再是冻结常量，exports 以 live getter 暴露——既有测试读 M.ACCT_MODE 仍拿到当前现读值。 */
 if(typeof module!=="undefined" && module.exports){ Object.defineProperty(module.exports, "ACCT_MODE", { enumerable: true, configurable: true, get: function(){ return acctMode(); } }); }
+</script>
+<script>
+/* 第38批 全屏安全距探针（移植同门 BK-018 口径）：桥可能晚到或先返 0，轮询补读（每 500ms、至多 20 次）并与 env() 探针取大；
+   --safe-top 只在此写一处，消费在 body 与 #battleView 两处独立表面、各计一次，禁止叠加双计。 */
+(function applySafeTop38(){
+  var root = document.documentElement;
+  function envTop(){ try { if(!document.body) return 0; var p = document.createElement('div'); p.style.cssText = 'position:absolute;left:0;top:0;visibility:hidden;padding-top:env(safe-area-inset-top,0px)'; document.body.appendChild(p); var v = parseFloat(getComputedStyle(p).paddingTop) || 0; p.remove(); return v; } catch(e){ return 0; } }
+  var best = 0, tries = 0;
+  function read(){
+    var v = 0; try { if(window.ColorboxAI && typeof window.ColorboxAI.getFullscreenSafeTop === 'function') v = Number(window.ColorboxAI.getFullscreenSafeTop()) || 0; } catch(e){}
+    best = Math.max(best, v, envTop());
+    root.style.setProperty('--safe-top', best + 'px');
+    if(best <= 0 && ++tries < 20) setTimeout(read, 500);
+  }
+  read();
+  window.addEventListener('resize', read);
+})();
 </script>
 
 <script>
