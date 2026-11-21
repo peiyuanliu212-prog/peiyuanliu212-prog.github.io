@@ -811,7 +811,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
     <div class="kv"><span>当前版本</span><b>正式版</b></div>
     <div class="kv"><span>背景音乐（日常／战斗／Boss 三场景）</span><b><label class="note"><input type="checkbox" id="bgmChk"> 开启</label></b></div>
     <div class="kv"><span>战斗演出（关掉＝极速模式：直接出结果＋文字战报）</span><b><label class="note"><input type="checkbox" id="bpAnimChk"> 开启</label></b></div>
-    <div class="kv"><span>战斗默认倍速</span><b><label class="note"><input type="radio" name="bpSpeed" id="bpSpd1" value="1"> 1 倍</label> <label class="note"><input type="radio" name="bpSpeed" id="bpSpd3" value="3"> 3 倍</label></b></div>
+    <div class="kv"><span>战斗默认倍速</span><b><label class="note"><input type="radio" name="bpSpeed" id="bpSpd1" value="1"> 1 倍</label> <label class="note"><input type="radio" name="bpSpeed" id="bpSpd2" value="2"> 2 倍</label> <label class="note"><input type="radio" name="bpSpeed" id="bpSpd3" value="3"> 3 倍</label></b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button>
@@ -948,7 +948,7 @@ const CFG = {
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b36", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b37", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1676,11 +1676,12 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 存档同步大修：退出游戏或切到后台时立即把进度同步上云，同步失败自动重试并弹出提醒，告别丢档；换设备时用同一个虎扑账号登录即可接着打。</p>"
        + "<p class='note'>· 存档加固：个别设备本地存储被限制时，进游戏自动改从账号云端找回进度，不再一进游戏就重新开局；本地存不进的进度也会照常同步上云。</p>"
        + "<p class='note'>· 战斗提示不挡手：战斗演出中不再弹出挡住整个屏幕的提示——个别设备上存档提示盖住倍速、暂停按钮的问题已修；演出中的提示改为一闪而过的小条，战斗操作不会被打断。</p>"
+       + "<p class='note'>· 战斗倍速加档：倍速按钮改为 1→2→3 循环切换，设置里也能选默认倍速；嫌 3 倍太快、看不清打点时，2 倍刚刚好。</p>"
        + "<p class='note'>· 主页改版：出战阵容、五大副本、屯营橱窗一屏直达——主页新增出战阵容陈列（前军/后军一目了然）、五大副本场景入口与屯营/橱窗双卡，签到与待领取顺延其后，不用再翻页找。</p>"
        + "<p class='note'>· 秘阁视频口径修正：兵甲秘阁「看视频开启第 2 轮」「看视频强行闯关」已接入真实激励视频，看完才开启/生效（与战斗跳过同一口径）；一骑当先强行闯关、天命副本每日重置同步接闸。</p>"
        + "<p class='note'>· 开局福利：主页「可领取」卡里可领开服福利——元宝 +2000、招募令 +10，每个存档限领一次；老玩家同样可领，就当这阵子丢档的补偿。</p>"
@@ -3432,7 +3433,7 @@ const TOUR_STEPS = [
  {screen:"main", tab:"cards", target:"cardList", text:"你的开局将已经自动上阵。以后抽到新武将，点卡上的「上阵/下阵」调整阵容，最多上 5 人。武将页顶部有站位条：点一个槽位，再点武将的「上阵」，就能把人放到指定位置、调前后排。"},
  {screen:"main", tab:"cards", target:"cardList", text:function(){ const hasMat = state && ((state.skillsOwned||[]).length>0 || (state.cards||[]).some((c,i,arr)=>arr.some((o,j)=>j!==i && o.genId===c.genId))); return hasMat? "升星靠重复卡当材料，星越高四维涨得越多；抽到的技能卡在武将详情里学，注意兵种要对位。" : "看到武将名旁边的 ★ 了吗？那是星级。你现在只有一张卡，等抽到同一张卡就能在这里升星；抽到技能卡，也是在这张卡上学。"; }},
  {screen:"main", tab:"pool", target:"rateDisclosure", sub:["pool","rates"], text:"卡池有屯营、招贤、金台、天命四池，外加将魂阁与观战悟法。每个池的出率和保底都公示在这一节，抽之前先看清。"},
- {screen:"main", tab:"stage", target:"stageList", text:"逐鹿天下是主要的成长线：逐关推进拿经验卡，首通给元宝与招募令。点「出战」进入战斗演出：双方武将站位对决、出手与怒技都有画面，血条怒气实时变化；可切 1 倍/3 倍速，已通关的关卡还能看视频跳过，文字战报在演出页「战报」里随时可查。副本页里还有通天塔、兵甲秘阁、铜雀演武和虎牢争锋。"},
+ {screen:"main", tab:"stage", target:"stageList", text:"逐鹿天下是主要的成长线：逐关推进拿经验卡，首通给元宝与招募令。点「出战」进入战斗演出：双方武将站位对决、出手与怒技都有画面，血条怒气实时变化；可切 1/2/3 倍速，已通关的关卡还能看视频跳过，文字战报在演出页「战报」里随时可查。副本页里还有通天塔、兵甲秘阁、铜雀演武和虎牢争锋。"},
  {screen:"main", tab:"dex", target:"dexList", text:"图鉴记录 169 名武将的收集进度，67 条羁绊的条件也在这——组队凑羁绊有额外加成。"},
  {screen:"main", tab:"save", target:"saveNoteCard", text:"存档就一句话：自动保存、和账号绑定，不用你操心。这一页能看存档状态；真要重开，删档也在这一页（两步确认，防手滑）。"},
  {screen:"main", tab:"more", target:"cumLoginCard", sub:["more","sign"], text:"这里是签到页：每日签到之外还有「累计登录」——每天来一次就累计 1 天，满 3/5/7 天领大奖（元宝＋招募令，奖面都写明了）。累计登录 11月21日开启；开启后主页任务卡上也能直接领。"},
@@ -4686,8 +4687,9 @@ function bind(){
   { const sc = $("soulAutoChk"); if(sc) sc.onchange = function(){ state.soulAuto = sc.checked; save(); const m=$("soulMsg"); if(m) m.textContent = state.soulAuto? "自动转化已开启：抽卡盈余重复卡将自动转将魂" : "自动转化已关闭"; }; }
   { const bc = $("bgmChk"); if(bc){ bc.checked = state.bgmOn!==false; bc.onchange = function(){ BGM.setEnabled(bc.checked); }; } }
   { const ac = $("bpAnimChk"); if(ac){ ac.checked = !battleFastMode(); ac.onchange = function(){ bpSetPref("bpFast", !ac.checked); showToast(ac.checked? "战斗演出已开启" : "已切换极速模式：战斗直接出结果＋文字战报"); }; }
-    const s1 = $("bpSpd1"), s3 = $("bpSpd3"); if(s1) s1.checked = bpSpeedPref()===1; if(s3) s3.checked = bpSpeedPref()===3;
+    const s1 = $("bpSpd1"), s2 = $("bpSpd2"), s3 = $("bpSpd3"); if(s1) s1.checked = bpSpeedPref()===1; if(s2) s2.checked = bpSpeedPref()===2; if(s3) s3.checked = bpSpeedPref()===3;
     if(s1) s1.onchange = function(){ bpSetPref("bpSpeed", 1); };
+    if(s2) s2.onchange = function(){ bpSetPref("bpSpeed", 2); };
     if(s3) s3.onchange = function(){ bpSetPref("bpSpeed", 3); }; }
   if(!window.__bgmHook12){ window.__bgmHook12 = true; /* 首次用户交互后才起播（自动播放限制）；BGM.start 内部按 state.bgmOn 与播放中状态自门控 */
     document.addEventListener("pointerdown", function(){ BGM.start(); });
@@ -5324,7 +5326,7 @@ function showDrawn(d){
 
 /* ============ v4 第 26 批 · 可视化战斗演出（一期） ============
    架构：模拟与演出分离——BattlePlayer 只消费 battleSim 的 events 快照排戏，永不重算数值。
-   DOM+CSS/WAAPI、零新依赖；倍速仅 1x/3x（主人 2026-11-18 定档，覆盖方案 1x/2x/3x）；
+   DOM+CSS/WAAPI、零新依赖；倍速 1x/2x/3x 三档（主人 2026-11-18 原定档 1x/3x；2026-11-21 试玩反馈 3x 太快点不到，改加 2x 中档、按钮循环切换）；
    跳过＝看激励广告，三护栏：①首通不给跳（canSkip=false 不渲染按钮）②广告未确认
    rewarded 一律降级 3x 继续、绝不锁人 ③引导内战斗不给跳（inTour 不渲染按钮）。
    引擎无暴击机制：飘字分级只用真实克制信号（金字＋「克制」），严禁造暴击样式。 */
@@ -5347,7 +5349,7 @@ function bpElemColorOf(skillName){
   return "#d8b25c"; /* 默认兵刃银金 */
 }
 function battleFastMode(){ try{ return !!(typeof state !== "undefined" && state && state.flags && state.flags.bpFast); }catch(e){ return false; } }
-function bpSpeedPref(){ try{ return (typeof state !== "undefined" && state && state.flags && state.flags.bpSpeed === 3)? 3 : 1; }catch(e){ return 1; } }
+function bpSpeedPref(){ try{ const v = (typeof state !== "undefined" && state && state.flags)? state.flags.bpSpeed : 1; return (v === 2 || v === 3)? v : 1; }catch(e){ return 1; } } /* 第 37 批：倍速加 2 倍中档，pref 接受 2 */
 function bpSetPref(k, v){
   if(typeof state === "undefined" || !state) return;
   if(!state.flags || typeof state.flags !== "object") state.flags = {};
@@ -5581,7 +5583,7 @@ const BattlePlayer = (function(){
     S.speed = v;
     bpSetPref("bpSpeed", v);
     S.anims.forEach(a=>{ try{ a.playbackRate = v; }catch(e){} });
-    if(S.speedBtn) S.speedBtn.textContent = v === 3 ? "3 倍速" : "1 倍速";
+    if(S.speedBtn) S.speedBtn.textContent = v + " 倍速";
     if(wasPlaying){ S.stepStartReal = performance.now(); S.subs.forEach(armSub); armMain(); }
   }
   function showBanner(text){
@@ -5746,7 +5748,7 @@ const BattlePlayer = (function(){
     view.innerHTML =
       "<div class='bp-top'><span class='bp-title'>" + esc(opts.title || "战斗") + "</span>"
       + "<span class='bp-ctrls'>"
-      + "<button class='btn sm sub' id='bpSpeedBtn'>" + (S.speed === 3 ? "3 倍速" : "1 倍速") + "</button>"
+      + "<button class='btn sm sub' id='bpSpeedBtn'>" + S.speed + " 倍速</button>"
       + "<button class='btn sm sub' id='bpPauseBtn'>⏸ 暂停</button>"
       + (canSkip ? "<button class='btn sm gold' id='bpSkipBtn'>跳过（看视频）</button>" : "")
       + "<button class='btn sm sub' id='bpLogBtn'>战报</button>"
@@ -5787,7 +5789,7 @@ const BattlePlayer = (function(){
       u.stEl = d.querySelector(".bp-status");
       renderBars(u);
     });
-    S.speedBtn.onclick = function(){ setSpeed(S.speed === 3 ? 1 : 3); };
+    S.speedBtn.onclick = function(){ setSpeed(S.speed === 1 ? 2 : (S.speed === 2 ? 3 : 1)); }; /* 第 37 批：三档循环 */
     S.pauseBtn.onclick = function(){ if(S.playing) pauseGame(false); else resumeGame(); };
     const sk = document.getElementById("bpSkipBtn"); if(sk) sk.onclick = onSkip;
     document.getElementById("bpLogBtn").onclick = toggleLog;
