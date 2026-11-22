@@ -781,16 +781,6 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
     <p class="note">在网页版玩：存档保存在这台设备的浏览器里，清除浏览器数据会丢失进度。</p>
     <div class="kv"><span>当前存档状态</span><b id="saveStatusLine">—</b></div>
   </div>
-  <h2 class="sec">删档重开</h2>
-  <div class="card">
-    <p class="note">删掉当前存档，回到开局选将重新开档。<b>删档不可恢复</b>：在虎扑里玩会同时清掉账号云端的存档，删了就是真没了。</p>
-    <div style="margin:8px 0"><button class="btn sub" id="btnWipe1">删档重开</button></div>
-    <div id="wipeBox" style="display:none">
-      <p class="note" style="color:#b03a2e">确认要删掉当前存档吗？删了就没了。</p>
-      <button class="btn" id="btnWipe2" style="background:#b03a2e;color:#fff">确认删档重开</button>
-      <button class="btn sub" id="btnWipeCancel">取消</button>
-    </div>
-  </div>
 </section>
 <section class="page" id="tab-more">
   <div class="subtabs" data-subtabs="more"><button data-sub="show" class="on" onclick="setSub('more','show')">橱窗</button><button data-sub="sign" onclick="setSub('more','sign')">签到</button><button data-sub="settings" onclick="setSub('more','settings')">设置</button><button data-sub="rank" onclick="setSub('more','rank')">排行榜</button></div>
@@ -816,7 +806,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
     <span class="note">午间、晚间各可领一次，每日重置。</span></div>
     <div style="margin:6px 0"><button class="btn dark" id="btnAd" data-testid="ad-btn">看视频 · 招募令 +5</button>
     <span class="note" id="adInfo">今日 0/20 次。</span></div>
-    <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档说明与删档重开</button></div>
+    <div style="margin:6px 0"><button class="btn sub" id="btnReset">存档说明</button></div>
   <div class="card" id="cumLoginCard"></div>
   </div>
   </div>
@@ -827,13 +817,13 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
     <div class="kv"><span>背景音乐（日常／战斗／Boss 三场景）</span><b><label class="note"><input type="checkbox" id="bgmChk"> 开启</label></b></div>
     <div class="kv"><span>战斗演出（关掉＝极速模式：直接出结果＋文字战报）</span><b><label class="note"><input type="checkbox" id="bpAnimChk"> 开启</label></b></div>
     <div class="kv"><span>战斗默认倍速</span><b><label class="note"><input type="radio" name="bpSpeed" id="bpSpd1" value="1"> 1 倍</label> <label class="note"><input type="radio" name="bpSpeed" id="bpSpd2" value="2"> 2 倍</label> <label class="note"><input type="radio" name="bpSpeed" id="bpSpd3" value="3"> 3 倍</label></b></div>
-    <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明与删档重开</button>
+    <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
     <button class="btn sub" id="btnTourReplay">重看新手引导</button>
     <button class="btn sub" id="btnMigReceipt" style="display:none" onclick="showMigReceipt()">存档迁移回执（v4）</button></div>
     <div style="margin:8px 0;display:none" id="desktopRow"><button class="btn dark" id="btnDesktop">添加到桌面</button>
     <span class="note">把游戏放到手机桌面，下次点图标直接回来。</span></div>
-    <p class="note">重置说明：本作只有一个存档；删档重开在存档页底部、两步确认，在虎扑里玩会同时清掉账号云端存档，删档不可恢复。</p>
+    <p class="note">重置说明：本作只有一个存档，与账号绑定、自动保存；不提供删档重开，进度会一直保留。</p>
     <details class="rules"><summary>音乐署名（CC BY 4.0）</summary><p class="note" style="margin-top:4px">Big Mojo Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/<br>Mountain Emperor Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/<br>Five Armies Kevin MacLeod (incompetech.com) Licensed under Creative Commons: By Attribution 4.0 https://creativecommons.org/licenses/by/4.0/</p></details>
   </div>
   </div>
@@ -963,7 +953,7 @@ const CFG = {
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b38", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b39", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1046,7 +1036,7 @@ function exclBaseId(def){ const g = GENS.find(x=>x.name===def.baseName && !x.var
 /* ---- 存档层（v3.3 账号绑定单档）：全游戏只许经本层读写 ----
  * 主键 sanguo_idle_save_main 为本机镜像（永远先落本机）；虎扑壳内（window.ColorboxAI 在场）
  * 同一份档经 /api/acctsave 同步到账号云存（一人一档，契约见 acctsave契约-v1.md）。
- * 旧键（v1 单档、五槽 slot1..5、meta）仅作首次迁移来源，迁后保留不删，删档重开时一并清。 */
+ * 旧键（v1 单档、五槽 slot1..5、meta）仅作首次迁移来源，迁后保留不删（第 39 批起已无删档功能）。 */
 const SAVE_KEY = "sanguo_idle_save_v1"; /* v1 旧单档键：仅作迁移来源 */
 const MAIN_KEY = "sanguo_idle_save_main";
 const SLOT_COUNT = 5;
@@ -1691,13 +1681,14 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配＋移除删档）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 存档同步大修：退出游戏或切到后台时立即把进度同步上云，同步失败自动重试并弹出提醒，告别丢档；换设备时用同一个虎扑账号登录即可接着打。</p>"
        + "<p class='note'>· 存档加固：个别设备本地存储被限制时，进游戏自动改从账号云端找回进度，不再一进游戏就重新开局；本地存不进的进度也会照常同步上云。</p>"
        + "<p class='note'>· 战斗提示不挡手：战斗演出中不再弹出挡住整个屏幕的提示——个别设备上存档提示盖住倍速、暂停按钮的问题已修；演出中的提示改为一闪而过的小条，战斗操作不会被打断。</p>"
        + "<p class='note'>· 战斗倍速加档：倍速按钮改为 1→2→3 循环切换，设置里也能选默认倍速；嫌 3 倍太快、看不清打点时，2 倍刚刚好。</p>"
        + "<p class='note'>· 抽卡动画＋全屏适配：抽卡时卡牌逐张翻开，抽到 SSR／UR 还有全屏亮相；全屏模式下顶部按钮已避开状态栏，不再被遮挡。</p>"
+       + "<p class='note'>· 存档更安心：存档页已移除「删档重开」，再也不怕手滑误删，进度只进不退。</p>"
        + "<p class='note'>· 主页改版：出战阵容、五大副本、屯营橱窗一屏直达——主页新增出战阵容陈列（前军/后军一目了然）、五大副本场景入口与屯营/橱窗双卡，签到与待领取顺延其后，不用再翻页找。</p>"
        + "<p class='note'>· 秘阁视频口径修正：兵甲秘阁「看视频开启第 2 轮」「看视频强行闯关」已接入真实激励视频，看完才开启/生效（与战斗跳过同一口径）；一骑当先强行闯关、天命副本每日重置同步接闸。</p>"
        + "<p class='note'>· 开局福利：主页「可领取」卡里可领开服福利——元宝 +2000、招募令 +10，每个存档限领一次；老玩家同样可领，就当这阵子丢档的补偿。</p>"
@@ -3451,7 +3442,7 @@ const TOUR_STEPS = [
  {screen:"main", tab:"pool", target:"rateDisclosure", sub:["pool","rates"], text:"卡池有屯营、招贤、金台、天命四池，外加将魂阁与观战悟法。每个池的出率和保底都公示在这一节，抽之前先看清。"},
  {screen:"main", tab:"stage", target:"stageList", text:"逐鹿天下是主要的成长线：逐关推进拿经验卡，首通给元宝与招募令。点「出战」进入战斗演出：双方武将站位对决、出手与怒技都有画面，血条怒气实时变化；可切 1/2/3 倍速，已通关的关卡还能看视频跳过，文字战报在演出页「战报」里随时可查。副本页里还有通天塔、兵甲秘阁、铜雀演武和虎牢争锋。"},
  {screen:"main", tab:"dex", target:"dexList", text:"图鉴记录 169 名武将的收集进度，67 条羁绊的条件也在这——组队凑羁绊有额外加成。"},
- {screen:"main", tab:"save", target:"saveNoteCard", text:"存档就一句话：自动保存、和账号绑定，不用你操心。这一页能看存档状态；真要重开，删档也在这一页（两步确认，防手滑）。"},
+ {screen:"main", tab:"save", target:"saveNoteCard", text:"存档就一句话：自动保存、和账号绑定，不用你操心。这一页能看存档状态，进度会一直保留。"},
  {screen:"main", tab:"more", target:"cumLoginCard", sub:["more","sign"], text:"这里是签到页：每日签到之外还有「累计登录」——每天来一次就累计 1 天，满 3/5/7 天领大奖（元宝＋招募令，奖面都写明了）。累计登录 11月21日开启；开启后主页任务卡上也能直接领。"},
  {screen:"main", tab:"home", target:"questCard", text:"门道就这些，剩下的靠你自己闯。点「完成」领一份开局礼：元宝 +100。", final:true}
 ];
@@ -4563,7 +4554,6 @@ function renderSave(){
     "<div class='kv'><span>创建时间</span><b>" + created + "</b></div>" +
     "<div class='kv'><span>最近保存</span><b>" + (state.savedAt? new Date(state.savedAt).toLocaleString() : "—") + "</b></div>";
   const sl = $("saveStatusLine"); if(sl) sl.textContent = acctMode() === "shell"? "已与账号同步（自动保存）" : "保存在本机浏览器（自动保存）";
-  const wb = $("wipeBox"); if(wb) wb.style.display = "none";
 }
 
 /* ---- 全局操作 ---- */
@@ -4756,25 +4746,7 @@ function bind(){
       btn.onclick = desktopGo;
     });
   })();
-  /* ---- 存档页接线（v3.3：只剩删档重开） ---- */
-  $("btnWipe1").onclick = function(){ $("wipeBox").style.display = ""; };
-  $("btnWipeCancel").onclick = function(){ $("wipeBox").style.display = "none"; };
-  $("btnWipe2").onclick = async function(){
-    const btn = this; btn.disabled = true;
-    if(acctMode() === "shell"){
-      const ok = await acctPut(JSON.stringify(newState()));
-      if(!ok){ btn.disabled = false; showNotice("云端存档清除失败（网络问题），为防旧档被恢复，这次删档没有执行。联网后重试一次。"); return; }
-    }
-    try{
-      localStorage.removeItem(MAIN_KEY);
-      localStorage.removeItem(MAIN_KEY + "_v6bak");
-      localStorage.removeItem(SAVE_KEY);
-      localStorage.removeItem(SAVE_META_KEY);
-      localStorage.removeItem("sanguo_idle_save_backup");
-      for(let n = 1; n <= SLOT_COUNT; n++){ localStorage.removeItem(slotKey(n)); localStorage.removeItem(slotBackupKey(n)); localStorage.removeItem(slotKey(n) + "_v6bak"); }
-    }catch(e){}
-    location.reload();
-  };
+  /* ---- 存档页接线：第 39 批起无删档功能（主人 2026-11-22 令下线删档重开） ---- */
 
   const enhBtn = document.createElement("button");
   enhBtn.className="btn"; enhBtn.textContent="执行强化（需选满 5 张饲料）"; enhBtn.style.margin="0 12px";
