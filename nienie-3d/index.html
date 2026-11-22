@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>捏捏 3D 手感原型 v0.1</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif; background: #f3efe9; color: #2e2a26; }
+  #scene { position: fixed; inset: 0; touch-action: none; cursor: grab; }
+  #scene:active { cursor: grabbing; }
+  header { position: fixed; top: 0; left: 0; right: 0; padding: 14px 16px 8px; text-align: center; pointer-events: none; }
+  header h1 { font-size: 19px; font-weight: 700; letter-spacing: .04em; }
+  header p { font-size: 12.5px; color: #8a8178; margin-top: 3px; }
+  #meters { position: fixed; top: 74px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: none; }
+  .meter { background: rgba(255,255,255,.82); border: 1px solid #e3ddd2; border-radius: 999px; padding: 5px 12px; font-size: 12px; color: #6d6459; white-space: nowrap; }
+  .meter b { color: #2e2a26; font-variant-numeric: tabular-nums; }
+  #panel { position: fixed; left: 0; right: 0; bottom: 0; padding: 10px 14px calc(12px + env(safe-area-inset-bottom)); background: rgba(255,255,255,.9); backdrop-filter: blur(10px); border-top: 1px solid #e3ddd2; }
+  .row { display: flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+  .row:first-child { margin-top: 0; }
+  .label { font-size: 12px; color: #8a8178; width: 34px; text-align: right; flex: none; }
+  button { font: inherit; font-size: 13.5px; border: 1px solid #ddd5c7; background: #fff; color: #2e2a26; border-radius: 999px; padding: 8px 15px; cursor: pointer; transition: all .15s; }
+  button:active { transform: scale(.96); }
+  button.on { background: #2e2a26; color: #fff; border-color: #2e2a26; }
+  button.primary { background: #e4572e; border-color: #e4572e; color: #fff; font-weight: 600; }
+  button:disabled { opacity: .45; cursor: default; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; padding: 0; border: 2px solid rgba(0,0,0,.08); }
+  .swatch.on { border-color: #2e2a26; transform: scale(1.12); }
+  #toast { position: fixed; top: 118px; left: 50%; transform: translateX(-50%) translateY(-6px); background: #2e2a26; color: #fff; font-size: 13px; padding: 8px 16px; border-radius: 999px; opacity: 0; transition: all .25s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+<header>
+  <h1>捏捏 · 3D 手感原型</h1>
+  <p>按住球往下压、拖着揉，松手看回弹；裹蜡后用力捏，听它碎</p>
+</header>
+<div id="meters">
+  <div class="meter">按压 <b id="mDepth">0%</b></div>
+  <div class="meter">蜡壳 <b id="mWax">未裹蜡</b></div>
+</div>
+<div id="toast"></div>
+
+<div id="panel">
+  <div class="row">
+    <span class="label">手感</span>
+    <button data-preset="jelly" class="on">果冻 · 快回弹</button>
+    <button data-preset="memory">记忆棉 · 慢回弹</button>
+    <button data-preset="clay">粘土 · 不回弹</button>
+  </div>
+  <div class="row">
+    <span class="label">颜色</span>
+    <button class="swatch on" data-color="0xf6a8c1" style="background:#f6a8c1" aria-label="粉"></button>
+    <button class="swatch" data-color="0xa8d8f6" style="background:#a8d8f6" aria-label="蓝"></button>
+    <button class="swatch" data-color="0xbfe6b0" style="background:#bfe6b0" aria-label="绿"></button>
+    <button class="swatch" data-color="0xf9e08a" style="background:#f9e08a" aria-label="黄"></button>
+    <button class="swatch" data-color="0xd9c2f0" style="background:#d9c2f0" aria-label="紫"></button>
+  </div>
+  <div class="row">
+    <button id="btnWax" class="primary">裹一层蜡</button>
+    <button id="btnReset">捏回原形</button>
+    <button id="btnSpin">转一转</button>
+  </div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./three.module.js" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- 场景 ----------
+const container = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+container.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf3efe9);
+scene.fog = new THREE.Fog(0xf3efe9, 9, 16);
+
+const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 50);
+let camAngle = 0.5, camTilt = 0.32, spinVel = 0;
+function placeCamera() {
+  camera.position.set(Math.sin(camAngle) * 6.7, Math.sin(camTilt) * 6.7 + 0.4, Math.cos(camAngle) * 6.7);
+  camera.lookAt(0, -0.1, 0);
+}
+placeCamera();
+
+scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc4b4, 1.05));
+const key = new THREE.DirectionalLight(0xffffff, 1.6);
+key.position.set(3, 5, 2.5); key.castShadow = true;
+key.shadow.mapSize.set(1024, 1024);
+scene.add(key);
+const fill = new THREE.DirectionalLight(0xffe9d6, 0.5);
+fill.position.set(-4, 2, -3); scene.add(fill);
+
+const ground = new THREE.Mesh(
+  new THREE.CircleGeometry(3.4, 48),
+  new THREE.ShadowMaterial({ opacity: 0.16 })
+);
+ground.rotation.x = -Math.PI / 2; ground.position.y = -1.28; ground.receiveShadow = true;
+scene.add(ground);
+const disc = new THREE.Mesh(
+  new THREE.CircleGeometry(1.55, 48),
+  new THREE.MeshStandardMaterial({ color: 0xe9e1d3, roughness: 0.95 })
+);
+disc.rotation.x = -Math.PI / 2; disc.position.y = -1.27; disc.receiveShadow = true;
+scene.add(disc);
+
+// ---------- 捏捏本体：顶点弹簧 ----------
+const RADIUS = 1;
+const geo = new THREE.SphereGeometry(RADIUS, 48, 34);
+const posAttr = geo.attributes.position;
+const COUNT = posAttr.count;
+const rest = new Float32Array(posAttr.array);
+const disp = new Float32Array(COUNT * 3);
+const vel = new Float32Array(COUNT * 3);
+const restN = new Float32Array(COUNT * 3);
+for (let i = 0; i < COUNT; i++) {
+  const x = rest[i*3], y = rest[i*3+1], z = rest[i*3+2];
+  const l = Math.hypot(x, y, z) || 1;
+  restN[i*3] = x/l; restN[i*3+1] = y/l; restN[i*3+2] = z/l;
+}
+const ballMat = new THREE.MeshPhysicalMaterial({
+  color: 0xf6a8c1, roughness: 0.32, clearcoat: 0.65, clearcoatRoughness: 0.5,
+  sheen: 0.4, sheenColor: 0xffffff
+});
+const ball = new THREE.Mesh(geo, ballMat);
+ball.castShadow = true;
+scene.add(ball);
+
+// 高光小点缀：内部亮片（透过表面看不见，用表面微点代替）
+const glitterGeo = new THREE.BufferGeometry();
+{
+  const pts = [];
+  for (let i = 0; i < 260; i++) {
+    const v = new THREE.Vector3().randomDirection().multiplyScalar(RADIUS * 0.995);
+    pts.push(v.x, v.y, v.z);
+  }
+  glitterGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+}
+const glitter = new THREE.Points(glitterGeo, new THREE.PointsMaterial({
+  color: 0xffffff, size: 0.022, transparent: true, opacity: 0.55, sizeAttenuation: true
+}));
+scene.add(glitter);
+
+// ---------- 手感参数 ----------
+const PRESETS = {
+  jelly:  { k: 110, damp: 5.2, plastic: 0.0 },
+  memory: { k: 20,  damp: 7.5, plastic: 0.0 },
+  clay:   { k: 46,  damp: 9.0, plastic: 0.045 }
+};
+let preset = PRESETS.jelly, presetName = 'jelly';
+
+// ---------- 声音（WebAudio 合成，不用外部样本） ----------
+let AC = null, lastSquish = 0;
+function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
+function noiseBuffer(ac, dur) {
+  const b = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
+  const d = b.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  return b;
+}
+function playSquish(strength) {
+  const now = performance.now(); if (now - lastSquish < 110) return; lastSquish = now;
+  try {
+    const ac = audio(), t = ac.currentTime;
+    const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.16);
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(500 + strength * 300, t); f.frequency.exponentialRampToValueAtTime(160, t + 0.15);
+    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.10 + strength * 0.13, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.18);
+    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(85, t + 0.14);
+    const og = ac.createGain(); og.gain.setValueAtTime(0.05 * strength, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
+    o.connect(og).connect(ac.destination); o.start(t); o.stop(t + 0.16);
+  } catch (e) {}
+}
+function playCrack(layers, big) {
+  try {
+    const ac = audio(), t0 = ac.currentTime;
+    const bursts = big ? 7 : 4;
+    for (let i = 0; i < bursts; i++) {
+      const t = t0 + i * (0.028 + Math.random() * 0.03);
+      const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.07);
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1600 + Math.random() * 2200 + layers * 300; f.Q.value = 1.1;
+      const g = ac.createGain(); const peak = (0.16 + Math.random() * 0.14) * (big ? 1 : 0.7);
+      g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
+      src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.09);
+    }
+  } catch (e) {}
+}
+
+// ---------- 蜡壳：预切碎片 ----------
+let waxGroup = null, waxFrags = [], waxLayers = 0, waxStress = 0, waxCracked = 0;
+const mWax = document.getElementById('mWax');
+function waxStatus() {
+  if (!waxLayers) { mWax.textContent = '未裹蜡'; return; }
+  const total = waxFrags.length || 1;
+  const left = waxFrags.filter(f => f.state === 'on').length;
+  mWax.textContent = waxLayers + '层 · 完好 ' + Math.round(left / total * 100) + '%';
+}
+function applyWax() {
+  removeWax(true);
+  waxLayers = Math.min(3, waxLayers + 1);
+  const r = RADIUS + 0.028 + waxLayers * 0.014;
+  waxGroup = new THREE.Group();
+  const mat = new THREE.MeshPhysicalMaterial({ color: 0xfff6e8, roughness: 0.22, clearcoat: 0.9, clearcoatRoughness: 0.25 });
+  const COLS = 16, ROWS = 10;
+  for (let cx = 0; cx < COLS; cx++) {
+    for (let ry = 0; ry < ROWS; ry++) {
+      const phiStart = (cx / COLS) * Math.PI * 2, phiLen = (Math.PI * 2 / COLS) * 0.985;
+      const thStart = (ry / ROWS) * Math.PI, thLen = (Math.PI / ROWS) * 0.98;
+      const g = new THREE.SphereGeometry(r, 4, 3, phiStart, phiLen, thStart, thLen);
+      const m = new THREE.Mesh(g, mat);
+      m.castShadow = true;
+      const pm = phiStart + phiLen / 2, tm = thStart + thLen / 2;
+      const dir = new THREE.Vector3(-Math.cos(pm) * Math.sin(tm), Math.cos(tm), Math.sin(pm) * Math.sin(tm));
+      waxGroup.add(m);
+      waxFrags.push({ mesh: m, dir, state: 'on', vel: new THREE.Vector3(), rotVel: new THREE.Vector3() });
+    }
+  }
+  scene.add(waxGroup);
+  waxStress = 0; waxCracked = 0;
+  waxStatus(); toast('裹上第 ' + waxLayers + ' 层蜡，用力捏捏看');
+  document.getElementById('btnWax').textContent = waxLayers >= 3 ? '已裹满 3 层' : '再裹一层蜡';
+  document.getElementById('btnWax').disabled = waxLayers >= 3;
+}
+function removeWax(silent) {
+  if (waxGroup) { scene.remove(waxGroup); waxGroup = null; }
+  waxFrags = []; if (!silent) { waxLayers = 0; waxStatus(); }
+}
+function crackWax(hitDir, power) {
+  let detached = 0;
+  const range = 0.55 + power * 0.5;
+  for (const f of waxFrags) {
+    if (f.state !== 'on') continue;
+    if (f.dir.angleTo(hitDir) < range * (0.55 + Math.random() * 0.6)) {
+      f.state = 'fall';
+      f.vel.copy(f.dir).multiplyScalar(0.7 + Math.random() * 0.9);
+      f.vel.y += 0.4;
+      f.rotVel.set(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3);
+      detached++;
+    }
+  }
+  if (detached) { playCrack(waxLayers, detached > 8); waxCracked += detached; waxStatus(); }
+  return detached;
+}
+
+// ---------- 按压交互 ----------
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let pressing = false, pressDepth = 0, pressDir = new THREE.Vector3(0, 1, 0), pressPoint = new THREE.Vector3();
+let lastHitDir = new THREE.Vector3(0, 1, 0), draggingBg = false, lastX = 0, depthVel = 0, prevDepth = 0;
+
+function castBall(e) {
+  pointer.x = (e.clientX / innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hit = raycaster.intersectObject(ball, false)[0];
+  return hit || null;
+}
+renderer.domElement.addEventListener('pointerdown', e => {
+  audio();
+  const hit = castBall(e);
+  renderer.domElement.setPointerCapture(e.pointerId);
+  if (hit) {
+    pressing = true;
+    pressPoint.copy(hit.point);
+    pressDir.copy(hit.point).normalize();
+    lastHitDir.copy(pressDir);
+  } else { draggingBg = true; lastX = e.clientX; }
+});
+renderer.domElement.addEventListener('pointermove', e => {
+  if (pressing) {
+    const hit = castBall(e);
+    if (hit) { pressPoint.copy(hit.point); pressDir.copy(hit.point).normalize(); lastHitDir.copy(pressDir); }
+  } else if (draggingBg) {
+    camAngle += (e.clientX - lastX) * 0.008; lastX = e.clientX; placeCamera();
+  }
+});
+function endPress() { pressing = false; draggingBg = false; }
+renderer.domElement.addEventListener('pointerup', endPress);
+renderer.domElement.addEventListener('pointercancel', endPress);
+
+// ---------- 物理 ----------
+const tmpV = new THREE.Vector3();
+function physics(dt) {
+  const sub = 2, sdt = Math.min(dt, 0.033) / sub;
+  for (let s = 0; s < sub; s++) {
+    // 按压深度：按住时渐深，拖动揉时维持
+    prevDepth = pressDepth;
+    if (pressing) pressDepth = Math.min(0.62, pressDepth + sdt * 0.85);
+    else pressDepth = Math.max(0, pressDepth - sdt * 2.2);
+    depthVel = (pressDepth - prevDepth) / Math.max(sdt, 0.001);
+
+    for (let i = 0; i < COUNT; i++) {
+      const ix = i * 3;
+      const rx = rest[ix], ry = rest[ix + 1], rz = rest[ix + 2];
+      let dx = disp[ix], dy = disp[ix + 1], dz = disp[ix + 2];
+      let vx = vel[ix], vy = vel[ix + 1], vz = vel[ix + 2];
+
+      // 弹簧回原位 + 阻尼
+      vx += (-preset.k * dx - preset.damp * vx) * sdt;
+      vy += (-preset.k * dy - preset.damp * vy) * sdt;
+      vz += (-preset.k * dz - preset.damp * vz) * sdt;
+
+      if (pressing && pressDepth > 0.01) {
+        // 离按压点越近凹得越深（高斯衰减）：位移直接向目标混合，保证凹陷看得见摸得着
+        const hx = rx - pressDir.x, hy = ry - pressDir.y, hz = rz - pressDir.z;
+        const dist2 = hx * hx + hy * hy + hz * hz;
+        const fall = Math.exp(-dist2 / 0.38);
+        // 体积守恒：按压轴的赤道带向外鼓
+        const axial = rx * pressDir.x + ry * pressDir.y + rz * pressDir.z;
+        const equator = Math.max(0, 1 - Math.abs(axial) / 0.55);
+        const bulge = pressDepth * 0.20 * equator * equator;
+        const tx = -pressDir.x * pressDepth * 0.88 * fall + restN[ix] * bulge;
+        const ty = -pressDir.y * pressDepth * 0.88 * fall + restN[ix + 1] * bulge;
+        const tz = -pressDir.z * pressDepth * 0.88 * fall + restN[ix + 2] * bulge;
+        const infl = Math.max(fall, equator * equator * 0.7);
+        if (infl > 0.02) {
+          const a = (1 - Math.exp(-sdt * 26)) * Math.min(1, infl + 0.25);
+          const ndx = dx + (tx - dx) * a, ndy = dy + (ty - dy) * a, ndz = dz + (tz - dz) * a;
+          vx = vx * 0.4 + ((ndx - dx) / sdt) * 0.30;
+          vy = vy * 0.4 + ((ndy - dy) / sdt) * 0.30;
+          vz = vz * 0.4 + ((ndz - dz) / sdt) * 0.30;
+          dx = ndx; dy = ndy; dz = ndz;
+        }
+        // 粘土：原位跟着变形走，松手不回
+        if (preset.plastic > 0) {
+          rest[ix] += dx * preset.plastic * sdt * 8;
+          rest[ix + 1] += dy * preset.plastic * sdt * 8;
+          rest[ix + 2] += dz * preset.plastic * sdt * 8;
+        }
+      }
+      vx *= 0.995; vy *= 0.995; vz *= 0.995;
+      dx += vx * sdt; dy += vy * sdt; dz += vz * sdt;
+      disp[ix] = dx; disp[ix + 1] = dy; disp[ix + 2] = dz;
+      vel[ix] = vx; vel[ix + 1] = vy; vel[ix + 2] = vz;
+      posAttr.array[ix] = rx + dx; posAttr.array[ix + 1] = ry + dy; posAttr.array[ix + 2] = rz + dz;
+    }
+    posAttr.needsUpdate = true;
+    geo.computeVertexNormals();
+
+    // 蜡壳应力：压得够深够快就积累，超阈值开裂
+    if (waxLayers && pressing) {
+      const threshold = 0.20 + waxLayers * 0.055;
+      if (pressDepth > threshold) {
+        waxStress += (pressDepth - threshold) * sdt * 14 + Math.max(0, depthVel) * sdt * 2.0;
+        if (waxStress > 0.42) {
+          const n = crackWax(lastHitDir, pressDepth);
+          waxStress = n ? 0.12 : waxStress * 0.6;
+          if (n) toast('咔嚓！蜡壳碎了 ' + n + ' 片');
+        }
+      } else waxStress = Math.max(0, waxStress - sdt * 0.8);
+    }
+  }
+  // 捏声
+  if (pressing && depthVel > 0.25) playSquish(Math.min(1, pressDepth + depthVel * 0.2));
+  document.getElementById('mDepth').textContent = Math.round(pressDepth / 0.62 * 100) + '%';
+
+  // 碎片掉落
+  for (const f of waxFrags) {
+    if (f.state !== 'fall') continue;
+    f.vel.y -= 3.4 * dt;
+    f.mesh.position.addScaledVector(f.vel, dt);
+    f.mesh.rotation.x += f.rotVel.x * dt; f.mesh.rotation.y += f.rotVel.y * dt; f.mesh.rotation.z += f.rotVel.z * dt;
+    if (f.mesh.position.y < -2.4) f.state = 'gone', f.mesh.visible = false;
+  }
+  glitter.rotation.y += dt * 0.05;
+  if (Math.abs(spinVel) > 0.001) { camAngle += spinVel * dt; spinVel *= Math.pow(0.25, dt); placeCamera(); }
+}
+
+// ---------- UI ----------
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1700);
+}
+document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-preset]').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); presetName = b.dataset.preset; preset = PRESETS[presetName];
+  toast({ jelly: '果冻：弹回去还晃', memory: '记忆棉：慢慢鼓回来', clay: '粘土：捏成啥样就是啥样' }[presetName]);
+}));
+document.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-color]').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); ballMat.color.setHex(parseInt(b.dataset.color));
+}));
+document.getElementById('btnWax').addEventListener('click', () => { audio(); applyWax(); });
+document.getElementById('btnReset').addEventListener('click', () => {
+  for (let i = 0; i < COUNT * 3; i++) { disp[i] = 0; vel[i] = 0; }
+  // 粘土改过的原形也恢复
+  const fresh = new THREE.SphereGeometry(RADIUS, 48, 34);
+  rest.set(fresh.attributes.position.array);
+  removeWax(); waxLayers = 0; waxStatus();
+  const bw = document.getElementById('btnWax'); bw.disabled = false; bw.textContent = '裹一层蜡';
+  toast('恢复出厂圆润');
+});
+document.getElementById('btnSpin').addEventListener('click', () => { spinVel = 5; });
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ---------- 主循环 ----------
+const clock = new THREE.Clock();
+function loop() {
+  requestAnimationFrame(loop);
+  physics(clock.getDelta());
+  renderer.render(scene, camera);
+}
+loop();
+waxStatus();
+</script>
+</body>
+</html>
