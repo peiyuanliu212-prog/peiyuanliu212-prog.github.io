@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>捏捏 3D 手感原型 v0.1</title>
+<title>捏捏 3D 手感原型 v0.2</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
@@ -207,21 +207,28 @@ function waxStatus() {
 function applyWax() {
   removeWax(true);
   waxLayers = Math.min(3, waxLayers + 1);
-  const r = RADIUS + 0.028 + waxLayers * 0.014;
+  const r = RADIUS + 0.042 + waxLayers * 0.014;
   waxGroup = new THREE.Group();
-  const mat = new THREE.MeshPhysicalMaterial({ color: 0xfff6e8, roughness: 0.22, clearcoat: 0.9, clearcoatRoughness: 0.25 });
-  const COLS = 16, ROWS = 10;
+  // 全壳统一一个材质：真蜡就是一色的，随机近色反而拼成花布（v0.2 实测教训）
+  const waxMat = new THREE.MeshPhysicalMaterial({
+    color: 0xfff6e8, roughness: 0.22, clearcoat: 0.9, clearcoatRoughness: 0.25
+  });
+  const COLS = 18, ROWS = 12;
   for (let cx = 0; cx < COLS; cx++) {
     for (let ry = 0; ry < ROWS; ry++) {
-      const phiStart = (cx / COLS) * Math.PI * 2, phiLen = (Math.PI * 2 / COLS) * 0.985;
-      const thStart = (ry / ROWS) * Math.PI, thLen = (Math.PI / ROWS) * 0.98;
-      const g = new THREE.SphereGeometry(r, 4, 3, phiStart, phiLen, thStart, thLen);
-      const m = new THREE.Mesh(g, mat);
-      m.castShadow = true;
-      const pm = phiStart + phiLen / 2, tm = thStart + thLen / 2;
+      const phiFull = Math.PI * 2 / COLS, thFull = Math.PI / ROWS;
+      const phiStart = cx * phiFull, thStart = ry * thFull;
+      const pm = phiStart + phiFull / 2, tm = thStart + thFull / 2;
       const dir = new THREE.Vector3(-Math.cos(pm) * Math.sin(tm), Math.cos(tm), Math.sin(pm) * Math.sin(tm));
-      waxGroup.add(m);
-      waxFrags.push({ mesh: m, dir, state: 'on', vel: new THREE.Vector3(), rotVel: new THREE.Vector3() });
+      const mat = waxMat;
+      // 外层碎片：留极细缝
+      const g = new THREE.SphereGeometry(r, 6, 4, phiStart, phiFull * 0.99, thStart, thFull * 0.985);
+      const m = new THREE.Mesh(g, mat); m.castShadow = true;
+      // 内衬碎片：无缝同色，堵住缝隙透出的球色；开裂时与外层成对脱落
+      const g2 = new THREE.SphereGeometry(r - 0.016, 6, 4, phiStart, phiFull * 1.01, thStart, thFull * 1.01);
+      const m2 = new THREE.Mesh(g2, mat);
+      waxGroup.add(m); waxGroup.add(m2);
+      waxFrags.push({ mesh: m, mesh2: m2, dir, state: 'on', vel: new THREE.Vector3(), rotVel: new THREE.Vector3(), off: new THREE.Vector3(), jitter: 0.75 + Math.random() * 0.5 });
     }
   }
   scene.add(waxGroup);
@@ -236,14 +243,16 @@ function removeWax(silent) {
 }
 function crackWax(hitDir, power) {
   let detached = 0;
-  const range = 0.55 + power * 0.5;
+  const range = 0.50 + power * 0.45;
   for (const f of waxFrags) {
     if (f.state !== 'on') continue;
-    if (f.dir.angleTo(hitDir) < range * (0.55 + Math.random() * 0.6)) {
+    const ang = f.dir.angleTo(hitDir);
+    // 边缘带随机豁口，裂口不规则不呈圆斑
+    if (ang < range * f.jitter && Math.random() < 1.15 - ang / (range * 1.25)) {
       f.state = 'fall';
-      f.vel.copy(f.dir).multiplyScalar(0.7 + Math.random() * 0.9);
-      f.vel.y += 0.4;
-      f.rotVel.set(Math.random() * 6 - 3, Math.random() * 6 - 3, Math.random() * 6 - 3);
+      f.vel.copy(f.dir).multiplyScalar(0.55 + Math.random() * 0.55);
+      f.vel.y += 0.12;
+      f.rotVel.set(Math.random() * 9 - 4.5, Math.random() * 9 - 4.5, Math.random() * 9 - 4.5);
       detached++;
     }
   }
@@ -290,7 +299,8 @@ renderer.domElement.addEventListener('pointercancel', endPress);
 // ---------- 物理 ----------
 const tmpV = new THREE.Vector3();
 function physics(dt) {
-  const sub = 2, sdt = Math.min(dt, 0.033) / sub;
+  const rawDt = Math.min(dt, 0.08);
+  const sub = Math.max(1, Math.min(4, Math.ceil(rawDt / 0.0167))), sdt = rawDt / sub;
   for (let s = 0; s < sub; s++) {
     // 按压深度：按住时渐深，拖动揉时维持
     prevDepth = pressDepth;
@@ -317,7 +327,7 @@ function physics(dt) {
         // 体积守恒：按压轴的赤道带向外鼓
         const axial = rx * pressDir.x + ry * pressDir.y + rz * pressDir.z;
         const equator = Math.max(0, 1 - Math.abs(axial) / 0.55);
-        const bulge = pressDepth * 0.20 * equator * equator;
+        const bulge = pressDepth * (waxLayers ? 0.11 : 0.20) * equator * equator;
         const tx = -pressDir.x * pressDepth * 0.88 * fall + restN[ix] * bulge;
         const ty = -pressDir.y * pressDepth * 0.88 * fall + restN[ix + 1] * bulge;
         const tz = -pressDir.z * pressDepth * 0.88 * fall + restN[ix + 2] * bulge;
@@ -363,13 +373,29 @@ function physics(dt) {
   if (pressing && depthVel > 0.25) playSquish(Math.min(1, pressDepth + depthVel * 0.2));
   document.getElementById('mDepth').textContent = Math.round(pressDepth / 0.62 * 100) + '%';
 
-  // 碎片掉落
+  // 碎片掉落：干脆往下掉，不许空中飘
   for (const f of waxFrags) {
-    if (f.state !== 'fall') continue;
-    f.vel.y -= 3.4 * dt;
-    f.mesh.position.addScaledVector(f.vel, dt);
-    f.mesh.rotation.x += f.rotVel.x * dt; f.mesh.rotation.y += f.rotVel.y * dt; f.mesh.rotation.z += f.rotVel.z * dt;
-    if (f.mesh.position.y < -2.4) f.state = 'gone', f.mesh.visible = false;
+    if (f.state === 'fall') {
+      f.vel.y -= 5.6 * dt;
+      f.off.addScaledVector(f.vel, dt);
+      f.mesh.position.copy(f.off); f.mesh2.position.copy(f.off);
+      f.mesh.rotation.x += f.rotVel.x * dt; f.mesh.rotation.y += f.rotVel.y * dt; f.mesh.rotation.z += f.rotVel.z * dt;
+      f.mesh2.rotation.copy(f.mesh.rotation);
+      if (f.off.y < -2.6) { f.state = 'gone'; f.mesh.visible = false; f.mesh2.visible = false; }
+    } else if (f.state === 'on') {
+      // 完好碎片跟随按压凹陷：裹着蜡也能看见被捏下去，松手弹回
+      let tx = 0, ty = 0, tz = 0;
+      if (pressing && pressDepth > 0.01) {
+        const ang = f.dir.angleTo(pressDir);
+        const fall = Math.exp(-(ang * ang) / 0.30);
+        tx = -pressDir.x * pressDepth * 0.82 * fall;
+        ty = -pressDir.y * pressDepth * 0.82 * fall;
+        tz = -pressDir.z * pressDepth * 0.82 * fall;
+      }
+      const a = 1 - Math.exp(-dt * 22);
+      f.off.x += (tx - f.off.x) * a; f.off.y += (ty - f.off.y) * a; f.off.z += (tz - f.off.z) * a;
+      f.mesh.position.copy(f.off); f.mesh2.position.copy(f.off);
+    }
   }
   glitter.rotation.y += dt * 0.05;
   if (Math.abs(spinVel) > 0.001) { camAngle += spinVel * dt; spinVel *= Math.pow(0.25, dt); placeCamera(); }
@@ -385,6 +411,8 @@ function toast(msg) {
 document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('[data-preset]').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); presetName = b.dataset.preset; preset = PRESETS[presetName];
+  for (let i = 0; i < COUNT * 3; i++) { disp[i] = 0; vel[i] = 0; }
+  { const fresh = new THREE.SphereGeometry(RADIUS, 48, 34); rest.set(fresh.attributes.position.array); }
   toast({ jelly: '果冻：弹回去还晃', memory: '记忆棉：慢慢鼓回来', clay: '粘土：捏成啥样就是啥样' }[presetName]);
 }));
 document.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => {
