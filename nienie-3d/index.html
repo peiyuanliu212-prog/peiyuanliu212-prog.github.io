@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>捏捏 3D 手感原型 v0.3</title>
+<title>捏捏 3D 手感原型 v0.4 · 脆皮</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
@@ -24,43 +24,37 @@
   button:active { transform: scale(.96); }
   button.on { background: #2e2a26; color: #fff; border-color: #2e2a26; }
   button.primary { background: #e4572e; border-color: #e4572e; color: #fff; font-weight: 600; }
-  button:disabled { opacity: .45; cursor: default; }
   .swatch { width: 30px; height: 30px; border-radius: 50%; padding: 0; border: 2px solid rgba(0,0,0,.08); }
   .swatch.on { border-color: #2e2a26; transform: scale(1.12); }
-  #toast { position: fixed; top: 118px; left: 50%; transform: translateX(-50%) translateY(-6px); background: #2e2a26; color: #fff; font-size: 13px; padding: 8px 16px; border-radius: 999px; opacity: 0; transition: all .25s; pointer-events: none; }
+  #toast { position: fixed; top: 118px; left: 50%; transform: translateX(-50%) translateY(-6px); background: #2e2a26; color: #fff; font-size: 13px; padding: 8px 16px; border-radius: 999px; opacity: 0; transition: all .25s; pointer-events: none; z-index: 5; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
 <body>
 <div id="scene"></div>
 <header>
-  <h1>捏捏 · 3D 手感原型 v0.3</h1>
-  <p>按住往下压、拖着揉，按得越久陷得越宽；裹蜡后用力捏，听它碎</p>
+  <h1>捏捏 · 脆皮原型 v0.4</h1>
+  <p>按住压——裂纹会从指尖爬开，咔嚓作响；裂过的地方会变软、塌下去</p>
 </header>
 <div id="meters">
   <div class="meter">按压 <b id="mDepth">0%</b></div>
-  <div class="meter">蜡壳 <b id="mWax">未裹蜡</b></div>
+  <div class="meter">裂纹 <b id="mCrack">0 条</b></div>
 </div>
 <div id="toast"></div>
 
 <div id="panel">
   <div class="row">
-    <span class="label">手感</span>
-    <button data-preset="jelly" class="on">果冻 · 快回弹</button>
-    <button data-preset="memory">记忆棉 · 慢回弹</button>
-    <button data-preset="clay">粘土 · 不回弹</button>
-  </div>
-  <div class="row">
+    <span class="label">造型</span>
+    <button data-shape="block" class="on">方块 · 半透</button>
+    <button data-shape="ball">圆球</button>
     <span class="label">颜色</span>
-    <button class="swatch on" data-color="0xf6a8c1" style="background:#f6a8c1" aria-label="粉"></button>
-    <button class="swatch" data-color="0xa8d8f6" style="background:#a8d8f6" aria-label="蓝"></button>
-    <button class="swatch" data-color="0xbfe6b0" style="background:#bfe6b0" aria-label="绿"></button>
-    <button class="swatch" data-color="0xf9e08a" style="background:#f9e08a" aria-label="黄"></button>
-    <button class="swatch" data-color="0xd9c2f0" style="background:#d9c2f0" aria-label="紫"></button>
+    <button class="swatch on" data-color="0xf6f1e7" style="background:#f6f1e7" aria-label="奶白"></button>
+    <button class="swatch" data-color="0xf6cdd9" style="background:#f6cdd9" aria-label="粉"></button>
+    <button class="swatch" data-color="0xd7e8c3" style="background:#d7e8c3" aria-label="抹茶"></button>
+    <button class="swatch" data-color="0xf9e3ae" style="background:#f9e3ae" aria-label="蛋黄"></button>
   </div>
   <div class="row">
-    <button id="btnWax" class="primary">裹一层蜡</button>
-    <button id="btnReset">捏回原形</button>
+    <button id="btnReset" class="primary">新的一块（重置）</button>
     <button id="btnSpin">转一转</button>
   </div>
 </div>
@@ -82,111 +76,121 @@ container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xf3efe9);
-scene.fog = new THREE.Fog(0xf3efe9, 10, 18);
+scene.fog = new THREE.Fog(0xf3efe9, 11, 19);
 
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 50);
-let camAngle = 0.5, camTilt = 0.32, spinVel = 0;
+let camAngle = 0.55, camTilt = 0.42, spinVel = 0;
 function placeCamera() {
   camera.position.set(Math.sin(camAngle) * 6.7, Math.sin(camTilt) * 6.7 + 0.4, Math.cos(camAngle) * 6.7);
-  camera.lookAt(0, -0.1, 0);
+  camera.lookAt(0, -0.05, 0);
 }
 placeCamera();
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc4b4, 1.05));
-const key = new THREE.DirectionalLight(0xffffff, 1.6);
+scene.add(new THREE.HemisphereLight(0xffffff, 0xcfc4b4, 1.1));
+const key = new THREE.DirectionalLight(0xffffff, 1.5);
 key.position.set(3, 5, 2.5); key.castShadow = true;
 key.shadow.mapSize.set(1024, 1024);
 scene.add(key);
-const fill = new THREE.DirectionalLight(0xffe9d6, 0.5);
+const fill = new THREE.DirectionalLight(0xffe9d6, 0.55);
 fill.position.set(-4, 2, -3); scene.add(fill);
 
-const ground = new THREE.Mesh(new THREE.CircleGeometry(3.4, 48), new THREE.ShadowMaterial({ opacity: 0.16 }));
-ground.rotation.x = -Math.PI / 2; ground.position.y = -1.28; ground.receiveShadow = true;
+const ground = new THREE.Mesh(new THREE.CircleGeometry(3.6, 48), new THREE.ShadowMaterial({ opacity: 0.15 }));
+ground.rotation.x = -Math.PI / 2; ground.position.y = -1.06; ground.receiveShadow = true;
 scene.add(ground);
-const disc = new THREE.Mesh(new THREE.CircleGeometry(1.55, 48), new THREE.MeshStandardMaterial({ color: 0xe9e1d3, roughness: 0.95 }));
-disc.rotation.x = -Math.PI / 2; disc.position.y = -1.27; disc.receiveShadow = true;
+const disc = new THREE.Mesh(new THREE.CircleGeometry(1.75, 48), new THREE.MeshStandardMaterial({ color: 0xe9e1d3, roughness: 0.95 }));
+disc.rotation.x = -Math.PI / 2; disc.position.y = -1.05; disc.receiveShadow = true;
 scene.add(disc);
 
-// ---------- 本体表面（只负责长相，形变跟随内部粒子笼） ----------
-const RADIUS = 1;
-const geo = new THREE.SphereGeometry(RADIUS, 48, 34);
-const posAttr = geo.attributes.position;
-const COUNT = posAttr.count;
-const surfRest = new Float32Array(posAttr.array);
+// ---------- 造型：超椭球（方块 q=4 / 圆球 q=2），统一隐式面 ----------
+const SHAPES = {
+  block: { a: 1.14, b: 0.76, c: 1.14, q: 4 },
+  ball:  { a: 1.02, b: 1.02, c: 1.02, q: 2 }
+};
+let shape = SHAPES.block, shapeName = 'block';
+function shapeG(x, y, z) { // 隐式函数值，表面 =1
+  const s = shape;
+  return Math.pow(Math.abs(x) / s.a, s.q) + Math.pow(Math.abs(y) / s.b, s.q) + Math.pow(Math.abs(z) / s.c, s.q);
+}
+function surfPoint(dir, out) { // 沿方向 dir 到表面的点
+  const s = shape;
+  const g = Math.pow(Math.abs(dir.x) / s.a, s.q) + Math.pow(Math.abs(dir.y) / s.b, s.q) + Math.pow(Math.abs(dir.z) / s.c, s.q);
+  const r = Math.pow(g, -1 / s.q);
+  out.set(dir.x * r, dir.y * r, dir.z * r);
+  return out;
+}
+function surfNormal(p, out) { // 隐式面梯度
+  const s = shape, q = s.q;
+  out.set(
+    q * Math.pow(Math.abs(p.x), q - 1) * Math.sign(p.x) / Math.pow(s.a, q),
+    q * Math.pow(Math.abs(p.y), q - 1) * Math.sign(p.y) / Math.pow(s.b, q),
+    q * Math.pow(Math.abs(p.z), q - 1) * Math.sign(p.z) / Math.pow(s.c, q)
+  );
+  return out.normalize();
+}
+function buildSurfaceGeometry() {
+  const g = new THREE.SphereGeometry(1, 64, 44);
+  const pos = g.attributes.position;
+  const v = new THREE.Vector3(), d = new THREE.Vector3();
+  for (let i = 0; i < pos.count; i++) {
+    v.fromBufferAttribute(pos, i);
+    d.copy(v).normalize();
+    surfPoint(d, v);
+    pos.setXYZ(i, v.x, v.y, v.z);
+  }
+  g.computeVertexNormals();
+  return g;
+}
 const ballMat = new THREE.MeshPhysicalMaterial({
-  color: 0xf6a8c1, roughness: 0.32, clearcoat: 0.65, clearcoatRoughness: 0.5,
-  sheen: 0.4, sheenColor: 0xffffff
+  color: 0xf6f1e7, roughness: 0.38, transmission: 0.5, thickness: 1.5,
+  ior: 1.35, clearcoat: 0.4, clearcoatRoughness: 0.5, sheen: 0.3, sheenColor: 0xffffff
 });
-const ball = new THREE.Mesh(geo, ballMat);
+let surfGeo = buildSurfaceGeometry();
+const ball = new THREE.Mesh(surfGeo, ballMat);
 ball.castShadow = true;
 scene.add(ball);
+let surfRest = new Float32Array(surfGeo.attributes.position.array);
+let surfCount = surfGeo.attributes.position.count;
 
-const glitterGeo = new THREE.BufferGeometry();
-const GLIT_N = 260, glitRest = new Float32Array(GLIT_N * 3);
-{
-  const pts = [];
-  for (let i = 0; i < GLIT_N; i++) {
-    const v = new THREE.Vector3().randomDirection().multiplyScalar(RADIUS * 0.995);
-    pts.push(v.x, v.y, v.z); glitRest[i*3] = v.x; glitRest[i*3+1] = v.y; glitRest[i*3+2] = v.z;
-  }
-  glitterGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
-}
-const glitter = new THREE.Points(glitterGeo, new THREE.PointsMaterial({
-  color: 0xffffff, size: 0.022, transparent: true, opacity: 0.55, sizeAttenuation: true
-}));
-scene.add(glitter);
-
-// ---------- v0.3 内核：内部粒子笼 + 延迟形变状态 ----------
-// 学 Squishy Lab / Jelly-Baby：低模体积笼算物理，表面嵌入跟随；固定 120Hz。
-const cagePts = [];
-{
-  const vals = [-0.95, -0.57, -0.19, 0.19, 0.57, 0.95];
-  for (const x of vals) for (const y of vals) for (const z of vals) {
-    if (Math.hypot(x, y, z) <= 1.0) cagePts.push([x, y, z]);
+// ---------- 内部粒子笼（沿用 v0.3 内核，按造型重建） ----------
+let NP = 0, pRest, pPos, pVel, pSlow, springs = [];
+function buildCage() {
+  const pts = [], step = 0.36, s = shape;
+  for (let x = -s.a; x <= s.a + 0.001; x += step)
+    for (let y = -s.b; y <= s.b + 0.001; y += step)
+      for (let z = -s.c; z <= s.c + 0.001; z += step)
+        if (shapeG(x, y, z) <= 0.78) pts.push([x, y, z]);
+  NP = pts.length;
+  pRest = new Float32Array(NP * 3); pPos = new Float32Array(NP * 3);
+  pVel = new Float32Array(NP * 3); pSlow = new Float32Array(NP * 3);
+  for (let i = 0; i < NP; i++) { pRest.set(pts[i], i * 3); pPos.set(pts[i], i * 3); pSlow.set(pts[i], i * 3); }
+  springs = [];
+  for (let i = 0; i < NP; i++) for (let j = i + 1; j < NP; j++) {
+    const dx = pRest[i*3] - pRest[j*3], dy = pRest[i*3+1] - pRest[j*3+1], dz = pRest[i*3+2] - pRest[j*3+2];
+    const d = Math.hypot(dx, dy, dz);
+    if (d <= 0.60 && d > 0.001) springs.push([i, j, d]);
   }
 }
-const NP = cagePts.length;
-const pRest = new Float32Array(NP * 3), pPos = new Float32Array(NP * 3);
-const pVel = new Float32Array(NP * 3), pSlow = new Float32Array(NP * 3);
-for (let i = 0; i < NP; i++) {
-  pRest.set(cagePts[i], i * 3); pPos.set(cagePts[i], i * 3); pSlow.set(cagePts[i], i * 3);
-}
-const springs = []; // [i, j, restLen]
-for (let i = 0; i < NP; i++) for (let j = i + 1; j < NP; j++) {
-  const dx = pRest[i*3] - pRest[j*3], dy = pRest[i*3+1] - pRest[j*3+1], dz = pRest[i*3+2] - pRest[j*3+2];
-  const d = Math.hypot(dx, dy, dz);
-  if (d <= 0.68 && d > 0.001) springs.push([i, j, d]);
-}
-function resetCage() {
-  pPos.set(pRest); pSlow.set(pRest); pVel.fill(0);
-}
-// 位移场：任意静止点 x 处的形变 = 全部粒子位移的反距离加权混合
-const _d = { x: 0, y: 0, z: 0 };
+buildCage();
+function resetCage() { pPos.set(pRest); pSlow.set(pRest); pVel.fill(0); }
+const _out = { x: 0, y: 0, z: 0 };
 function dispAt(x, y, z, out) {
   let wx = 0, wy = 0, wz = 0, wsum = 0;
   for (let i = 0; i < NP; i++) {
     const ix = i * 3;
     const dx = x - pRest[ix], dy = y - pRest[ix+1], dz = z - pRest[ix+2];
-    const d2 = dx*dx + dy*dy + dz*dz + 0.02; const w = 1 / (d2 * d2);
-    wx += (pPos[ix]   - pRest[ix])   * w;
-    wy += (pPos[ix+1] - pRest[ix+1]) * w;
-    wz += (pPos[ix+2] - pRest[ix+2]) * w;
+    const d2 = dx*dx + dy*dy + dz*dz + 0.02;
+    const w = 1 / (d2 * d2);
+    wx += (pPos[ix] - pRest[ix]) * w; wy += (pPos[ix+1] - pRest[ix+1]) * w; wz += (pPos[ix+2] - pRest[ix+2]) * w;
     wsum += w;
   }
   out.x = wx / wsum; out.y = wy / wsum; out.z = wz / wsum;
   return out;
 }
+// 脆皮参数：形变退居其次——浅、硬；慢状态让压痕残留（不回原形）
+const PHYS = { kSpring: 250, kAnchor: 42, damp: 3.4, slowMix: 0.5, tauIn: 0.2, tauOut: 30, kPress: 430 };
 
-// 手感参数：同一套（弹簧/锚定/阻尼/慢状态）表达三档
-const PRESETS = {
-  jelly:  { kSpring: 300, kAnchor: 82, damp: 1.7, slowMix: 0.0,  tauIn: 0.30, tauOut: 1.5,  kPress: 520 },
-  memory: { kSpring: 210, kAnchor: 30, damp: 5.0, slowMix: 0.92, tauIn: 0.35, tauOut: 2.4,  kPress: 430 },
-  clay:   { kSpring: 260, kAnchor: 38, damp: 7.0, slowMix: 1.0,  tauIn: 0.07, tauOut: 1e9,  kPress: 460 }
-};
-let preset = PRESETS.jelly, presetName = 'jelly';
-
-// ---------- 声音（WebAudio 合成） ----------
-let AC = null, lastSquish = 0;
+// ---------- 声音 ----------
+let AC = null, lastCrackle = 0;
 function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
 function noiseBuffer(ac, dur) {
   const b = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
@@ -195,89 +199,123 @@ function noiseBuffer(ac, dur) {
   return b;
 }
 function playSquish(strength) {
-  const now = performance.now(); if (now - lastSquish < 110) return; lastSquish = now;
   try {
     const ac = audio(), t = ac.currentTime;
-    const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.16);
-    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(500 + strength * 300, t); f.frequency.exponentialRampToValueAtTime(160, t + 0.15);
-    const g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.10 + strength * 0.13, t + 0.03); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
-    src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.18);
-    const o = ac.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(210, t); o.frequency.exponentialRampToValueAtTime(85, t + 0.14);
-    const og = ac.createGain(); og.gain.setValueAtTime(0.05 * strength, t); og.gain.exponentialRampToValueAtTime(0.0001, t + 0.15);
-    o.connect(og).connect(ac.destination); o.start(t); o.stop(t + 0.16);
+    const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.14);
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 380;
+    const g = ac.createGain(); g.gain.setValueAtTime(0.05 * strength, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
+    src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.15);
   } catch (e) {}
 }
-function playCrack(layers, big) {
+function playCrackle(big) { // 裂纹生长的脆响：主角音效
+  const now = performance.now(); if (now - lastCrackle < (big ? 30 : 65)) return; lastCrackle = now;
   try {
     const ac = audio(), t0 = ac.currentTime;
-    const bursts = big ? 7 : 4;
+    const bursts = big ? 6 : 2;
     for (let i = 0; i < bursts; i++) {
-      const t = t0 + i * (0.028 + Math.random() * 0.03);
-      const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.07);
-      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1600 + Math.random() * 2200 + layers * 300; f.Q.value = 1.1;
-      const g = ac.createGain(); const peak = (0.16 + Math.random() * 0.14) * (big ? 1 : 0.7);
-      g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.07);
-      src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.09);
+      const t = t0 + i * (0.02 + Math.random() * 0.025);
+      const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.05);
+      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1900 + Math.random() * 2300; f.Q.value = 1.2;
+      const g = ac.createGain(); const peak = (big ? 0.20 : 0.11) * (0.7 + Math.random() * 0.5);
+      g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
+      src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.07);
     }
   } catch (e) {}
 }
 
-// ---------- 蜡壳：预切碎片 + 同色无缝内衬 ----------
-let waxGroup = null, waxFrags = [], waxLayers = 0, waxStress = 0, waxCracked = 0;
-const mWax = document.getElementById('mWax');
-function waxStatus() {
-  if (!waxLayers) { mWax.textContent = '未裹蜡'; return; }
-  const total = waxFrags.length || 1;
-  const left = waxFrags.filter(f => f.state === 'on').length;
-  mWax.textContent = waxLayers + '层 · 完好 ' + Math.round(left / total * 100) + '%';
-}
-function applyWax() {
-  removeWax(true);
-  waxLayers = Math.min(3, waxLayers + 1);
-  const r = RADIUS + 0.042 + waxLayers * 0.014;
-  waxGroup = new THREE.Group();
-  const waxMat = new THREE.MeshPhysicalMaterial({ color: 0xfff6e8, roughness: 0.22, clearcoat: 0.9, clearcoatRoughness: 0.25 });
-  const COLS = 18, ROWS = 12;
-  for (let cx = 0; cx < COLS; cx++) {
-    for (let ry = 0; ry < ROWS; ry++) {
-      const phiFull = Math.PI * 2 / COLS, thFull = Math.PI / ROWS;
-      const phiStart = cx * phiFull, thStart = ry * thFull;
-      const pm = phiStart + phiFull / 2, tm = thStart + thFull / 2;
-      const dir = new THREE.Vector3(-Math.cos(pm) * Math.sin(tm), Math.cos(tm), Math.sin(pm) * Math.sin(tm));
-      const g = new THREE.SphereGeometry(r, 6, 4, phiStart, phiFull * 0.99, thStart, thFull * 0.985);
-      const m = new THREE.Mesh(g, waxMat); m.castShadow = true;
-      const g2 = new THREE.SphereGeometry(r - 0.016, 6, 4, phiStart, phiFull * 1.01, thStart, thFull * 1.01);
-      const m2 = new THREE.Mesh(g2, waxMat);
-      waxGroup.add(m); waxGroup.add(m2);
-      waxFrags.push({ mesh: m, mesh2: m2, dir, state: 'on', vel: new THREE.Vector3(), rotVel: new THREE.Vector3(), off: new THREE.Vector3(), jitter: 0.75 + Math.random() * 0.5 });
+// ---------- 裂纹系统（v0.4 主角） ----------
+const MAXSEG = 1600;
+const crackPos = new Float32Array(MAXSEG * 2 * 3);
+const crackGeo = new THREE.BufferGeometry();
+crackGeo.setAttribute('position', new THREE.BufferAttribute(crackPos, 3));
+crackGeo.setDrawRange(0, 0);
+const cracks = new THREE.LineSegments(crackGeo, new THREE.LineBasicMaterial({ color: 0x4a3b2c, transparent: true, opacity: 0.95 }));
+cracks.frustumCulled = false;
+scene.add(cracks);
+let crackNodes = [];   // {p:Vector3(静止表面点), h:Vector3(切向走向)}
+let crackSegs = [];     // [ia, ib] 节点索引对
+let crackCenters = [];  // 裂过的区域中心（变软用）
+const _sv = new THREE.Vector3(), _sv2 = new THREE.Vector3(), _sv3 = new THREE.Vector3();
+function addNode(p, h) { crackNodes.push({ p: p.clone(), h: h.clone() }); return crackNodes.length - 1; }
+function addSeg(a, b) { if (crackSegs.length < MAXSEG) crackSegs.push([a, b]); }
+function seedCrack(centerDir) {
+  surfPoint(centerDir, _sv);
+  surfNormal(_sv, _sv2);
+  // 随机切向基
+  _sv3.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).cross(_sv2).normalize();
+  const center = addNode(_sv, _sv3);
+  const arms = 5 + (Math.random() * 3 | 0);
+  for (let k = 0; k < arms; k++) {
+    const ang = (k / arms) * Math.PI * 2 + Math.random() * 0.5;
+    const h = _sv3.clone().applyAxisAngle(_sv2, ang);
+    let prev = center, from = _sv;
+    const steps = 3 + (Math.random() * 3 | 0);
+    for (let sIdx = 0; sIdx < steps; sIdx++) {
+      _sv.copy(from).addScaledVector(h, 0.09 + Math.random() * 0.07).normalize();
+      surfPoint(_sv, _sv2);
+      const ni = addNode(_sv2, h);
+      addSeg(prev, ni); prev = ni; from = _sv2.clone();
     }
   }
-  scene.add(waxGroup);
-  waxStress = 0; waxCracked = 0;
-  waxStatus(); toast('裹上第 ' + waxLayers + ' 层蜡，用力捏捏看');
-  document.getElementById('btnWax').textContent = waxLayers >= 3 ? '已裹满 3 层' : '再裹一层蜡';
-  document.getElementById('btnWax').disabled = waxLayers >= 3;
+  crackCenters.push(_sv.clone());
+  if (crackCenters.length > 48) crackCenters.shift();
+  playCrackle(true);
 }
-function removeWax(silent) {
-  if (waxGroup) { scene.remove(waxGroup); waxGroup = null; }
-  waxFrags = []; if (!silent) { waxLayers = 0; waxStatus(); }
+function growCrack(centerDir) {
+  // 从按压点附近的已有节点继续往外爬
+  surfPoint(centerDir, _sv);
+  const near = [];
+  for (let i = 0; i < crackNodes.length; i++) if (crackNodes[i].p.distanceTo(_sv) < 1.15) near.push(i);
+  if (!near.length) return 0;
+  const ni = near[(Math.random() * near.length) | 0];
+  const node = crackNodes[ni];
+  surfNormal(node.p, _sv2);
+  const turn = (Math.random() - 0.5) * 1.1;
+  const h = node.h.clone().applyAxisAngle(_sv2, turn);
+  // 向外漂移：裂纹从按压中心放射着爬，而不是原地打转
+  _sv3.copy(node.p).sub(_sv).addScaledVector(_sv2, -node.p.clone().sub(_sv).dot(_sv2));
+  if (_sv3.lengthSq() > 0.0001) { _sv3.normalize(); h.lerp(_sv3, 0.38).normalize(); }
+  _sv3.copy(node.p).addScaledVector(h, 0.085 + Math.random() * 0.075).normalize();
+  surfPoint(_sv3, _sv);
+  const ci = addNode(_sv, h);
+  addSeg(ni, ci);
+  let added = 1;
+  if (Math.random() < 0.20) { // 分叉
+    const h2 = node.h.clone().applyAxisAngle(_sv2, (Math.random() < 0.5 ? 1 : -1) * (0.6 + Math.random() * 0.5));
+    _sv3.copy(node.p).addScaledVector(h2, 0.08 + Math.random() * 0.06).normalize();
+    surfPoint(_sv3, _sv);
+    const bi = addNode(_sv, h2);
+    addSeg(ni, bi); added++;
+  }
+  if (crackNodes.length % 14 === 0) { crackCenters.push(node.p.clone()); if (crackCenters.length > 48) crackCenters.shift(); }
+  return added;
 }
-function crackWax(hitDir, power) {
-  let detached = 0;
-  const range = 0.50 + power * 0.45;
-  for (const f of waxFrags) {
-    if (f.state !== 'on') continue;
-    const ang = f.dir.angleTo(hitDir);
-    if (ang < range * f.jitter && Math.random() < 1.15 - ang / (range * 1.25)) {
-      f.state = 'fall';
-      f.vel.copy(f.dir).multiplyScalar(0.55 + Math.random() * 0.55);
-      f.vel.y += 0.12;
-      f.rotVel.set(Math.random() * 9 - 4.5, Math.random() * 9 - 4.5, Math.random() * 9 - 4.5);
-      detached++;
+function crackSoftAt(x, y, z) { // 裂过的区域变软：0..1
+  let s = 0;
+  for (const c of crackCenters) {
+    const dx = x - c.x, dy = y - c.y, dz = z - c.z;
+    s += Math.exp(-(dx*dx + dy*dy + dz*dz) / 0.085);
+  }
+  return Math.min(1, s);
+}
+function clearCracks() { crackNodes = []; crackSegs = []; crackCenters = []; crackGeo.setDrawRange(0, 0); crackStatus(); }
+function crackStatus() { document.getElementById('mCrack').textContent = crackSegs.length + ' 条'; }
+const _cv = { x: 0, y: 0, z: 0 }, _cn = new THREE.Vector3();
+function updateCrackLines() { // 裂纹贴在表面上、随形变走
+  const pos = crackGeo.attributes.position.array;
+  for (let sIdx = 0; sIdx < crackSegs.length; sIdx++) {
+    for (let e = 0; e < 2; e++) {
+      const node = crackNodes[crackSegs[sIdx][e]];
+      dispAt(node.p.x, node.p.y, node.p.z, _cv);
+      surfNormal(node.p, _cn);
+      const o = (sIdx * 2 + e) * 3;
+      pos[o] = node.p.x + _cv.x + _cn.x * 0.007;
+      pos[o+1] = node.p.y + _cv.y + _cn.y * 0.007;
+      pos[o+2] = node.p.z + _cv.z + _cn.z * 0.007;
     }
   }
-  if (detached) { playCrack(waxLayers, detached > 8); waxCracked += detached; waxStatus(); }
-  return detached;
+  crackGeo.setDrawRange(0, crackSegs.length * 2);
+  crackGeo.attributes.position.needsUpdate = true;
 }
 
 // ---------- 按压交互 ----------
@@ -285,7 +323,7 @@ const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 let pressing = false, pressHold = 0, pressDir = new THREE.Vector3(0, 1, 0);
 let lastHitDir = new THREE.Vector3(0, 1, 0), draggingBg = false, lastX = 0;
-let dispMagNow = 0, prevDispMag = 0;
+let dispMagNow = 0, prevDispMag = 0, crackBudget = 0;
 
 function castBall(e) {
   pointer.x = (e.clientX / innerWidth) * 2 - 1;
@@ -312,71 +350,69 @@ function endPress() { pressing = false; draggingBg = false; }
 renderer.domElement.addEventListener('pointerup', endPress);
 renderer.domElement.addEventListener('pointercancel', endPress);
 
-// ---------- 物理步进（固定 120Hz） ----------
-const force = new Float32Array(NP * 3);
+// ---------- 物理步进（固定 120Hz，沿用 v0.3） ----------
+const force = new Float32Array(4096 * 3);
 function physStep(h) {
   if (pressing) pressHold += h; else pressHold = Math.max(0, pressHold - h * 3);
-  // 蠕变：按得越久，陷得越深、范围越宽（学 Squishy Lab）
-  const depth = Math.min(0.62, 0.24 + pressHold * 0.70);
-  const radius = Math.min(0.95, 0.48 + pressHold * 0.28);
+  const depthBase = Math.min(0.40, 0.13 + pressHold * 0.38);
+  const radius = Math.min(0.85, 0.42 + pressHold * 0.24);
   const sigma2 = 2 * Math.pow(radius * 0.55, 2);
-  const px = pressDir.x * 0.95, py = pressDir.y * 0.95, pz = pressDir.z * 0.95;
+  surfPoint(pressDir, _sv);
+  const px = _sv.x, py = _sv.y, pz = _sv.z;
 
-  force.fill(0);
-  // 邻居弹簧
+  force.fill(0, 0, NP * 3);
   for (let s = 0; s < springs.length; s++) {
     const i = springs[s][0], j = springs[s][1], rl = springs[s][2];
     const ix = i * 3, jx = j * 3;
     const dx = pPos[jx] - pPos[ix], dy = pPos[jx+1] - pPos[ix+1], dz = pPos[jx+2] - pPos[ix+2];
     const len = Math.hypot(dx, dy, dz) || 0.0001;
-    const f = preset.kSpring * (len - rl) / len;
+    const f = PHYS.kSpring * (len - rl) / len;
     force[ix] += dx * f; force[ix+1] += dy * f; force[ix+2] += dz * f;
     force[jx] -= dx * f; force[jx+1] -= dy * f; force[jx+2] -= dz * f;
   }
-  const tau = pressing ? preset.tauIn : preset.tauOut;
+  const tau = pressing ? PHYS.tauIn : PHYS.tauOut;
   const slowRate = 1 - Math.exp(-h / tau);
-  const dampF = Math.exp(-preset.damp * h);
+  const dampF = Math.exp(-PHYS.damp * h);
   for (let i = 0; i < NP; i++) {
     const ix = i * 3;
-    // 延迟形变状态：慢状态吸收当前形变（记忆棉/粘土的魂）
-    pSlow[ix]   += (pPos[ix]   - pSlow[ix])   * slowRate;
+    pSlow[ix] += (pPos[ix] - pSlow[ix]) * slowRate;
     pSlow[ix+1] += (pPos[ix+1] - pSlow[ix+1]) * slowRate;
     pSlow[ix+2] += (pPos[ix+2] - pSlow[ix+2]) * slowRate;
-    // 锚定目标 = 静止位与慢状态按 slowMix 混合
-    const tx = pRest[ix]   * (1 - preset.slowMix) + pSlow[ix]   * preset.slowMix;
-    const ty = pRest[ix+1] * (1 - preset.slowMix) + pSlow[ix+1] * preset.slowMix;
-    const tz = pRest[ix+2] * (1 - preset.slowMix) + pSlow[ix+2] * preset.slowMix;
-    let fx = force[ix]   + (tx - pPos[ix])   * preset.kAnchor;
-    let fy = force[ix+1] + (ty - pPos[ix+1]) * preset.kAnchor;
-    let fz = force[ix+2] + (tz - pPos[ix+2]) * preset.kAnchor;
-    // 按压：把受压区粒子拉向受压目标位
+    const tx = pRest[ix] * (1 - PHYS.slowMix) + pSlow[ix] * PHYS.slowMix;
+    const ty = pRest[ix+1] * (1 - PHYS.slowMix) + pSlow[ix+1] * PHYS.slowMix;
+    const tz = pRest[ix+2] * (1 - PHYS.slowMix) + pSlow[ix+2] * PHYS.slowMix;
+    let fx = force[ix] + (tx - pPos[ix]) * PHYS.kAnchor;
+    let fy = force[ix+1] + (ty - pPos[ix+1]) * PHYS.kAnchor;
+    let fz = force[ix+2] + (tz - pPos[ix+2]) * PHYS.kAnchor;
     if (pressing) {
       const dx = pRest[ix] - px, dy = pRest[ix+1] - py, dz = pRest[ix+2] - pz;
       const fall = Math.exp(-(dx*dx + dy*dy + dz*dz) / sigma2);
       if (fall > 0.02) {
-        fx += (pRest[ix]   - pressDir.x * depth - pPos[ix])   * preset.kPress * fall;
-        fy += (pRest[ix+1] - pressDir.y * depth - pPos[ix+1]) * preset.kPress * fall;
-        fz += (pRest[ix+2] - pressDir.z * depth - pPos[ix+2]) * preset.kPress * fall;
+        // 裂过的地方更软：压得更深
+        const soft = crackSoftAt(pRest[ix], pRest[ix+1], pRest[ix+2]);
+        const depth = depthBase * (1 + 0.65 * soft);
+        fx += (pRest[ix] - pressDir.x * depth - pPos[ix]) * PHYS.kPress * fall;
+        fy += (pRest[ix+1] - pressDir.y * depth - pPos[ix+1]) * PHYS.kPress * fall;
+        fz += (pRest[ix+2] - pressDir.z * depth - pPos[ix+2]) * PHYS.kPress * fall;
       }
     }
-    pVel[ix]   = (pVel[ix]   + fx * h) * dampF;
+    pVel[ix] = (pVel[ix] + fx * h) * dampF;
     pVel[ix+1] = (pVel[ix+1] + fy * h) * dampF;
     pVel[ix+2] = (pVel[ix+2] + fz * h) * dampF;
-    // 速度钳制防爆
     const sp = Math.hypot(pVel[ix], pVel[ix+1], pVel[ix+2]);
     if (sp > 7) { const c = 7 / sp; pVel[ix] *= c; pVel[ix+1] *= c; pVel[ix+2] *= c; }
     pPos[ix] += pVel[ix] * h; pPos[ix+1] += pVel[ix+1] * h; pPos[ix+2] += pVel[ix+2] * h;
-    // 位移钳制
     const ox = pPos[ix] - pRest[ix], oy = pPos[ix+1] - pRest[ix+1], oz = pPos[ix+2] - pRest[ix+2];
     const om = Math.hypot(ox, oy, oz);
-    if (om > 0.9) { const c = 0.9 / om; pPos[ix] = pRest[ix] + ox * c; pPos[ix+1] = pRest[ix+1] + oy * c; pPos[ix+2] = pRest[ix+2] + oz * c; }
+    if (om > 0.85) { const c = 0.85 / om; pPos[ix] = pRest[ix] + ox * c; pPos[ix+1] = pRest[ix+1] + oy * c; pPos[ix+2] = pRest[ix+2] + oz * c; }
   }
 }
 
-// ---------- 每帧：表面跟随 + 蜡壳 + 读数 ----------
+// ---------- 每帧：表面/裂纹跟随 + 裂纹生长 ----------
 const _v = { x: 0, y: 0, z: 0 };
 function updateSurfaces(dt) {
-  for (let i = 0; i < COUNT; i++) {
+  const posAttr = surfGeo.attributes.position;
+  for (let i = 0; i < surfCount; i++) {
     const ix = i * 3;
     dispAt(surfRest[ix], surfRest[ix+1], surfRest[ix+2], _v);
     posAttr.array[ix] = surfRest[ix] + _v.x;
@@ -384,52 +420,34 @@ function updateSurfaces(dt) {
     posAttr.array[ix+2] = surfRest[ix+2] + _v.z;
   }
   posAttr.needsUpdate = true;
-  geo.computeVertexNormals();
-  const gp = glitterGeo.attributes.position;
-  for (let i = 0; i < GLIT_N; i++) {
-    const ix = i * 3;
-    dispAt(glitRest[ix], glitRest[ix+1], glitRest[ix+2], _v);
-    gp.array[ix] = glitRest[ix] + _v.x; gp.array[ix+1] = glitRest[ix+1] + _v.y; gp.array[ix+2] = glitRest[ix+2] + _v.z;
-  }
-  gp.needsUpdate = true;
-  glitter.rotation.y += dt * 0.03;
+  surfGeo.computeVertexNormals();
 
-  // 按压点真实位移（诚实读数 + 开裂判据）
-  dispAt(pressDir.x, pressDir.y, pressDir.z, _v);
+  surfPoint(pressDir, _sv);
+  dispAt(_sv.x, _sv.y, _sv.z, _v);
   prevDispMag = dispMagNow;
   dispMagNow = Math.hypot(_v.x, _v.y, _v.z);
-  document.getElementById('mDepth').textContent = Math.round(Math.min(1, dispMagNow / 0.55) * 100) + '%';
-  if (pressing && dispMagNow > prevDispMag + 0.004) playSquish(Math.min(1, dispMagNow * 1.6));
+  document.getElementById('mDepth').textContent = Math.round(Math.min(1, dispMagNow / 0.5) * 100) + '%';
+  if (pressing && dispMagNow > prevDispMag + 0.006) playSquish(Math.min(1, dispMagNow * 1.4));
 
-  // 蜡壳应力：真实位移够大才积累
-  if (waxLayers && pressing) {
-    const threshold = 0.13 + waxLayers * 0.045;
-    if (dispMagNow > threshold) {
-      waxStress += (dispMagNow - threshold) * dt * 16;
-      if (waxStress > 0.36) {
-        const n = crackWax(lastHitDir, dispMagNow);
-        waxStress = n ? 0.12 : waxStress * 0.6;
-        if (n) toast('咔嚓！蜡壳碎了 ' + n + ' 片');
-      }
-    } else waxStress = Math.max(0, waxStress - dt * 0.8);
-  }
-
-  // 碎片：完好的跟随位移场（含回弹晃动），碎落的干脆掉
-  for (const f of waxFrags) {
-    if (f.state === 'fall') {
-      f.vel.y -= 5.6 * dt;
-      f.off.addScaledVector(f.vel, dt);
-      f.mesh.position.copy(f.off); f.mesh2.position.copy(f.off);
-      f.mesh.rotation.x += f.rotVel.x * dt; f.mesh.rotation.y += f.rotVel.y * dt; f.mesh.rotation.z += f.rotVel.z * dt;
-      f.mesh2.rotation.copy(f.mesh.rotation);
-      if (f.off.y < -2.6) { f.state = 'gone'; f.mesh.visible = false; f.mesh2.visible = false; }
-    } else if (f.state === 'on') {
-      dispAt(f.dir.x * 1.02, f.dir.y * 1.02, f.dir.z * 1.02, _v);
-      const a = 1 - Math.exp(-dt * 26);
-      f.off.x += (_v.x - f.off.x) * a; f.off.y += (_v.y - f.off.y) * a; f.off.z += (_v.z - f.off.z) * a;
-      f.mesh.position.copy(f.off); f.mesh2.position.copy(f.off);
+  // 裂纹生长：压得越深长得越快；新落点先开一朵裂纹星
+  if (pressing && dispMagNow > 0.055 && crackSegs.length < MAXSEG) {
+    crackBudget += dt * (40 + dispMagNow * 300);
+    let nearNodes = 0;
+    surfPoint(pressDir, _sv);
+    for (let i = Math.max(0, crackNodes.length - 400); i < crackNodes.length; i++)
+      if (crackNodes[i].p.distanceTo(_sv) < 0.3) { nearNodes++; break; }
+    if (!nearNodes && crackBudget > 5) { seedCrack(pressDir); crackBudget -= 5; crackStatus(); }
+    let grew = 0;
+    while (crackBudget >= 1) {
+      const n = growCrack(pressDir);
+      if (!n) { crackBudget = 0; break; }
+      grew += n; crackBudget -= 1;
+      if (grew > 14) break;
     }
-  }
+    if (grew) { playCrackle(false); crackStatus(); }
+  } else crackBudget = Math.max(0, crackBudget - dt * 20);
+
+  if (crackSegs.length) updateCrackLines();
   if (Math.abs(spinVel) > 0.001) { camAngle += spinVel * dt; spinVel *= Math.pow(0.25, dt); placeCamera(); }
 }
 
@@ -440,31 +458,40 @@ function toast(msg) {
   el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1700);
 }
-document.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
-  document.querySelectorAll('[data-preset]').forEach(x => x.classList.remove('on'));
-  b.classList.add('on'); presetName = b.dataset.preset; preset = PRESETS[presetName];
-  resetCage();
-  toast({ jelly: '果冻：弹回去还晃', memory: '记忆棉：压出坑慢慢涨回来', clay: '粘土：捏成啥样就是啥样' }[presetName]);
+function switchShape(name) {
+  shapeName = name; shape = SHAPES[name];
+  const old = surfGeo;
+  surfGeo = buildSurfaceGeometry();
+  ball.geometry = surfGeo;
+  surfRest = new Float32Array(surfGeo.attributes.position.array);
+  surfCount = surfGeo.attributes.position.count;
+  old.dispose();
+  buildCage(); clearCracks();
+  ground.position.y = disc.position.y - 0.01;
+  const bottom = -shape.b - 0.30;
+  disc.position.y = bottom; ground.position.y = bottom - 0.01;
+}
+document.querySelectorAll('[data-shape]').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('[data-shape]').forEach(x => x.classList.remove('on'));
+  b.classList.add('on'); switchShape(b.dataset.shape);
+  toast(b.dataset.shape === 'block' ? '方块：照着原版视频同款' : '圆球：换个造型裂着玩');
 }));
 document.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('[data-color]').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); ballMat.color.setHex(parseInt(b.dataset.color));
 }));
-document.getElementById('btnWax').addEventListener('click', () => { audio(); applyWax(); });
 document.getElementById('btnReset').addEventListener('click', () => {
-  resetCage();
-  removeWax(); waxLayers = 0; waxStatus();
-  const bw = document.getElementById('btnWax'); bw.disabled = false; bw.textContent = '裹一层蜡';
-  toast('恢复出厂圆润');
+  resetCage(); clearCracks(); toast('新的一块，完好无裂');
 });
 document.getElementById('btnSpin').addEventListener('click', () => { spinVel = 5; });
+disc.position.y = -shape.b - 0.30; ground.position.y = disc.position.y - 0.01;
 
 addEventListener('resize', () => {
   camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
 });
 
-// ---------- 主循环：固定步长物理 + 渲染 ----------
+// ---------- 主循环 ----------
 const clock = new THREE.Clock();
 let acc = 0;
 const H = 1 / 120;
@@ -479,9 +506,9 @@ function loop() {
   renderer.render(scene, camera);
 }
 loop();
-waxStatus();
-console.log('cage particles:', NP, 'springs:', springs.length);
-window.__squishy = { get stress(){ return waxStress; }, get layers(){ return waxLayers; }, get disp(){ return dispMagNow; }, get hold(){ return pressHold; }, onFrags: () => waxFrags.filter(f => f.state === 'on').length, totalFrags: () => waxFrags.length };
+crackStatus();
+console.log('shape:', shapeName, 'cage particles:', NP, 'springs:', springs.length);
+window.__squishy = { get segs(){ return crackSegs.length; }, get disp(){ return dispMagNow; }, softAtPress: () => { surfPoint(pressDir, _sv); return crackSoftAt(_sv.x, _sv.y, _sv.z); } };
 </script>
 </body>
 </html>
