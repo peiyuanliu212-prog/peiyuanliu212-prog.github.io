@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>捏捏 3D 手感原型 v0.4 · 脆皮</title>
+<title>捏捏 3D 手感原型 v0.5 · 脆皮</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; overflow: hidden; }
@@ -33,12 +33,13 @@
 <body>
 <div id="scene"></div>
 <header>
-  <h1>捏捏 · 脆皮原型 v0.4</h1>
-  <p>按住压——裂纹会从指尖爬开，咔嚓作响；裂过的地方会变软、塌下去</p>
+  <h1>捏捏 · 脆皮原型 v0.5</h1>
+  <p>按住压——软体先陷下去，脆壳从指尖裂开；裂过的地方更软、塌得更深</p>
 </header>
 <div id="meters">
   <div class="meter">按压 <b id="mDepth">0%</b></div>
-  <div class="meter">裂纹 <b id="mCrack">0 条</b></div>
+  <div class="meter">裂纹 <b id="mCrack">0%</b></div>
+  <div class="meter">阶段 <b id="mStage">0</b></div>
 </div>
 <div id="toast"></div>
 
@@ -65,7 +66,7 @@
 <script type="module">
 import * as THREE from 'three';
 
-// ---------- 场景 ----------
+// ---------- 场景（沿用 v0.4 已过关的卖相与机位） ----------
 const container = document.getElementById('scene');
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -79,7 +80,7 @@ scene.background = new THREE.Color(0xf3efe9);
 scene.fog = new THREE.Fog(0xf3efe9, 11, 19);
 
 const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 50);
-let camAngle = 0.55, camTilt = 0.42, spinVel = 0;
+let camAngle = 0.55, camTilt = 0.42, spinVel = 0, punch = 0;
 function placeCamera() {
   camera.position.set(Math.sin(camAngle) * 6.7, Math.sin(camTilt) * 6.7 + 0.4, Math.cos(camAngle) * 6.7);
   camera.lookAt(0, -0.05, 0);
@@ -95,40 +96,27 @@ const fill = new THREE.DirectionalLight(0xffe9d6, 0.55);
 fill.position.set(-4, 2, -3); scene.add(fill);
 
 const ground = new THREE.Mesh(new THREE.CircleGeometry(3.6, 48), new THREE.ShadowMaterial({ opacity: 0.15 }));
-ground.rotation.x = -Math.PI / 2; ground.position.y = -1.06; ground.receiveShadow = true;
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true;
 scene.add(ground);
 const disc = new THREE.Mesh(new THREE.CircleGeometry(1.75, 48), new THREE.MeshStandardMaterial({ color: 0xe9e1d3, roughness: 0.95 }));
-disc.rotation.x = -Math.PI / 2; disc.position.y = -1.05; disc.receiveShadow = true;
+disc.rotation.x = -Math.PI / 2; disc.receiveShadow = true;
 scene.add(disc);
 
-// ---------- 造型：超椭球（方块 q=4 / 圆球 q=2），统一隐式面 ----------
+// ---------- 造型：超椭球（方块 q=4 / 圆球 q=2），同 v0.4 ----------
 const SHAPES = {
   block: { a: 1.14, b: 0.76, c: 1.14, q: 4 },
   ball:  { a: 1.02, b: 1.02, c: 1.02, q: 2 }
 };
 let shape = SHAPES.block, shapeName = 'block';
-function shapeG(x, y, z) { // 隐式函数值，表面 =1
-  const s = shape;
-  return Math.pow(Math.abs(x) / s.a, s.q) + Math.pow(Math.abs(y) / s.b, s.q) + Math.pow(Math.abs(z) / s.c, s.q);
-}
-function surfPoint(dir, out) { // 沿方向 dir 到表面的点
+function surfPoint(dir, out) {
   const s = shape;
   const g = Math.pow(Math.abs(dir.x) / s.a, s.q) + Math.pow(Math.abs(dir.y) / s.b, s.q) + Math.pow(Math.abs(dir.z) / s.c, s.q);
   const r = Math.pow(g, -1 / s.q);
   out.set(dir.x * r, dir.y * r, dir.z * r);
   return out;
 }
-function surfNormal(p, out) { // 隐式面梯度
-  const s = shape, q = s.q;
-  out.set(
-    q * Math.pow(Math.abs(p.x), q - 1) * Math.sign(p.x) / Math.pow(s.a, q),
-    q * Math.pow(Math.abs(p.y), q - 1) * Math.sign(p.y) / Math.pow(s.b, q),
-    q * Math.pow(Math.abs(p.z), q - 1) * Math.sign(p.z) / Math.pow(s.c, q)
-  );
-  return out.normalize();
-}
 function buildSurfaceGeometry() {
-  const g = new THREE.SphereGeometry(1, 64, 44);
+  const g = new THREE.SphereGeometry(1, 64, 46);
   const pos = g.attributes.position;
   const v = new THREE.Vector3(), d = new THREE.Vector3();
   for (let i = 0; i < pos.count; i++) {
@@ -140,208 +128,462 @@ function buildSurfaceGeometry() {
   g.computeVertexNormals();
   return g;
 }
+
+// ---------- L2 烘焙：Voronoi 裂纹遮罩（R=边 profile、G=生长 order、B=cell id） ----------
+function bakeCrackTexture(size = 512, cells = 7) {
+  const seeds = [];
+  const cw = size / cells;
+  for (let gy = 0; gy < cells; gy++) for (let gx = 0; gx < cells; gx++) {
+    seeds.push({
+      x: (gx + 0.5 + (Math.random() - 0.5) * 0.84) * cw,
+      y: (gy + 0.5 + (Math.random() - 0.5) * 0.84) * cw,
+      cell: gy * cells + gx
+    });
+  }
+  const buckets = new Map();
+  for (const s of seeds) {
+    const k = ((s.y / cw) | 0) * cells + ((s.x / cw) | 0);
+    if (!buckets.has(k)) buckets.set(k, []);
+    buckets.get(k).push(s);
+  }
+  function nearSeeds(x, y) {
+    const bx = Math.min(cells - 1, Math.max(0, (x / cw) | 0)), by = Math.min(cells - 1, Math.max(0, (y / cw) | 0));
+    const out = [];
+    for (let j = -1; j <= 1; j++) for (let i = -1; i <= 1; i++) {
+      const xx = bx + i, yy = by + j;
+      if (xx < 0 || yy < 0 || xx >= cells || yy >= cells) continue;
+      const arr = buckets.get(yy * cells + xx);
+      if (arr) out.push(...arr);
+    }
+    return out;
+  }
+  const NG = 24, ngrid = new Float32Array((NG + 1) * (NG + 1));
+  for (let i = 0; i < ngrid.length; i++) ngrid[i] = Math.random();
+  function vnoise(x, y) {
+    const fx = x / size * NG, fy = y / size * NG;
+    const ix = Math.min(NG - 1, fx | 0), iy = Math.min(NG - 1, fy | 0);
+    const tx = fx - ix, ty = fy - iy, sx = tx * tx * (3 - 2 * tx), sy = ty * ty * (3 - 2 * ty);
+    const a = ngrid[iy * (NG + 1) + ix], b = ngrid[iy * (NG + 1) + ix + 1];
+    const c = ngrid[(iy + 1) * (NG + 1) + ix], d = ngrid[(iy + 1) * (NG + 1) + ix + 1];
+    return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+  }
+  const cellOf = new Int16Array(size * size);
+  const f2f1 = new Float32Array(size * size);
+  const adj = new Map();
+  function link(a, b) {
+    if (a === b) return;
+    if (!adj.has(a)) adj.set(a, new Set());
+    adj.get(a).add(b);
+  }
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const wx = x + (vnoise(x * 1.7 + 40, y * 1.7) - 0.5) * 26;
+    const wy = y + (vnoise(x * 1.7, y * 1.7 + 40) - 0.5) * 26;
+    let f1 = 1e9, f2 = 1e9, c1 = 0;
+    for (const s of nearSeeds(wx, wy)) {
+      const dx = wx - s.x, dy = wy - s.y, d2 = dx * dx + dy * dy;
+      if (d2 < f1) { f2 = f1; f1 = d2; c1 = s.cell; } else if (d2 < f2) f2 = d2;
+    }
+    const idx = y * size + x;
+    cellOf[idx] = c1;
+    f2f1[idx] = Math.sqrt(f2) - Math.sqrt(f1);
+    if (x > 0) link(c1, cellOf[idx - 1]);
+    if (y > 0) link(c1, cellOf[idx - size]);
+  }
+  const seedCell = cellOf[((size * 0.72) | 0) * size + (size >> 1)];
+  const dist = new Map([[seedCell, 0]]);
+  const queue = [seedCell];
+  while (queue.length) {
+    const c = queue.shift(), dc = dist.get(c);
+    for (const nb of (adj.get(c) || [])) if (!dist.has(nb)) { dist.set(nb, dc + 1); queue.push(nb); }
+  }
+  let maxD = 1;
+  for (const v of dist.values()) maxD = Math.max(maxD, v);
+  const cv = document.createElement('canvas'); cv.width = cv.height = size;
+  const ctx = cv.getContext('2d');
+  const img = ctx.createImageData(size, size);
+  for (let y = 0; y < size; y++) for (let x = 0; x < size; x++) {
+    const idx = y * size + x, o = idx * 4;
+    const halfW = 1.3 + vnoise(x * 3.1, y * 3.1) * 2.2;
+    let prof = Math.max(0, 1 - f2f1[idx] / (halfW * 2));
+    prof = Math.pow(prof, 1.6);
+    const ord = Math.min(1, ((dist.get(cellOf[idx]) || 0) / maxD) * 0.85 + vnoise(x * 2.3 + 90, y * 2.3) * 0.22);
+    img.data[o] = Math.round(prof * 255);
+    img.data[o + 1] = Math.round(ord * 255);
+    img.data[o + 2] = Math.round((cellOf[idx] / (cells * cells - 1)) * 255);
+    img.data[o + 3] = 255;
+  }
+  ctx.putImageData(img, 0, 0);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.colorSpace = THREE.NoColorSpace;
+  return tex;
+}
+const crackTex = bakeCrackTexture();
+
+// ---------- L2/L5 材质：透光脆壳 + shader 裂纹 reveal；内芯异色承接 discard ----------
+const crackUniforms = {
+  uDamageTex: { value: crackTex },
+  uCrack: { value: 0 },
+  uHitUV: { value: new THREE.Vector2(0.5, 0.75) },
+  uLocal: { value: 0 },
+  uStageF: { value: 0 }
+};
 const ballMat = new THREE.MeshPhysicalMaterial({
   color: 0xf6f1e7, roughness: 0.38, transmission: 0.5, thickness: 1.5,
   ior: 1.35, clearcoat: 0.4, clearcoatRoughness: 0.5, sheen: 0.3, sheenColor: 0xffffff
 });
+ballMat.onBeforeCompile = (shader) => {
+  Object.assign(shader.uniforms, crackUniforms);
+  shader.vertexShader = shader.vertexShader
+    .replace('#include <common>', '#include <common>\nvarying vec2 vCrackUv;')
+    .replace('#include <uv_vertex>', '#include <uv_vertex>\nvCrackUv = uv;');
+  shader.fragmentShader = shader.fragmentShader
+    .replace('#include <common>', `#include <common>
+      varying vec2 vCrackUv;
+      uniform sampler2D uDamageTex;
+      uniform float uCrack, uLocal, uStageF;
+      uniform vec2 uHitUV;
+      float gCrack = 0.0;`)
+    .replace('#include <map_fragment>', `#include <map_fragment>
+      {
+        vec3 dmg = texture2D(uDamageTex, vCrackUv).rgb;
+        float edgeP = dmg.r;
+        float order = dmg.g;
+        float cellId = dmg.b;
+        vec2 duv = abs(vCrackUv - uHitUV);
+        duv.x = min(duv.x, 1.0 - duv.x);
+        float distUV = length(duv);
+        float localBoost = 1.0 - smoothstep(0.0, 0.30, distUV);
+        float revealAmt = uCrack * (0.85 + 0.5 * localBoost);
+        float vis = smoothstep(order - 0.05, order + 0.05, revealAmt);
+        float wThr = mix(0.80, 0.52, clamp(uStageF / 3.0, 0.0, 1.0));
+        float crackLine = vis * smoothstep(wThr, 1.0, edgeP);
+        float crackCore = vis * smoothstep(0.85, 1.0, edgeP);
+        gCrack = crackLine;
+        vec3 col = diffuseColor.rgb;
+        // 阶段1：白化细纹；阶段2：裂芯加深
+        col = mix(col, vec3(1.0, 0.995, 0.98), crackLine * 0.72);
+        float darkAmt = crackCore * smoothstep(1.0, 2.0, uStageF);
+        col = mix(col, vec3(0.42, 0.36, 0.31), darkAmt * 0.85);
+        // 阶段3：命中区按 cell 剥落（白碎边 + discard 露内芯）
+        if (uStageF > 2.4) {
+          float cellRnd = fract(sin(cellId * 43758.5453) * 24634.63);
+          float cellDmg = uLocal * (0.55 + 0.75 * (1.0 - smoothstep(0.0, 0.30, distUV)));
+          float thr = 0.62 + 0.33 * cellRnd;
+          float rimF = smoothstep(thr - 0.14, thr, cellDmg) * (1.0 - step(thr, cellDmg));
+          col = mix(col, vec3(1.0), rimF * 0.9);
+          if (cellDmg > thr && edgeP < 0.55) discard;
+        }
+        diffuseColor.rgb = col;
+      }`)
+    .replace('#include <roughnessmap_fragment>', `#include <roughnessmap_fragment>
+      roughnessFactor = clamp(roughnessFactor + gCrack * 0.35, 0.05, 1.0);`)
+    .replace('#include <normal_fragment_begin>', `#include <normal_fragment_begin>
+      {
+        float cx = dFdx(gCrack), cy = dFdy(gCrack);
+        normal = normalize(normal - vec3(cx, cy, 0.0) * 0.5);
+      }`);
+};
+ballMat.customProgramCacheKey = () => 'crack-shell-v5';
+
 let surfGeo = buildSurfaceGeometry();
 const ball = new THREE.Mesh(surfGeo, ballMat);
 ball.castShadow = true;
 scene.add(ball);
-let surfRest = new Float32Array(surfGeo.attributes.position.array);
-let surfCount = surfGeo.attributes.position.count;
+const coreMat = new THREE.MeshStandardMaterial({ color: 0xe9a05f, roughness: 0.92 });
+let coreGeo = surfGeo.clone();
+coreGeo.scale(0.9, 0.9, 0.9);
+const core = new THREE.Mesh(coreGeo, coreMat);
+scene.add(core);
 
-// ---------- 内部粒子笼（沿用 v0.3 内核，按造型重建） ----------
-let NP = 0, pRest, pPos, pVel, pSlow, springs = [];
-function buildCage() {
-  const pts = [], step = 0.36, s = shape;
-  for (let x = -s.a; x <= s.a + 0.001; x += step)
-    for (let y = -s.b; y <= s.b + 0.001; y += step)
-      for (let z = -s.c; z <= s.c + 0.001; z += step)
-        if (shapeG(x, y, z) <= 0.78) pts.push([x, y, z]);
-  NP = pts.length;
-  pRest = new Float32Array(NP * 3); pPos = new Float32Array(NP * 3);
-  pVel = new Float32Array(NP * 3); pSlow = new Float32Array(NP * 3);
-  for (let i = 0; i < NP; i++) { pRest.set(pts[i], i * 3); pPos.set(pts[i], i * 3); pSlow.set(pts[i], i * 3); }
-  springs = [];
-  for (let i = 0; i < NP; i++) for (let j = i + 1; j < NP; j++) {
-    const dx = pRest[i*3] - pRest[j*3], dy = pRest[i*3+1] - pRest[j*3+1], dz = pRest[i*3+2] - pRest[j*3+2];
-    const d = Math.hypot(dx, dy, dz);
-    if (d <= 0.60 && d > 0.001) springs.push([i, j, d]);
+function meshData(geo) {
+  return {
+    geo,
+    rest: new Float32Array(geo.attributes.position.array),
+    restN: new Float32Array(geo.attributes.normal.array),
+    count: geo.attributes.position.count
+  };
+}
+let outerData = meshData(surfGeo);
+let coreData = meshData(coreGeo);
+
+// ---------- L3 碎片池：不规则小薄片（扁四面体），重力掉落 ----------
+const CHIPN = 26;
+const chipMesh = new THREE.InstancedMesh(new THREE.TetrahedronGeometry(1, 0), new THREE.MeshStandardMaterial({ color: 0xf1e7d3, roughness: 0.85 }), CHIPN);
+chipMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+chipMesh.frustumCulled = false;
+scene.add(chipMesh);
+const chips = [];
+for (let i = 0; i < CHIPN; i++) chips.push({ life: 0, pos: new THREE.Vector3(), vel: new THREE.Vector3(), rot: new THREE.Euler(), av: new THREE.Vector3(), s: 0.03 });
+const _dummy = new THREE.Object3D();
+function hideChip(i) {
+  _dummy.position.set(0, -50, 0); _dummy.scale.setScalar(0.0001); _dummy.rotation.set(0, 0, 0);
+  _dummy.updateMatrix(); chipMesh.setMatrixAt(i, _dummy.matrix);
+}
+for (let i = 0; i < CHIPN; i++) hideChip(i);
+chipMesh.instanceMatrix.needsUpdate = true;
+let chipCursor = 0;
+function spawnChips(point, normal, n) {
+  for (let k = 0; k < n; k++) {
+    const c = chips[chipCursor]; chipCursor = (chipCursor + 1) % CHIPN;
+    c.life = 0.8 + Math.random() * 0.3;
+    c.pos.copy(point);
+    c.vel.copy(normal).multiplyScalar(0.5 + Math.random() * 0.7);
+    c.vel.x += (Math.random() - 0.5) * 0.8; c.vel.z += (Math.random() - 0.5) * 0.8;
+    c.vel.y += 0.3 + Math.random() * 0.4;
+    c.rot.set(Math.random() * 3, Math.random() * 3, Math.random() * 3);
+    c.av.set((Math.random() - 0.5) * 9, (Math.random() - 0.5) * 9, (Math.random() - 0.5) * 9);
+    c.s = 0.022 + Math.random() * 0.03;
+    c.fz = 0.6 + Math.random() * 0.5;
   }
 }
-buildCage();
-function resetCage() { pPos.set(pRest); pSlow.set(pRest); pVel.fill(0); }
-const _out = { x: 0, y: 0, z: 0 };
-function dispAt(x, y, z, out) {
-  let wx = 0, wy = 0, wz = 0, wsum = 0;
-  for (let i = 0; i < NP; i++) {
+const FLOOR_Y = -1.0;
+function updateChips(dt) {
+  let dirty = false;
+  for (let i = 0; i < CHIPN; i++) {
+    const c = chips[i];
+    if (c.life <= 0) continue;
+    dirty = true;
+    c.life -= dt;
+    if (c.life <= 0) { hideChip(i); continue; }
+    c.vel.y -= 3.4 * dt;
+    c.pos.addScaledVector(c.vel, dt);
+    if (c.pos.y < FLOOR_Y) { c.pos.y = FLOOR_Y; c.vel.y *= -0.32; c.vel.x *= 0.7; c.vel.z *= 0.7; }
+    c.rot.x += c.av.x * dt; c.rot.y += c.av.y * dt; c.rot.z += c.av.z * dt;
+    const fade = Math.min(1, c.life / 0.25);
+    _dummy.position.copy(c.pos);
+    _dummy.rotation.copy(c.rot);
+    _dummy.scale.set(c.s, c.s * 0.3, c.s * c.fz);
+    _dummy.scale.multiplyScalar(fade);
+    _dummy.updateMatrix(); chipMesh.setMatrixAt(i, _dummy.matrix);
+  }
+  if (dirty) chipMesh.instanceMatrix.needsUpdate = true;
+}
+
+// ---------- L4 声音：WebAudio 全合成，按 Δcrack 触发（任务书硬配方） ----------
+let AC = null, master = null, noiseBuf = null, voices = 0;
+let lastTickAt = 0, combo = 0, comboAt = 0, lastSquishAt = 0;
+function ensureAudio() {
+  if (!AC) {
+    AC = new (window.AudioContext || window.webkitAudioContext)();
+    const comp = AC.createDynamicsCompressor();
+    comp.threshold.value = -18; comp.ratio.value = 8;
+    master = AC.createGain(); master.gain.value = 0.9;
+    master.connect(comp); comp.connect(AC.destination);
+    noiseBuf = AC.createBuffer(1, AC.sampleRate, AC.sampleRate);
+    const d = noiseBuf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  }
+  if (AC.state === 'suspended') AC.resume();
+}
+function noiseSrc() {
+  const s = AC.createBufferSource();
+  s.buffer = noiseBuf; s.loop = true;
+  s.playbackRate.value = 0.9 + Math.random() * 0.2;
+  return s;
+}
+function envGain(t, peak, dec) {
+  const g = AC.createGain();
+  g.gain.setValueAtTime(peak, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dec);
+  g.connect(master);
+  return g;
+}
+function playClick(pitch, gain) { // click：高通 3–6kHz、约 2ms 脉冲
+  if (!AC || voices > 6) return;
+  const t = AC.currentTime;
+  const src = noiseSrc();
+  const f = AC.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = (3000 + Math.random() * 3000) * pitch;
+  src.connect(f); f.connect(envGain(t, gain, 0.02));
+  voices++; src.start(t, Math.random() * 0.5, 0.05); src.stop(t + 0.05);
+  src.onended = () => voices--;
+}
+function playSnap(gain) { // snap：低通 14k→4kHz 扫频
+  if (!AC || voices > 6) return;
+  const t = AC.currentTime;
+  const src = noiseSrc();
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.Q.value = 0.8;
+  f.frequency.setValueAtTime(14000, t);
+  f.frequency.exponentialRampToValueAtTime(4000, t + 0.03);
+  src.connect(f); f.connect(envGain(t, gain, 0.04));
+  voices++; src.start(t, Math.random() * 0.5, 0.07); src.stop(t + 0.07);
+  src.onended = () => voices--;
+}
+function playRing(pitch, gain) { // ring：3–9kHz 阻尼共振、±4% 抖动
+  if (!AC || voices > 6) return;
+  const t = AC.currentTime;
+  const src = noiseSrc();
+  const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 20;
+  f.frequency.value = (3000 + Math.random() * 5500) * pitch * (0.96 + Math.random() * 0.08);
+  src.connect(f); f.connect(envGain(t, gain, 0.07));
+  voices++; src.start(t, Math.random() * 0.5, 0.1); src.stop(t + 0.1);
+  src.onended = () => voices--;
+}
+function playTick(intensity) {
+  const now = performance.now();
+  if (now - lastTickAt < 34) return;
+  lastTickAt = now;
+  if (now - comboAt < 350) combo = Math.min(combo + 1, 10); else combo = 0;
+  comboAt = now;
+  const pitch = (0.9 + Math.random() * 0.25) * Math.pow(2, combo / 24); // 随机 0.9–1.15 + 连裂升调
+  const g = Math.min(0.5, 0.14 + intensity * 0.5);
+  playClick(pitch, g);
+  if (Math.random() < 0.65) playRing(pitch, g * 0.5);
+}
+function playCrunch() { // 阶段跃迁：click+snap+grit+debris 一记深 crunch
+  if (!AC) return;
+  playClick(0.8, 0.5); playSnap(0.5); playRing(0.85, 0.3);
+  const t = AC.currentTime;
+  const src = noiseSrc(); // grit：带通 4k→1.2kHz 颗粒噪声
+  const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.1;
+  f.frequency.setValueAtTime(4000, t);
+  f.frequency.exponentialRampToValueAtTime(1200, t + 0.24);
+  const g = AC.createGain();
+  const curve = new Float32Array(10);
+  for (let i = 0; i < 10; i++) curve[i] = (0.25 - i * 0.022) * (0.4 + Math.random() * 0.6);
+  g.gain.setValueCurveAtTime(curve, t, 0.24);
+  src.connect(f); f.connect(g); g.connect(master);
+  src.start(t, Math.random() * 0.4, 0.3); src.stop(t + 0.3);
+  for (let i = 0; i < 3; i++) setTimeout(() => playClick(0.7 + Math.random() * 0.3, 0.16), 40 + i * 55 + Math.random() * 30);
+}
+function playSquish(s) { // 底层闷捏声，压低不抢裂响
+  if (!AC) return;
+  const now = performance.now();
+  if (now - lastSquishAt < 130) return;
+  lastSquishAt = now;
+  const t = AC.currentTime;
+  const src = noiseSrc();
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 400;
+  src.connect(f); f.connect(envGain(t, 0.05 * s, 0.13));
+  src.start(t, Math.random() * 0.5, 0.15); src.stop(t + 0.15);
+}
+
+// ---------- 状态 + L1 物理（解析凹陷 + 体积 squash + 塑性残留，固定 120Hz） ----------
+let pressing = false, draggingBg = false, lastX = 0;
+let hold = 0, depth = 0, depthVel = 0;          // 凹陷深度（弹簧驱动）
+let plastic = 0;                                 // 塑性残留（慢状态）
+let squash = 1, squashVel = 0;                   // 全局纵向 squash（sx=sz=1/√sy）
+let progress = 0, stage = 0, seeded = false;     // 裂纹总进度 / 阶段
+let hitStop = 0, frameDC = 0, dispNow = 0, hitVert = -1;
+let hitPoint = new THREE.Vector3(0, 0.76, 0), plasticPoint = new THREE.Vector3(0, 0.76, 0);
+let hitNormal = new THREE.Vector3(0, 1, 0);
+let sites = [], site = null;                     // 损伤点（裂过变软的耦合源）
+const STAGE_AT = [0.06, 0.30, 0.62];
+function stageOf(p) { return p >= STAGE_AT[2] ? 3 : p >= STAGE_AT[1] ? 2 : p >= STAGE_AT[0] ? 1 : 0; }
+
+function onStageUp(s) {
+  hitStop = s === 3 ? 0.08 : 0.05;               // L6 hit-stop 30–80ms
+  punch = 1;                                     // L6 镜头 punch
+  playCrunch();
+  if (navigator.vibrate) navigator.vibrate(s === 3 ? [14, 30, 18] : 10);
+  if (s === 3) { spawnChips(hitPoint, hitNormal, 8); toast('壳碎了，露出内芯'); }
+  else if (s === 2) toast('裂纹成网了');
+}
+
+function physStep(h) {
+  if (hitStop > 0) return; // hit-stop：冻结形变推进，不冻渲染
+  if (pressing) {
+    hold += h;
+    const target = Math.min(0.80, Math.min(0.52, 0.20 + hold * 0.30) * (1 + 1.0 * (site ? site.dmg : 0)));
+    const acc = 150 * (target - depth) - 17 * depthVel;
+    depthVel += acc * h; depth += depthVel * h;
+    plastic += (depth * 0.62 - plastic) * (1 - Math.exp(-h / 0.9));
+    if (plastic > depth) plastic = depth;
+    if (!seeded && depth > 0.09 && progress < 0.055) { progress = 0.055; frameDC += 0.055; seeded = true; }
+    if (depth > 0.07) {
+      if (site) site.dmg = Math.min(1, site.dmg + h * 0.25 * Math.min(1, depth / 0.5)); // 压力本身也累积损伤
+      if (progress < 1) {
+        const rate = 0.34 * Math.pow(Math.min(1, depth / 0.5), 1.4) * (1 + 0.6 * (site ? site.dmg : 0));
+        const dC = Math.min(rate * h, 1 - progress);
+        progress += dC; frameDC += dC;
+        if (site) site.dmg = Math.min(1, site.dmg + dC * 3.0);
+      }
+    }
+  } else {
+    const acc = 60 * (plastic - depth) - 8 * depthVel;
+    depthVel += acc * h; depth += depthVel * h;
+    if (depth < 0) { depth = 0; depthVel = 0; }
+    plastic *= Math.exp(-h / 7);
+    if (plastic < 0.003) plastic = 0;
+  }
+  const sqTarget = 1 - 0.34 * Math.min(1, depth / 0.55);
+  const sacc = 80 * (sqTarget - squash) - 11 * squashVel;
+  squashVel += sacc * h; squash += squashVel * h;
+  const ns = stageOf(progress);
+  if (ns !== stage) { stage = ns; onStageUp(ns); }
+}
+
+// ---------- L1 变形：DoG 凹陷（高斯坑 + rim 隆起）+ 全局体积 squash ----------
+function deform(data, pointK, depthEff, sy, sx) {
+  const pos = data.geo.attributes.position.array;
+  const rest = data.rest, restN = data.restN;
+  const sigma = 0.30 + 0.55 * depthEff;
+  const s2 = 2 * sigma * sigma;
+  const rimC = sigma * 1.8, rimS2 = 2 * Math.pow(sigma * 0.7, 2);
+  for (let i = 0; i < data.count; i++) {
     const ix = i * 3;
-    const dx = x - pRest[ix], dy = y - pRest[ix+1], dz = z - pRest[ix+2];
-    const d2 = dx*dx + dy*dy + dz*dz + 0.02;
-    const w = 1 / (d2 * d2);
-    wx += (pPos[ix] - pRest[ix]) * w; wy += (pPos[ix+1] - pRest[ix+1]) * w; wz += (pPos[ix+2] - pRest[ix+2]) * w;
-    wsum += w;
-  }
-  out.x = wx / wsum; out.y = wy / wsum; out.z = wz / wsum;
-  return out;
-}
-// 脆皮参数：形变退居其次——浅、硬；慢状态让压痕残留（不回原形）
-const PHYS = { kSpring: 250, kAnchor: 42, damp: 3.4, slowMix: 0.5, tauIn: 0.2, tauOut: 30, kPress: 430 };
-
-// ---------- 声音 ----------
-let AC = null, lastCrackle = 0;
-function audio() { if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)(); if (AC.state === 'suspended') AC.resume(); return AC; }
-function noiseBuffer(ac, dur) {
-  const b = ac.createBuffer(1, ac.sampleRate * dur, ac.sampleRate);
-  const d = b.getChannelData(0);
-  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
-  return b;
-}
-function playSquish(strength) {
-  try {
-    const ac = audio(), t = ac.currentTime;
-    const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.14);
-    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 380;
-    const g = ac.createGain(); g.gain.setValueAtTime(0.05 * strength, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.13);
-    src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.15);
-  } catch (e) {}
-}
-function playCrackle(big) { // 裂纹生长的脆响：主角音效
-  const now = performance.now(); if (now - lastCrackle < (big ? 30 : 65)) return; lastCrackle = now;
-  try {
-    const ac = audio(), t0 = ac.currentTime;
-    const bursts = big ? 6 : 2;
-    for (let i = 0; i < bursts; i++) {
-      const t = t0 + i * (0.02 + Math.random() * 0.025);
-      const src = ac.createBufferSource(); src.buffer = noiseBuffer(ac, 0.05);
-      const f = ac.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1900 + Math.random() * 2300; f.Q.value = 1.2;
-      const g = ac.createGain(); const peak = (big ? 0.20 : 0.11) * (0.7 + Math.random() * 0.5);
-      g.gain.setValueAtTime(peak, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.05);
-      src.connect(f).connect(g).connect(ac.destination); src.start(t); src.stop(t + 0.07);
+    const rx = rest[ix], ry = rest[ix + 1], rz = rest[ix + 2];
+    let off = 0;
+    if (depthEff > 0.001) {
+      const dx = rx - pointK.x, dy = ry - pointK.y, dz = rz - pointK.z;
+      const d2 = dx * dx + dy * dy + dz * dz;
+      const dent = -depthEff * Math.exp(-d2 / s2);
+      const dr = Math.sqrt(d2) - rimC;
+      const rim = depthEff * 0.38 * Math.exp(-(dr * dr) / rimS2);
+      off = dent + rim;
     }
-  } catch (e) {}
+    pos[ix] = (rx + restN[ix] * off) * sx;
+    pos[ix + 1] = (ry + restN[ix + 1] * off) * sy;
+    pos[ix + 2] = (rz + restN[ix + 2] * off) * sx;
+  }
+  data.geo.attributes.position.needsUpdate = true;
+  data.geo.computeVertexNormals();
 }
 
-// ---------- 裂纹系统（v0.4 主角） ----------
-const MAXSEG = 1600;
-const crackPos = new Float32Array(MAXSEG * 2 * 3);
-const crackGeo = new THREE.BufferGeometry();
-crackGeo.setAttribute('position', new THREE.BufferAttribute(crackPos, 3));
-crackGeo.setDrawRange(0, 0);
-const cracks = new THREE.LineSegments(crackGeo, new THREE.LineBasicMaterial({ color: 0x4a3b2c, transparent: true, opacity: 0.95 }));
-cracks.frustumCulled = false;
-scene.add(cracks);
-let crackNodes = [];   // {p:Vector3(静止表面点), h:Vector3(切向走向)}
-let crackSegs = [];     // [ia, ib] 节点索引对
-let crackCenters = [];  // 裂过的区域中心（变软用）
-const _sv = new THREE.Vector3(), _sv2 = new THREE.Vector3(), _sv3 = new THREE.Vector3();
-function addNode(p, h) { crackNodes.push({ p: p.clone(), h: h.clone() }); return crackNodes.length - 1; }
-function addSeg(a, b) { if (crackSegs.length < MAXSEG) crackSegs.push([a, b]); }
-function seedCrack(centerDir) {
-  surfPoint(centerDir, _sv);
-  surfNormal(_sv, _sv2);
-  // 随机切向基
-  _sv3.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5).cross(_sv2).normalize();
-  const center = addNode(_sv, _sv3);
-  const arms = 5 + (Math.random() * 3 | 0);
-  for (let k = 0; k < arms; k++) {
-    const ang = (k / arms) * Math.PI * 2 + Math.random() * 0.5;
-    const h = _sv3.clone().applyAxisAngle(_sv2, ang);
-    let prev = center, from = _sv;
-    const steps = 3 + (Math.random() * 3 | 0);
-    for (let sIdx = 0; sIdx < steps; sIdx++) {
-      _sv.copy(from).addScaledVector(h, 0.09 + Math.random() * 0.07).normalize();
-      surfPoint(_sv, _sv2);
-      const ni = addNode(_sv2, h);
-      addSeg(prev, ni); prev = ni; from = _sv2.clone();
-    }
-  }
-  crackCenters.push(_sv.clone());
-  if (crackCenters.length > 48) crackCenters.shift();
-  playCrackle(true);
-}
-function growCrack(centerDir) {
-  // 从按压点附近的已有节点继续往外爬
-  surfPoint(centerDir, _sv);
-  const near = [];
-  for (let i = 0; i < crackNodes.length; i++) if (crackNodes[i].p.distanceTo(_sv) < 1.15) near.push(i);
-  if (!near.length) return 0;
-  const ni = near[(Math.random() * near.length) | 0];
-  const node = crackNodes[ni];
-  surfNormal(node.p, _sv2);
-  const turn = (Math.random() - 0.5) * 1.1;
-  const h = node.h.clone().applyAxisAngle(_sv2, turn);
-  // 向外漂移：裂纹从按压中心放射着爬，而不是原地打转
-  _sv3.copy(node.p).sub(_sv).addScaledVector(_sv2, -node.p.clone().sub(_sv).dot(_sv2));
-  if (_sv3.lengthSq() > 0.0001) { _sv3.normalize(); h.lerp(_sv3, 0.38).normalize(); }
-  _sv3.copy(node.p).addScaledVector(h, 0.085 + Math.random() * 0.075).normalize();
-  surfPoint(_sv3, _sv);
-  const ci = addNode(_sv, h);
-  addSeg(ni, ci);
-  let added = 1;
-  if (Math.random() < 0.20) { // 分叉
-    const h2 = node.h.clone().applyAxisAngle(_sv2, (Math.random() < 0.5 ? 1 : -1) * (0.6 + Math.random() * 0.5));
-    _sv3.copy(node.p).addScaledVector(h2, 0.08 + Math.random() * 0.06).normalize();
-    surfPoint(_sv3, _sv);
-    const bi = addNode(_sv, h2);
-    addSeg(ni, bi); added++;
-  }
-  if (crackNodes.length % 14 === 0) { crackCenters.push(node.p.clone()); if (crackCenters.length > 48) crackCenters.shift(); }
-  return added;
-}
-function crackSoftAt(x, y, z) { // 裂过的区域变软：0..1
-  let s = 0;
-  for (const c of crackCenters) {
-    const dx = x - c.x, dy = y - c.y, dz = z - c.z;
-    s += Math.exp(-(dx*dx + dy*dy + dz*dz) / 0.085);
-  }
-  return Math.min(1, s);
-}
-function clearCracks() { crackNodes = []; crackSegs = []; crackCenters = []; crackGeo.setDrawRange(0, 0); crackStatus(); }
-function crackStatus() { document.getElementById('mCrack').textContent = crackSegs.length + ' 条'; }
-const _cv = { x: 0, y: 0, z: 0 }, _cn = new THREE.Vector3();
-function updateCrackLines() { // 裂纹贴在表面上、随形变走
-  const pos = crackGeo.attributes.position.array;
-  for (let sIdx = 0; sIdx < crackSegs.length; sIdx++) {
-    for (let e = 0; e < 2; e++) {
-      const node = crackNodes[crackSegs[sIdx][e]];
-      dispAt(node.p.x, node.p.y, node.p.z, _cv);
-      surfNormal(node.p, _cn);
-      const o = (sIdx * 2 + e) * 3;
-      pos[o] = node.p.x + _cv.x + _cn.x * 0.007;
-      pos[o+1] = node.p.y + _cv.y + _cn.y * 0.007;
-      pos[o+2] = node.p.z + _cv.z + _cn.z * 0.007;
-    }
-  }
-  crackGeo.setDrawRange(0, crackSegs.length * 2);
-  crackGeo.attributes.position.needsUpdate = true;
-}
-
-// ---------- 按压交互 ----------
+// ---------- 交互 ----------
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
-let pressing = false, pressHold = 0, pressDir = new THREE.Vector3(0, 1, 0);
-let lastHitDir = new THREE.Vector3(0, 1, 0), draggingBg = false, lastX = 0;
-let dispMagNow = 0, prevDispMag = 0, crackBudget = 0;
-
 function castBall(e) {
   pointer.x = (e.clientX / innerWidth) * 2 - 1;
   pointer.y = -(e.clientY / innerHeight) * 2 + 1;
   raycaster.setFromCamera(pointer, camera);
   return raycaster.intersectObject(ball, false)[0] || null;
 }
+function nearestVert(p) {
+  const rest = outerData.rest;
+  let best = -1, bd = 1e9;
+  for (let i = 0; i < outerData.count; i++) {
+    const dx = rest[i * 3] - p.x, dy = rest[i * 3 + 1] - p.y, dz = rest[i * 3 + 2] - p.z;
+    const d = dx * dx + dy * dy + dz * dz;
+    if (d < bd) { bd = d; best = i; }
+  }
+  return best;
+}
 renderer.domElement.addEventListener('pointerdown', e => {
-  audio();
+  ensureAudio();
   const hit = castBall(e);
   renderer.domElement.setPointerCapture(e.pointerId);
-  if (hit) { pressing = true; pressDir.copy(hit.point).normalize(); lastHitDir.copy(pressDir); }
-  else { draggingBg = true; lastX = e.clientX; }
+  if (hit) {
+    pressing = true; hold = 0; seeded = false;
+    hitNormal.copy(hit.point).normalize();
+    // 换算到静止空间再设凹陷中心：残坑里二压才能加深同一个坑、量到同一个顶点
+    const restPt = hit.point.clone().addScaledVector(hitNormal, depth);
+    hitPoint.copy(restPt); plasticPoint.copy(restPt);
+    site = null;
+    for (const s of sites) if (s.point.distanceTo(restPt) < 0.55) { site = s; break; }
+    if (!site) { site = { point: restPt.clone(), dmg: 0 }; sites.push(site); if (sites.length > 6) sites.shift(); }
+    if (hit.uv) crackUniforms.uHitUV.value.copy(hit.uv);
+    crackUniforms.uLocal.value = site.dmg;
+    hitVert = nearestVert(restPt);
+  } else { draggingBg = true; lastX = e.clientX; }
 });
 renderer.domElement.addEventListener('pointermove', e => {
   if (pressing) {
     const hit = castBall(e);
-    if (hit) { pressDir.copy(hit.point).normalize(); lastHitDir.copy(pressDir); }
+    if (hit) {
+      _mv.copy(hit.point).addScaledVector(hitNormal, depth);
+      hitPoint.copy(_mv); plasticPoint.copy(_mv);
+    }
   } else if (draggingBg) {
     camAngle += (e.clientX - lastX) * 0.008; lastX = e.clientX; placeCamera();
   }
@@ -350,107 +592,6 @@ function endPress() { pressing = false; draggingBg = false; }
 renderer.domElement.addEventListener('pointerup', endPress);
 renderer.domElement.addEventListener('pointercancel', endPress);
 
-// ---------- 物理步进（固定 120Hz，沿用 v0.3） ----------
-const force = new Float32Array(4096 * 3);
-function physStep(h) {
-  if (pressing) pressHold += h; else pressHold = Math.max(0, pressHold - h * 3);
-  const depthBase = Math.min(0.40, 0.13 + pressHold * 0.38);
-  const radius = Math.min(0.85, 0.42 + pressHold * 0.24);
-  const sigma2 = 2 * Math.pow(radius * 0.55, 2);
-  surfPoint(pressDir, _sv);
-  const px = _sv.x, py = _sv.y, pz = _sv.z;
-
-  force.fill(0, 0, NP * 3);
-  for (let s = 0; s < springs.length; s++) {
-    const i = springs[s][0], j = springs[s][1], rl = springs[s][2];
-    const ix = i * 3, jx = j * 3;
-    const dx = pPos[jx] - pPos[ix], dy = pPos[jx+1] - pPos[ix+1], dz = pPos[jx+2] - pPos[ix+2];
-    const len = Math.hypot(dx, dy, dz) || 0.0001;
-    const f = PHYS.kSpring * (len - rl) / len;
-    force[ix] += dx * f; force[ix+1] += dy * f; force[ix+2] += dz * f;
-    force[jx] -= dx * f; force[jx+1] -= dy * f; force[jx+2] -= dz * f;
-  }
-  const tau = pressing ? PHYS.tauIn : PHYS.tauOut;
-  const slowRate = 1 - Math.exp(-h / tau);
-  const dampF = Math.exp(-PHYS.damp * h);
-  for (let i = 0; i < NP; i++) {
-    const ix = i * 3;
-    pSlow[ix] += (pPos[ix] - pSlow[ix]) * slowRate;
-    pSlow[ix+1] += (pPos[ix+1] - pSlow[ix+1]) * slowRate;
-    pSlow[ix+2] += (pPos[ix+2] - pSlow[ix+2]) * slowRate;
-    const tx = pRest[ix] * (1 - PHYS.slowMix) + pSlow[ix] * PHYS.slowMix;
-    const ty = pRest[ix+1] * (1 - PHYS.slowMix) + pSlow[ix+1] * PHYS.slowMix;
-    const tz = pRest[ix+2] * (1 - PHYS.slowMix) + pSlow[ix+2] * PHYS.slowMix;
-    let fx = force[ix] + (tx - pPos[ix]) * PHYS.kAnchor;
-    let fy = force[ix+1] + (ty - pPos[ix+1]) * PHYS.kAnchor;
-    let fz = force[ix+2] + (tz - pPos[ix+2]) * PHYS.kAnchor;
-    if (pressing) {
-      const dx = pRest[ix] - px, dy = pRest[ix+1] - py, dz = pRest[ix+2] - pz;
-      const fall = Math.exp(-(dx*dx + dy*dy + dz*dz) / sigma2);
-      if (fall > 0.02) {
-        // 裂过的地方更软：压得更深
-        const soft = crackSoftAt(pRest[ix], pRest[ix+1], pRest[ix+2]);
-        const depth = depthBase * (1 + 0.65 * soft);
-        fx += (pRest[ix] - pressDir.x * depth - pPos[ix]) * PHYS.kPress * fall;
-        fy += (pRest[ix+1] - pressDir.y * depth - pPos[ix+1]) * PHYS.kPress * fall;
-        fz += (pRest[ix+2] - pressDir.z * depth - pPos[ix+2]) * PHYS.kPress * fall;
-      }
-    }
-    pVel[ix] = (pVel[ix] + fx * h) * dampF;
-    pVel[ix+1] = (pVel[ix+1] + fy * h) * dampF;
-    pVel[ix+2] = (pVel[ix+2] + fz * h) * dampF;
-    const sp = Math.hypot(pVel[ix], pVel[ix+1], pVel[ix+2]);
-    if (sp > 7) { const c = 7 / sp; pVel[ix] *= c; pVel[ix+1] *= c; pVel[ix+2] *= c; }
-    pPos[ix] += pVel[ix] * h; pPos[ix+1] += pVel[ix+1] * h; pPos[ix+2] += pVel[ix+2] * h;
-    const ox = pPos[ix] - pRest[ix], oy = pPos[ix+1] - pRest[ix+1], oz = pPos[ix+2] - pRest[ix+2];
-    const om = Math.hypot(ox, oy, oz);
-    if (om > 0.85) { const c = 0.85 / om; pPos[ix] = pRest[ix] + ox * c; pPos[ix+1] = pRest[ix+1] + oy * c; pPos[ix+2] = pRest[ix+2] + oz * c; }
-  }
-}
-
-// ---------- 每帧：表面/裂纹跟随 + 裂纹生长 ----------
-const _v = { x: 0, y: 0, z: 0 };
-function updateSurfaces(dt) {
-  const posAttr = surfGeo.attributes.position;
-  for (let i = 0; i < surfCount; i++) {
-    const ix = i * 3;
-    dispAt(surfRest[ix], surfRest[ix+1], surfRest[ix+2], _v);
-    posAttr.array[ix] = surfRest[ix] + _v.x;
-    posAttr.array[ix+1] = surfRest[ix+1] + _v.y;
-    posAttr.array[ix+2] = surfRest[ix+2] + _v.z;
-  }
-  posAttr.needsUpdate = true;
-  surfGeo.computeVertexNormals();
-
-  surfPoint(pressDir, _sv);
-  dispAt(_sv.x, _sv.y, _sv.z, _v);
-  prevDispMag = dispMagNow;
-  dispMagNow = Math.hypot(_v.x, _v.y, _v.z);
-  document.getElementById('mDepth').textContent = Math.round(Math.min(1, dispMagNow / 0.5) * 100) + '%';
-  if (pressing && dispMagNow > prevDispMag + 0.006) playSquish(Math.min(1, dispMagNow * 1.4));
-
-  // 裂纹生长：压得越深长得越快；新落点先开一朵裂纹星
-  if (pressing && dispMagNow > 0.055 && crackSegs.length < MAXSEG) {
-    crackBudget += dt * (40 + dispMagNow * 300);
-    let nearNodes = 0;
-    surfPoint(pressDir, _sv);
-    for (let i = Math.max(0, crackNodes.length - 400); i < crackNodes.length; i++)
-      if (crackNodes[i].p.distanceTo(_sv) < 0.3) { nearNodes++; break; }
-    if (!nearNodes && crackBudget > 5) { seedCrack(pressDir); crackBudget -= 5; crackStatus(); }
-    let grew = 0;
-    while (crackBudget >= 1) {
-      const n = growCrack(pressDir);
-      if (!n) { crackBudget = 0; break; }
-      grew += n; crackBudget -= 1;
-      if (grew > 14) break;
-    }
-    if (grew) { playCrackle(false); crackStatus(); }
-  } else crackBudget = Math.max(0, crackBudget - dt * 20);
-
-  if (crackSegs.length) updateCrackLines();
-  if (Math.abs(spinVel) > 0.001) { camAngle += spinVel * dt; spinVel *= Math.pow(0.25, dt); placeCamera(); }
-}
-
 // ---------- UI ----------
 let toastTimer = null;
 function toast(msg) {
@@ -458,16 +599,22 @@ function toast(msg) {
   el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1700);
 }
+function resetAll() {
+  progress = 0; stage = 0; sites = []; site = null;
+  depth = 0; depthVel = 0; plastic = 0; squash = 1; squashVel = 0; hold = 0; frameDC = 0;
+  crackUniforms.uCrack.value = 0; crackUniforms.uLocal.value = 0; crackUniforms.uStageF.value = 0;
+  for (let i = 0; i < CHIPN; i++) { chips[i].life = 0; hideChip(i); }
+  chipMesh.instanceMatrix.needsUpdate = true;
+}
 function switchShape(name) {
   shapeName = name; shape = SHAPES[name];
-  const old = surfGeo;
-  surfGeo = buildSurfaceGeometry();
-  ball.geometry = surfGeo;
-  surfRest = new Float32Array(surfGeo.attributes.position.array);
-  surfCount = surfGeo.attributes.position.count;
-  old.dispose();
-  buildCage(); clearCracks();
-  ground.position.y = disc.position.y - 0.01;
+  const oldO = surfGeo, oldC = coreGeo;
+  surfGeo = buildSurfaceGeometry(); ball.geometry = surfGeo;
+  coreGeo = surfGeo.clone(); coreGeo.scale(0.9, 0.9, 0.9); core.geometry = coreGeo;
+  outerData = meshData(surfGeo); coreData = meshData(coreGeo);
+  oldO.dispose(); oldC.dispose();
+  hitVert = -1;
+  resetAll();
   const bottom = -shape.b - 0.30;
   disc.position.y = bottom; ground.position.y = bottom - 0.01;
 }
@@ -480,9 +627,7 @@ document.querySelectorAll('[data-color]').forEach(b => b.addEventListener('click
   document.querySelectorAll('[data-color]').forEach(x => x.classList.remove('on'));
   b.classList.add('on'); ballMat.color.setHex(parseInt(b.dataset.color));
 }));
-document.getElementById('btnReset').addEventListener('click', () => {
-  resetCage(); clearCracks(); toast('新的一块，完好无裂');
-});
+document.getElementById('btnReset').addEventListener('click', () => { resetAll(); toast('新的一块，完好无裂'); });
 document.getElementById('btnSpin').addEventListener('click', () => { spinVel = 5; });
 disc.position.y = -shape.b - 0.30; ground.position.y = disc.position.y - 0.01;
 
@@ -493,22 +638,67 @@ addEventListener('resize', () => {
 
 // ---------- 主循环 ----------
 const clock = new THREE.Clock();
-let acc = 0;
+let acc = 0, lastChipAt = 0;
 const H = 1 / 120;
-function loop() {
-  requestAnimationFrame(loop);
-  const dt = Math.min(clock.getDelta(), 0.06);
+const _hp = new THREE.Vector3();
+const _mv = new THREE.Vector3();
+function frame() {
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.25);
+  if (hitStop > 0) hitStop -= dt;
   acc += dt;
   let steps = 0;
-  while (acc >= H && steps < 10) { physStep(H); acc -= H; steps++; }
-  if (steps === 10) acc = 0;
-  updateSurfaces(dt);
+  while (acc >= H && steps < 32) { physStep(H); acc -= H; steps++; }
+  if (steps === 32) acc = 0;
+
+  // L4：本帧裂纹增量 → tick；阶段3 持续深压掉碎片
+  if (frameDC > 0.0012) {
+    playTick(frameDC * 60);
+    if (stage === 3 && pressing && frameDC > 0.004) {
+      const now = performance.now();
+      if (now - lastChipAt > 90) { lastChipAt = now; spawnChips(hitPoint, hitNormal, 2); }
+    }
+  }
+  frameDC = 0;
+  if (pressing && depthVel > 0.5) playSquish(Math.min(1, depth));
+
+  crackUniforms.uCrack.value = progress;
+  crackUniforms.uLocal.value = site ? site.dmg : 0;
+  crackUniforms.uStageF.value += (stage - crackUniforms.uStageF.value) * Math.min(1, dt * 10);
+
+  const pt = pressing ? hitPoint : plasticPoint;
+  const sx = 1 / Math.sqrt(Math.max(0.5, squash));
+  deform(outerData, pt, depth, squash, sx);
+  _hp.copy(pt).multiplyScalar(0.9);
+  deform(coreData, _hp, depth, squash, sx);
+
+  if (hitVert >= 0) {
+    const pa = outerData.geo.attributes.position.array, ra = outerData.rest, ix = hitVert * 3;
+    dispNow = Math.hypot(pa[ix] - ra[ix], pa[ix + 1] - ra[ix + 1], pa[ix + 2] - ra[ix + 2]);
+  } else dispNow = depth;
+
+  updateChips(dt);
+  if (punch > 0.003) {
+    punch *= Math.exp(-dt / 0.055);
+    camera.fov = 38 + 1.8 * punch; camera.updateProjectionMatrix();
+  } else if (camera.fov !== 38) { camera.fov = 38; camera.updateProjectionMatrix(); }
+  if (Math.abs(spinVel) > 0.001) { camAngle += spinVel * dt; spinVel *= Math.pow(0.25, dt); placeCamera(); }
+
+  document.getElementById('mDepth').textContent = Math.round(Math.min(1, dispNow / 0.55) * 100) + '%';
+  document.getElementById('mCrack').textContent = Math.round(progress * 100) + '%';
+  document.getElementById('mStage').textContent = stage;
   renderer.render(scene, camera);
 }
-loop();
-crackStatus();
-console.log('shape:', shapeName, 'cage particles:', NP, 'springs:', springs.length);
-window.__squishy = { get segs(){ return crackSegs.length; }, get disp(){ return dispMagNow; }, softAtPress: () => { surfPoint(pressDir, _sv); return crackSoftAt(_sv.x, _sv.y, _sv.z); } };
+frame();
+console.log('v0.5 crispy: analytic dent + squash, baked voronoi crack mask');
+window.__squishy = {
+  get disp() { return dispNow; },
+  get crack() { return progress; },
+  get stage() { return stage; },
+  get depth() { return depth; },
+  get plastic() { return plastic; },
+  get siteDmg() { return site ? site.dmg : 0; }
+};
 </script>
 </body>
 </html>
