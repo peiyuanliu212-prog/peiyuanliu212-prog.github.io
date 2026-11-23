@@ -24,10 +24,12 @@
 <div id="app"></div>
 <div class="panel">
   <h1>捏捏 · 脆皮原型（正道版）</h1>
-  <p>按住压、拖着揉都可以，两个手指能同时按；拖空白处转着捏其他面</p>
+  <p id="hint">按住压、拖着揉都可以，两个手指能同时按；拖空白处转着捏其他面</p>
   <p id="status">按压 0% · 裂纹 0% · 阶段 0</p>
 </div>
 <div class="bar">
+  <span class="lbl">玩法</span>
+  <button data-mode="crisp" class="modeBtn on">脆皮捏捏</button><button data-mode="sand" class="modeBtn">刮太空沙</button>
   <span class="lbl">造型</span>
   <button id="shapeBox" class="on">方块</button><button id="shapeBall">圆球</button>
   <span class="lbl">芯色</span>
@@ -166,6 +168,28 @@ function dmgAt(u,v){
 // ---------- brush tools ----------
 let toolMode='dent'; // dent | bulge | smooth
 let brushScale=1;
+let ringGain=0.10;
+// ---------- kinetic-sand mode ----------
+let playMode='crisp'; // crisp | sand
+let baseZ=1, scrapeWork=0, lastSandSnd=0;
+function scrapePaint(u,v,rate,dt){
+  // narrow deep groove, no bulge ring: a scraper shaving sand away
+  const cx=u*DW, cy=(1-v)*DH, sig=7*brushScale, rad=20*brushScale;
+  const x0=Math.floor(cx-rad), x1=Math.ceil(cx+rad), y0=Math.max(0,Math.floor(cy-rad)), y1=Math.min(DH-1,Math.ceil(cy+rad));
+  for(let y=y0;y<=y1;y++) for(let xx=x0;xx<=x1;xx++){
+    const dx=xx-cx, dy=y-cy, d2=dx*dx+dy*dy;
+    if(d2>rad*rad) continue;
+    const x=((xx%DW)+DW)%DW, idx=y*DW+x;
+    const g=Math.exp(-d2/(2*sig*sig));
+    defArr[idx]=Math.max(-0.72, defArr[idx]-rate*dt*g*noiseArr[idx]);
+  }
+  scrapeWork+=rate*dt*8;
+}
+function scrapePaintWrapped(u,v,rate,dt){
+  scrapePaint(u,v,rate,dt);
+  if(u<0.06) scrapePaint(u+1,v,rate,dt);
+  if(u>0.94) scrapePaint(u-1,v,rate,dt);
+}
 function smoothDef(u,v,dt){
   const cx=u*DW, cy=(1-v)*DH, sig=12*brushScale, rad=30*brushScale;
   const x0=Math.floor(cx-rad), x1=Math.ceil(cx+rad), y0=Math.max(0,Math.floor(cy-rad)), y1=Math.min(DH-1,Math.ceil(cy+rad));
@@ -206,7 +230,7 @@ function paintDef(u,v,rate,dt){
     const x=((xx%DW)+DW)%DW, idx=y*DW+x;
     const g=Math.exp(-(d*d)/(2*sig*sig));
     const ring=Math.exp(-Math.pow(d-2.05*sig,2)/(2*Math.pow(0.55*sig,2)));
-    let delta=-rate*dt*g*noiseArr[idx] + rate*dt*0.10*ring;
+    let delta=-rate*dt*g*noiseArr[idx] + rate*dt*ringGain*ring;
     defArr[idx]=Math.max(-0.72, Math.min(0.35, defArr[idx]+delta));
   }
 }
@@ -351,8 +375,10 @@ for(let i=0;i<90;i++){
   scene.add(m);
   flakes.push({m, vel:new THREE.Vector3(), rot:new THREE.Vector3(), life:0, maxLife:1});
 }
+const flakeMatsSand=[0xe8b06a,0xf0c285,0xd99a4e].map(c=>new THREE.MeshStandardMaterial({color:c, roughness:1, flatShading:true}));
+function setFlakePalette(sand){ const pal=sand?flakeMatsSand:flakeMats; flakes.forEach((f,i)=>{ f.m.material=pal[i%3]; }); }
 let flakesActive=0;
-function spawnFlakes(origin, n, power){
+function spawnFlakes(origin, n, power, sizeMul=1){
   let spawned=0;
   for(const f of flakes){
     if(spawned>=n) break;
@@ -362,7 +388,7 @@ function spawnFlakes(origin, n, power){
     f.m.position.copy(origin).add(new THREE.Vector3((Math.random()-0.5)*0.16,(Math.random()-0.3)*0.1,(Math.random()-0.5)*0.16));
     f.vel.set((Math.random()-0.5)*1.5*power, (0.7+Math.random()*0.9)*power, (Math.random()-0.5)*1.5*power);
     f.rot.set(Math.random()*9, Math.random()*9, Math.random()*9);
-    const s=0.7+Math.random()*0.9; f.m.scale.set(s,0.38*s,s);
+    const s=(0.7+Math.random()*0.9)*sizeMul; f.m.scale.set(s,0.38*s,s);
     spawned++;
   }
 }
@@ -418,7 +444,7 @@ function animate(){
   if(simPress && now>=simPress.until) simPress=null;
   let maxOff=0;
   // sculpt field slowly rebounds toward round, per rebound mode
-  const rk=REBOUND_K[reboundMode];
+  const rk= playMode==='sand' ? 0 : REBOUND_K[reboundMode];
   if(rk>0){ const m=Math.exp(-rk*dt); for(let i=0;i<DW*DH;i++) defArr[i]*=m; }
   depthNow=0;
   if(pts.length){
@@ -427,12 +453,27 @@ function animate(){
       p.holdT+=dt;
       p.depth=Math.min(0.14+p.holdT*0.13, 0.44);
       if(p.depth>depthNow) depthNow=p.depth;
-      if(toolMode==='dent'){ brushDamageWrapped(p.x, p.y, 0.52+p.depth*1.0, dt); paintDefWrapped(p.x, p.y, 0.85, dt); }
-      else if(toolMode==='bulge'){ paintDefWrapped(p.x, p.y, -0.95, dt); }
-      else { smoothDefWrapped(p.x, p.y, dt); }
       // kneading: dragging smears the sculpt along the path + scrubs extra damage (peeling)
       const mdu=Math.min(Math.abs(p.x-p.prevX), 1-Math.abs(p.x-p.prevX))*ARC_U, mdv=(p.y-p.prevY)*ARC_V;
       const moved=Math.sqrt(mdu*mdu + mdv*mdv);
+      if(playMode==='sand'){
+        if(moved>0.01){
+          scrapePaintWrapped(p.x, p.y, 2.4, dt);
+          spawnFlakes(p, 2, .5, .3);
+          if(scrapeWork>7){ scrapeWork=0; spawnFlakes(p, 2, .8, 1.05); }
+          if(now-lastSandSnd>90){ lastSandSnd=now; playBuf('grain', .18+Math.random()*.12, .8+Math.random()*.5); }
+          kneadEnergy+=moved;
+          const steps=Math.min(5, Math.max(1, Math.round(moved/0.06)));
+          for(let s=1;s<=steps;s++) scrapePaintWrapped(p.prevX+(p.x-p.prevX)*s/steps, p.prevY+(p.y-p.prevY)*s/steps, 2.4, dt);
+        } else {
+          scrapePaintWrapped(p.x, p.y, 0.5, dt);
+        }
+        p.prevX=p.x; p.prevY=p.y;
+        continue;
+      }
+      if(toolMode==='dent'){ brushDamageWrapped(p.x, p.y, 0.52+p.depth*1.0, dt); paintDefWrapped(p.x, p.y, 0.85, dt); }
+      else if(toolMode==='bulge'){ paintDefWrapped(p.x, p.y, -0.95, dt); }
+      else { smoothDefWrapped(p.x, p.y, dt); }
       if(moved>0.01){
         let du=p.x-p.prevX; if(du>0.5) du-=1; if(du<-0.5) du+=1;
         advectDef(du, p.y-p.prevY, Math.min(0.3, moved*0.8));
@@ -465,7 +506,7 @@ function animate(){
       const dv=(v-p.y)*ARC_V;
       const dist=Math.sqrt(du*du+dv*dv);
       let fall=1-Math.min(1,Math.max(0,(dist-0.18*brushScale)/(0.80*brushScale-0.18*brushScale))); fall=fall*fall*(3-2*fall);
-      if(fall>0) target+= (toolMode==='bulge' ? -p.depth*fall*0.4 : toolMode==='dent' ? p.depth*fall*0.55 : 0);
+      if(fall>0) target+= (playMode==='sand' ? p.depth*fall*0.3 : toolMode==='bulge' ? -p.depth*fall*0.4 : toolMode==='dent' ? p.depth*fall*0.55 : 0);
     }
     if(target>0.72) target=0.72; if(target<-0.35) target=-0.35;
     offset[i]+=(target-offset[i])*follow;
@@ -488,7 +529,7 @@ function animate(){
   if(reboundMode==='fast') kneadEnergy*=Math.exp(-0.8*dt);
   else if(reboundMode==='slow') kneadEnergy*=Math.exp(-0.02*dt);
   flatCur+=(Math.min(0.16, kneadEnergy*0.004)-flatCur)*Math.min(1, dt*3);
-  group.scale.set((1+sq*0.7)*(1+flatCur*0.6), (1-sq)*(1-flatCur), (1+sq*0.7)*(1+flatCur*0.6));
+  group.scale.set((1+sq*0.7)*(1+flatCur*0.6), (1-sq)*(1-flatCur), (1+sq*0.7)*(1+flatCur*0.6)*baseZ);
   if(pressMap.size===0 && !rotDrag){
     if(spin) group.rotation.y+=dt*0.55;
     else if(Math.abs(spinVel)>0.02){ group.rotation.y+=spinVel*dt; spinVel*=Math.exp(-1.9*dt); }
@@ -502,7 +543,12 @@ function animate(){
     let cnt=0; for(let i=0;i<DW*DH;i++) if(dmgArr[i]>0.3) cnt++;
     coverage=cnt/(DW*DH);
     stage = coverage<0.008?0 : coverage<0.035?1 : coverage<0.09?2 : 3;
-    statusEl.textContent=`按压 ${Math.round(depthNow/R*100)}% · 裂纹 ${Math.round(coverage*100)}% · 阶段 ${stage}`;
+    if(playMode==='sand'){
+      let peak=0; for(let i=0;i<DW*DH;i++){ const a=-defArr[i]; if(a>peak) peak=a; }
+      statusEl.textContent=`刮沙 · 刻深 ${Math.round(peak/0.72*100)}%`;
+    } else {
+      statusEl.textContent=`按压 ${Math.round(depthNow/R*100)}% · 裂纹 ${Math.round(coverage*100)}% · 阶段 ${stage}`;
+    }
   }
   renderer.render(scene,camera);
 }
@@ -517,6 +563,9 @@ window.__squishy={ get damage(){return coverage;}, get stage(){return stage;}, g
   get flat(){ return flatCur; },
   setRebound(m){ reboundMode=m; },
   setTool(m){ toolMode=m; },
+  setMode(m){ setPlayMode(m); },
+  get mode(){ return playMode; },
+  get flakesOn(){ return flakesActive; },
   setBrush(s){ brushScale=s; },
   defVal(u,v){ return defAt(u,v); },
   get flakes(){ return flakesActive; },
@@ -539,6 +588,49 @@ document.querySelectorAll('.toolBtn').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('.toolBtn').forEach(x=>x.classList.toggle('on',x===b));
 });
 document.getElementById('brushRange').oninput=e=>{ brushScale=parseFloat(e.target.value); };
+
+// ---------- kinetic sand presentation ----------
+function makeSandTex(){
+  const c=document.createElement('canvas'); c.width=512; c.height=256;
+  const g=c.getContext('2d');
+  const bands=['#f4a259','#ef9db8','#a9d6a5','#f7e08e','#93c5e8'];
+  const bh=256/bands.length;
+  bands.forEach((col,i)=>{ g.fillStyle=col; g.fillRect(0, Math.floor(i*bh), 512, Math.ceil(bh)+1); });
+  for(let i=0;i<11000;i++){
+    const x=Math.random()*512, y=Math.random()*256;
+    g.fillStyle=Math.random()<0.5?'rgba(90,50,20,0.20)':'rgba(255,255,255,0.20)';
+    g.fillRect(x,y,1.6,1.6);
+  }
+  g.fillStyle='rgba(255,255,255,0.75)';
+  for(let i=0;i<260;i++) g.fillRect(Math.random()*512, Math.random()*256, 1.2, 1.2);
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+const sandTex=makeSandTex();
+let curCoreColor='#f0a3b8';
+function setPlayMode(m){
+  playMode=m; scrapeWork=0;
+  document.querySelectorAll('.modeBtn').forEach(x=>x.classList.toggle('on',x.dataset.mode===m));
+  const hint=document.getElementById('hint');
+  if(m==='sand'){
+    shell.visible=false; baseZ=0.6; ringGain=0;
+    coreMat.map=sandTex; coreMat.bumpMap=sandTex; coreMat.color.set(0xffffff);
+    coreMat.roughness=.95; coreMat.clearcoat=0; coreMat.sheen=0; coreMat.needsUpdate=true;
+    setFlakePalette(true);
+    document.querySelectorAll('.shapeBtn').forEach(x=>x.classList.toggle('on',x.id==='shapeBox'));
+    setShape(true);
+    hint.textContent='按住拖动刮沙，一层层刮下来；拖空白处转着看';
+  } else {
+    shell.visible=true; baseZ=1; ringGain=0.10;
+    coreMat.map=coreTex; coreMat.bumpMap=coreTex; coreMat.color.set(curCoreColor);
+    coreMat.roughness=.55; coreMat.clearcoat=.65; coreMat.sheen=.6; coreMat.needsUpdate=true;
+    setFlakePalette(false);
+    resetAll();
+    hint.textContent='按住压、拖着揉都可以，两个手指能同时按；拖空白处转着捏其他面';
+  }
+}
+document.querySelectorAll('.modeBtn').forEach(b=>b.onclick=()=>setPlayMode(b.dataset.mode));
 document.getElementById('spinBtn').onclick=e=>{ spin=!spin; e.target.classList.toggle('on',spin); };
 function setShape(box, btn){
   exponent=box?0.62:1.0; buildRest();
@@ -551,7 +643,8 @@ function setShape(box, btn){
 document.getElementById('shapeBox').onclick=()=>setShape(true);
 document.getElementById('shapeBall').onclick=()=>setShape(false);
 document.querySelectorAll('.coreBtn').forEach(b=>b.onclick=()=>{
-  coreMat.color.set(b.dataset.core);
+  curCoreColor=b.dataset.core;
+  if(playMode==='crisp') coreMat.color.set(curCoreColor);
   document.querySelectorAll('.coreBtn').forEach(x=>x.classList.toggle('on',x===b));
 });
 addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
