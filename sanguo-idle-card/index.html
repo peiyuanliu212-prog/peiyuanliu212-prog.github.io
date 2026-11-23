@@ -360,7 +360,7 @@ nav.tabs button.on{background:url("assets/skin/tex-lacquer.webp") center top/cov
 /* ============ v4 第 29 批 · 赤壁夜江（横屏场景风竖屏版，对标 ui-dirs/dirP2 定版样稿） ============ */
 :root{--paper:#0d120f;--paper2:#16211c;--ink:#f2e7cf;--red:#c8402f;--red2:#ff9d8a;--line:#8a6a2f;--card:#101a16;--mut:#cdbd93;--ok:#9fd08a;--gold:#eec27a}
 body{background-color:#0a0d0c;background-image:linear-gradient(180deg,rgba(5,10,9,.80),rgba(5,10,9,.38) 22%,rgba(5,10,9,.48) 55%,rgba(5,10,9,.90)),url("assets/bg-scene.webp");background-size:cover;background-position:center top;background-attachment:fixed;color:#f2e7cf}
-header{background:linear-gradient(rgba(5,10,9,.88),rgba(5,10,9,.94));border-bottom:1px solid rgba(176,141,79,.85);box-shadow:0 4px 14px rgba(0,0,0,.5)}
+header{background:linear-gradient(rgba(5,10,9,1),rgba(5,10,9,1));border-bottom:1px solid rgba(176,141,79,.85);box-shadow:0 4px 14px rgba(0,0,0,.5)}
 .hdrTtx h1{font-family:"Noto Serif SC","Songti SC","STSong",serif;font-size:22px;font-weight:900;letter-spacing:3px;color:#f4dc9a;text-shadow:0 2px 4px #000,0 0 14px rgba(236,210,140,.35)}
 .hdrSub{color:#cdbd93;letter-spacing:2px}
 header .seal{background:linear-gradient(160deg,#c8402f,#8e1f1a);color:#ffe9c9;border:1px solid #eec27a;border-radius:3px;box-shadow:0 1px 4px rgba(0,0,0,.6);text-shadow:0 1px 2px rgba(40,0,0,.7)}
@@ -953,7 +953,7 @@ const CFG = {
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b39", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b41", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1681,7 +1681,7 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配＋移除删档）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配＋移除删档＋扫荡理顺＋页面理顺）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 存档同步大修：退出游戏或切到后台时立即把进度同步上云，同步失败自动重试并弹出提醒，告别丢档；换设备时用同一个虎扑账号登录即可接着打。</p>"
        + "<p class='note'>· 存档加固：个别设备本地存储被限制时，进游戏自动改从账号云端找回进度，不再一进游戏就重新开局；本地存不进的进度也会照常同步上云。</p>"
@@ -1689,6 +1689,8 @@ function renderNewsCard(){
        + "<p class='note'>· 战斗倍速加档：倍速按钮改为 1→2→3 循环切换，设置里也能选默认倍速；嫌 3 倍太快、看不清打点时，2 倍刚刚好。</p>"
        + "<p class='note'>· 抽卡动画＋全屏适配：抽卡时卡牌逐张翻开，抽到 SSR／UR 还有全屏亮相；全屏模式下顶部按钮已避开状态栏，不再被遮挡。</p>"
        + "<p class='note'>· 存档更安心：存档页已移除「删档重开」，再也不怕手滑误删，进度只进不退。</p>"
+       + "<p class='note'>· 扫荡理顺：主线扫荡一次扫完本关今日剩余次数，展开的章节不会再被刷新收起；秘阁的「扫荡领取」改名「提前领取」，不再和扫荡撞名。</p>"
+       + "<p class='note'>· 页面理顺：顶部资源栏改实底，翻页不再透字叠影；逐鹿、武将页的长段说明收进可展开规则，关键数字分行展示，看着更清爽。</p>"
        + "<p class='note'>· 主页改版：出战阵容、五大副本、屯营橱窗一屏直达——主页新增出战阵容陈列（前军/后军一目了然）、五大副本场景入口与屯营/橱窗双卡，签到与待领取顺延其后，不用再翻页找。</p>"
        + "<p class='note'>· 秘阁视频口径修正：兵甲秘阁「看视频开启第 2 轮」「看视频强行闯关」已接入真实激励视频，看完才开启/生效（与战斗跳过同一口径）；一骑当先强行闯关、天命副本每日重置同步接闸。</p>"
        + "<p class='note'>· 开局福利：主页「可领取」卡里可领开服福利——元宝 +2000、招募令 +10，每个存档限领一次；老玩家同样可领，就当这阵子丢档的补偿。</p>"
@@ -3642,11 +3644,13 @@ function sweepStage(idx){
   if(idx > state.stageCleared) return {ok:false, msg:"只能扫荡已通关的关卡"};
   const key = idx+"";
   const used = state.dun.stageUsed[key]||0;
-  if(used >= CFG.stageDailyLimit) return {ok:false, msg:"本关今日次数已用完（扫荡同样计次，05:00 重置）"};
-  state.dun.stageUsed[key] = used+1;
+  const left = CFG.stageDailyLimit - used;
+  if(left <= 0) return {ok:false, msg:"本关今日次数已用完（扫荡同样计次，05:00 重置）"};
+  state.dun.stageUsed[key] = used + left;
   const ch = CHAPTERS_V4[Math.floor((idx-1)/10)];
-  addExpPool(ch.exp); save();
-  return {ok:true, msg:"扫荡第 "+idx+" 关：经验卡 +"+ch.exp+"（本关今日剩余 "+(CFG.stageDailyLimit-used-1)+" 次）"};
+  const gain = ch.exp * left;
+  addExpPool(gain); save();
+  return {ok:true, msg:"扫荡第 "+idx+" 关 ×"+left+"：经验卡 +"+gain+"（本关今日次数已用完）", times:left, gain:gain};
 }
 /* ---------- 通天塔（本批只开 1–50 层：收口决定 4；系数＝生产校准表 TOWER_COEF，反推推荐战力展示） ---------- */
 function towerCoef(f){ if(f>=1 && f<=TOWER_COEF.length) return TOWER_COEF[f-1]; return TOWER_COEF[TOWER_COEF.length-1] * Math.pow(1.008, f-50) * Math.pow(1.05, Math.floor(f/10)-5); } /* 1–50 层用生产校准表 TOWER_COEF（gen_dungeons.py 生成）；51+ 无尽公式（第 9 批实测选定 g=1.008，每 10 层另有 ×1.05 BOSS 台阶） */
@@ -3762,9 +3766,9 @@ function sweepMige(){
   const rs = migeRoundState(); if(!rs.open) return {ok:false, msg:rs.why};
   const P = migePendingOf();
   const ni = Object.keys(P.items).reduce((a,k)=>a+(P.items[k]||0),0);
-  if(!(P.coin>0) && ni<=0) return {ok:false, msg:"本轮尚无已通过关的产出可领取（扫荡只结算本轮实际通过的关）"};
+  if(!(P.coin>0) && ni<=0) return {ok:false, msg:"本轮尚无已通过关的产出可领取（提前领取只结算本轮实际通过的关）"};
   const st = migeSettle(); save();
-  return {ok:true, msg:"扫荡领取本轮已通过关产出：将星币 +"+st.coin+"、通用道具 "+st.got.length+" 件（未通过的关请逐关挑战，或失败后看视频强闯）"};
+  return {ok:true, msg:"提前领取本轮已通过关产出：将星币 +"+st.coin+"、通用道具 "+st.got.length+" 件（未通过的关请逐关挑战，或失败后看视频强闯）"};
 }
 /* ---------- 铜雀演武（定版排位＋14 天赛季；回退修正＝至多一个大段位，收口决定 6） ---------- */
 function arenaTierOf(score){ let t = 0; for(let i=0;i<ARENA_LB.length;i++){ if(score >= ARENA_LB[i]) t = i; } return t; }
@@ -3975,16 +3979,19 @@ function drawGuanzhanExtra(){
   return {ok:true, skill:p.name, msg:"付费续抽：获得技能卡「"+p.name+"」（将星币 -"+cost+"，剩余池 "+(rem.length-1)+" 张）"};
 }
 /* ---------- 渲染：逐鹿 ---------- */
+let chapOpenSet = null, chapWatermark = -1; /* 第 40 批：章节展开状态跨重渲染保留（修「扫荡一次章节就收起」） */
 function renderStages(){
   const el = $("stageList"); if(!el) return;
   dungeonDaySync();
   const _mineP = myTeamPowerV4();
-  let html = "<p class='note'>上阵战力（定版口径）："+_mineP+"。每关每日 "+CFG.stageDailyLimit+" 次（失败计次），05:00 重置；已通关关卡可扫荡（计次、只给经验卡）。通关奖励经验卡入经验池；首通奖励按章发放（普通关元宝、第 5 关小 BOSS 元宝＋招募令×2、第 10 关关底 BOSS 元宝＋招募令×3）。每关标注推荐战力，仅作提示、不拦截挑战。</p>";
+  let html = "<p class='note'>上阵战力："+_mineP+" · 每关每日 "+CFG.stageDailyLimit+" 次（失败计次，05:00 重置）· 已通关可扫荡（一次扫完本关今日剩余次数、只给经验卡）</p><details class='rules'><summary>首通奖励与推关规则</summary><p class='note' style='margin-top:4px'>通关奖励经验卡入经验池；首通奖励按章发放（普通关元宝、第 5 关小 BOSS 元宝＋招募令×2、第 10 关关底 BOSS 元宝＋招募令×3）。每关标注推荐战力，仅作提示、不拦截挑战。</p></details>";
   const curCh24 = Math.min(10, Math.floor((state.stageCleared||0)/10)+1);
+  if(!chapOpenSet){ chapOpenSet = {}; chapOpenSet[curCh24] = true; chapWatermark = state.stageCleared||0; }
+  else if((state.stageCleared||0) > chapWatermark){ chapOpenSet[curCh24] = true; chapWatermark = state.stageCleared||0; }
   for(let ch=1; ch<=10; ch++){
     const C = CHAPTERS_V4[ch-1];
     const chCleared24 = Math.max(0, Math.min(10, (state.stageCleared||0) - (ch-1)*10));
-    html += "<h3 class='sec chapHead' onclick='toggleChap("+ch+")'>第 "+ch+" 章 · "+C.name+"（"+chCleared24+"/10）<span class='note' id='chapHint"+ch+"'>"+(ch===curCh24? " · 已展开" : " · 点开")+"</span></h3><div class='chapBody"+(ch===curCh24? " open" : "")+"' id='chapBody"+ch+"'>";
+    html += "<h3 class='sec chapHead' onclick='toggleChap("+ch+")'>第 "+ch+" 章 · "+C.name+"（"+chCleared24+"/10）<span class='note' id='chapHint"+ch+"'>"+(chapOpenSet[ch]? " · 已展开" : " · 点开")+"</span></h3><div class='chapBody"+(chapOpenSet[ch]? " open" : "")+"' id='chapBody"+ch+"'>";
     for(let s=1; s<=10; s++){
       const idx = (ch-1)*10+s; const def = STAGES_V4[idx-1];
       const locked = idx > state.stageCleared+1;
@@ -3994,7 +4001,7 @@ function renderStages(){
       const _rec = recPower(idx);
       html += "<div class='kv' id='stageRow"+idx+"'><span>"+idx+" 关（"+ch+"-"+s+(s===5? " · 小 BOSS" : s===10? " · 关底 BOSS" : "")+"）<br><span class='note'>敌方 Lv"+def.lv+" · "+names+"<br>推荐战力 "+_rec+(_mineP>=_rec? "（已达标）" : "（还差 "+(_rec-_mineP)+"）")+"</span></span><b>"+(cleared? "已通关" : locked? "未解锁" : "可挑战")+" · 今日 "+used+"/"+CFG.stageDailyLimit+"</b></div>"
         + "<div style='margin:2px 0 8px'><button class='btn sm' onclick='doStage("+idx+")' "+(locked||used>=CFG.stageDailyLimit? "disabled":"")+">出战</button>"
-        + (cleared? " <button class='btn sm sub' onclick='doSweepStage("+idx+")' "+(used>=CFG.stageDailyLimit? "disabled":"")+">扫荡</button>" : "")+"</div>";
+        + (cleared? " <button class='btn sm sub' onclick='doSweepStage("+idx+")' "+(used>=CFG.stageDailyLimit? "disabled":"")+">扫荡 ×"+(CFG.stageDailyLimit-used)+"</button>" : "")+"</div>";
     }
     html += "</div>";
   }
@@ -4038,10 +4045,10 @@ function renderDungeons(){
     });
     mEl.innerHTML = "<div class='kv'><span>今日轮次</span><b>已完成 "+D.migeRoundsDone+" / 2 轮"+(D.migeRoundsDone===1? (D.migeAdOpen? "（第 2 轮进行中）" : "（第 2 轮未开启）") : "")+"</b></div>"
     + "<div class='kv'><span>永久进度</span><b>已通关 "+D.migeCleared+" / 10 关</b></div>"
-    + (function(){ const P = (D.migePending && typeof D.migePending==="object")? D.migePending : {coin:0, items:{}}; const ni = Object.keys(P.items||{}).reduce(function(a,k){ return a+(P.items[k]||0); },0); return "<div class='kv'><span>待结算产出（整轮通关发放，或扫荡提前领取）</span><b>将星币 "+(P.coin||0)+" ＋ 道具 "+ni+" 件</b></div>"; })()
+    + (function(){ const P = (D.migePending && typeof D.migePending==="object")? D.migePending : {coin:0, items:{}}; const ni = Object.keys(P.items||{}).reduce(function(a,k){ return a+(P.items[k]||0); },0); return "<div class='kv'><span>待结算产出（整轮通关发放，或提前领取）</span><b>将星币 "+(P.coin||0)+" ＋ 道具 "+ni+" 件</b></div>"; })()
     + (D.migeRoundsDone===1 && !D.migeAdOpen? "<button class='btn gold' onclick='doMigeOpen2()'>看视频（15 秒）开启第 2 轮</button>" : "")
-    + (rs.open && (((D.migePending||{}).coin||0)>0 || Object.keys((D.migePending||{}).items||{}).some(k=>D.migePending.items[k]>0))? " <button class='btn sub' onclick='doMigeSweep()'>扫荡领取（本轮已通过关产出）</button>" : "")
-    + "<details class='rules'><summary>秘阁规则</summary><p class='note' style='margin-top:4px'>每轮全清：将星币 1,400 ＋ 通用道具 R×6、SR×6、SSR×3。每轮都逐关推进（第二轮与第一轮同规）：逐关真实胜利先计入待结算，重打本轮已通过的关、强行闯关的关不计掉落；整轮通关统一发放，未打完也可扫荡提前领取已通过关的产出，跨日未领作废。没有整轮一键领取。秘阁不设兑换店——道具兑换在卡池页「将魂阁」：专属道具用将星币、通用道具用将魂。失败后可看视频强行闯关（不限次数，但强闯的关不计掉落）。</p></details>" + rows;
+    + (rs.open && (((D.migePending||{}).coin||0)>0 || Object.keys((D.migePending||{}).items||{}).some(k=>D.migePending.items[k]>0))? " <button class='btn sub' onclick='doMigeSweep()'>提前领取（本轮已通过关产出）</button>" : "")
+    + "<details class='rules'><summary>秘阁规则</summary><p class='note' style='margin-top:4px'>每轮全清：将星币 1,400 ＋ 通用道具 R×6、SR×6、SSR×3。每轮都逐关推进（第二轮与第一轮同规）：逐关真实胜利先计入待结算，重打本轮已通过的关、强行闯关的关不计掉落；整轮通关统一发放，未打完也可提前领取已通过关的产出，跨日未领作废。没有整轮一键领取。秘阁不设兑换店——道具兑换在卡池页「将魂阁」：专属道具用将星币、通用道具用将魂。失败后可看视频强行闯关（不限次数，但强闯的关不计掉落）。</p></details>" + rows;
   }
   const aEl = $("arenaV4Info");
   if(aEl){
@@ -4100,8 +4107,8 @@ function renderItems(){
   }).join("");
 }
 /* ---------- UI 入口 ---------- */
-window.toggleChap = function(ch){ const b = $("chapBody"+ch); if(!b) return; const open = b.classList.toggle("open"); const h = $("chapHint"+ch); if(h) h.textContent = open? " · 已展开" : " · 点开"; };
-window.doSweepStage = function(idx){ const r = sweepStage(idx); showToast(r.msg); renderAll(); };
+window.toggleChap = function(ch){ const b = $("chapBody"+ch); if(!b) return; const open = b.classList.toggle("open"); if(!chapOpenSet) chapOpenSet = {}; chapOpenSet[ch] = open; const h = $("chapHint"+ch); if(h) h.textContent = open? " · 已展开" : " · 点开"; };
+window.doSweepStage = function(idx){ const r = sweepStage(idx); showToast(r.msg); if(r.ok){ const y = window.scrollY; renderRes(); renderStages(); renderDungeons(); window.scrollTo(0, y); } };
 window.doTowerV4 = function(){ const r = fightTower(); if(!r.ok){ showToast(r.msg); return; } BGM.setScene(BGM.sceneFor("tower", r.floor)); $("towerV4Log").innerHTML = "第 "+r.floor+" 层："+(r.win? "<span class='win'>成功</span>" : "<span class='lose'>失败</span>")+(r.rewardMsg? "｜"+r.rewardMsg : "")+"\n"+r.log.join("\n"); if(bpRoute32(r, { title:"通天塔 · 第 "+r.floor+" 层", logEl:"towerV4Log" })) return; renderAll(); };
 window.doMige = function(st){ const r = fightMige(st); if(!r.ok){ showToast(r.msg); return; } BGM.setScene(BGM.sceneFor("mige")); $("migeLog").innerHTML = "秘阁第 "+st+" 关："+(r.win? "<span class='win'>通关</span>｜"+r.rewardMsg : "<span class='lose'>失败</span>｜可点「看视频强行闯关」（不计掉落）")+"\n"+r.log.join("\n"); if(bpRoute32(r, { title:"兵甲秘阁 · 第 "+st+" 关", logEl:"migeLog" })) return; renderAll(); };
 window.doMigeForce = function(st){ bpRunSkipAd(function(ok){ if(!ok){ showToast("广告未完成，强行闯关未生效"); return; } const r = forceMige(st); showToast(r.msg); renderAll(); }); }; /* 第 33 批：强闯接真广告闸（复用 bpRunSkipAd） */
@@ -4382,7 +4389,7 @@ if(_tab==="pool"){
   const tnEl = $("tianmingNews");
   if(tnEl){ if(state.tianmingNews){ tnEl.style.display="block"; tnEl.textContent = "🎉 天命卡降临：「"+state.tianmingNews+"」已入包（典藏版，去武将页看金边卡面）"; } else { tnEl.style.display="none"; } }
 if(_tab==="cards"){
-  $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5，战力 "+teamPower()+"（站位前二后三：前两位＝前排、后三位＝后排）。官职加成："+(function(){ const _o = OFFICES_V4[officeIdx()] || OFFICES_V4[0]; return _o.name+" 攻 +"+Math.round((_o.atk||0)*100)+"%／防 +"+Math.round((_o.def||0)*100)+"%（全队）"; })()+"。羁绊："+
+  $("formationInfo").innerHTML = "当前上阵 "+state.formation.length+"/5 · 战力 "+teamPower()+"<br>官职加成："+(function(){ const _o = OFFICES_V4[officeIdx()] || OFFICES_V4[0]; return _o.name+" 攻 +"+Math.round((_o.atk||0)*100)+"%／防 +"+Math.round((_o.def||0)*100)+"%（全队）"; })()+"<br>羁绊："+
     (activeBonds(teamCards()).concat(troopBonds(teamCards())).map(b=>b.name+"（"+bondFxText(b)+"）").join("、") || "无") + teamPowerBreakdownHtml();
   }
   $("expPoolInfo").textContent = state.expPool;
