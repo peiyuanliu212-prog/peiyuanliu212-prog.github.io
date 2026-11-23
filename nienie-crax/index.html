@@ -24,7 +24,7 @@
 <div id="app"></div>
 <div class="panel">
   <h1>捏捏 · 脆皮原型（正道版）</h1>
-  <p>按住往下压——蜡壳从你按的地方裂开，缝里露出芯；裂过的地方更软、塌得更深</p>
+  <p>按住往下压——蜡壳从你按的地方裂开，缝里露出芯；拖空白处可以转着捏其他面</p>
   <p id="status">按压 0% · 裂纹 0% · 阶段 0</p>
 </div>
 <div class="bar">
@@ -297,16 +297,24 @@ function updateFlakes(dt){
     if(f.life<0.25){ const s=f.m.scale.x*(f.life/0.25); f.m.scale.set(Math.max(0.01,s), Math.max(0.01,0.38*s), Math.max(0.01,s)); }
   }
 }
+let rotDrag=null, spinVel=0; // drag-to-rotate + flick inertia (rad/s)
 renderer.domElement.addEventListener('pointerdown', e=>{
   initAudio();
   const uv=pick(e);
-  if(uv){ pressing=true; pressUv={x:uv.x,y:uv.y}; holdT=0; renderer.domElement.setPointerCapture(e.pointerId); }
+  if(uv){ pressing=true; pressUv={x:uv.x,y:uv.y}; holdT=0; spinVel=0; renderer.domElement.setPointerCapture(e.pointerId); }
+  else { rotDrag={x:e.clientX, y:e.clientY}; renderer.domElement.setPointerCapture(e.pointerId); }
 });
 renderer.domElement.addEventListener('pointermove', e=>{
-  if(!pressing) return;
-  const uv=pick(e); if(uv) pressUv={x:uv.x,y:uv.y};
+  if(pressing){ const uv=pick(e); if(uv) pressUv={x:uv.x,y:uv.y}; return; }
+  if(rotDrag){
+    const dx=e.clientX-rotDrag.x, dy=e.clientY-rotDrag.y;
+    rotDrag={x:e.clientX, y:e.clientY};
+    group.rotation.y+=dx*0.009;
+    group.rotation.x=Math.max(-0.65, Math.min(0.65, group.rotation.x+dy*0.005));
+    spinVel=dx*0.009*60;
+  }
 });
-function endPress(){ pressing=false; pressUv=null; }
+function endPress(){ pressing=false; pressUv=null; rotDrag=null; }
 renderer.domElement.addEventListener('pointerup', endPress);
 renderer.domElement.addEventListener('pointercancel', endPress);
 
@@ -376,7 +384,10 @@ function animate(){
   // volume-conserving squash/bulge
   const sq=Math.min(0.085, maxOff*0.16);
   group.scale.set(1+sq*0.7, 1-sq, 1+sq*0.7);
-  if(spin && !pressing) group.rotation.y+=dt*0.55;
+  if(!pressing && !rotDrag){
+    if(spin) group.rotation.y+=dt*0.55;
+    else if(Math.abs(spinVel)>0.02){ group.rotation.y+=spinVel*dt; spinVel*=Math.exp(-1.9*dt); }
+  }
   updateFlakes(dt);
   if(dmgDirty) pushDmgTexture();
 
@@ -397,6 +408,8 @@ window.__squishy={ get damage(){return coverage;}, get stage(){return stage;}, g
   get maxOff(){return Math.max(...offset);},
   pressAt(u,v,sec){ simPress={x:u,y:v,until:performance.now()+sec*1000}; },
   get flakes(){ return flakesActive; },
+  get rotY(){ return group.rotation.y; },
+  get rotX(){ return group.rotation.x; },
   spawnAt(u,v,n){ spawnFlakes(uvToWorld(u,v), n||6, 1.15); },
   brush(u,v,amt){ const before=dmgTotal; brushDamageWrapped(u,v,amt,1); if(dmgDirty) pushDmgTexture(); return dmgTotal-before; },
   reset(){ resetAll(); } };
