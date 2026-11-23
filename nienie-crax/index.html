@@ -181,7 +181,7 @@ function paintDef(u,v,rate,dt){
     const g=Math.exp(-(d*d)/(2*sig*sig));
     const ring=Math.exp(-Math.pow(d-2.05*sig,2)/(2*Math.pow(0.55*sig,2)));
     let delta=-rate*dt*g*noiseArr[idx] + rate*dt*0.16*ring;
-    defArr[idx]=Math.max(-0.52, Math.min(0.30, defArr[idx]+delta));
+    defArr[idx]=Math.max(-0.85, Math.min(0.45, defArr[idx]+delta));
   }
 }
 function paintDefWrapped(u,v,rate,dt){
@@ -189,6 +189,22 @@ function paintDefWrapped(u,v,rate,dt){
   if(u<0.1) paintDef(u+1,v,rate,dt);
   if(u>0.9) paintDef(u-1,v,rate,dt);
 }
+// material flow: shift the whole sculpt field along the knead direction (dents travel & stretch)
+const advTmp=new Float32Array(DW*DH);
+function advectDef(du,dv,strength){
+  if(strength<=0.01) return;
+  const sx=du*DW, sy=-dv*DH;
+  for(let y=0;y<DH;y++) for(let x=0; x<DW; x++){
+    let fx=x-sx, fy=y-sy;
+    fy=Math.min(DH-1.001, Math.max(0, fy));
+    const x0=Math.floor(fx), y0=Math.floor(fy), tx=fx-x0, ty=fy-y0;
+    const xa=((x0%DW)+DW)%DW, xb=(xa+1)%DW, yb=Math.min(DH-1,y0+1);
+    const s00=defArr[y0*DW+xa], s10=defArr[y0*DW+xb], s01=defArr[yb*DW+xa], s11=defArr[yb*DW+xb];
+    advTmp[y*DW+x]=(s00*(1-tx)+s10*tx)*(1-ty)+(s01*(1-tx)+s11*tx)*ty;
+  }
+  for(let i=0;i<DW*DH;i++) defArr[i]+=(advTmp[i]-defArr[i])*strength;
+}
+let kneadEnergy=0, flatCur=0; // kneading gradually flattens the whole blob (dough being worked)
 
 // ---------- materials / meshes ----------
 // subtle blotchy texture so the revealed core is a material, not a flat color swatch
@@ -383,6 +399,9 @@ function animate(){
       const mdu=Math.min(Math.abs(p.x-p.prevX), 1-Math.abs(p.x-p.prevX))*ARC_U, mdv=(p.y-p.prevY)*ARC_V;
       const moved=Math.sqrt(mdu*mdu + mdv*mdv);
       if(moved>0.01){
+        let du=p.x-p.prevX; if(du>0.5) du-=1; if(du<-0.5) du+=1;
+        advectDef(du, p.y-p.prevY, Math.min(0.8, moved*2.0));
+        kneadEnergy+=moved;
         const steps=Math.min(5, Math.max(1, Math.round(moved/0.06)));
         for(let s=1;s<=steps;s++){
           const mx=p.prevX+(p.x-p.prevX)*s/steps, my=p.prevY+(p.y-p.prevY)*s/steps;
@@ -410,7 +429,7 @@ function animate(){
       let fall=1-Math.min(1,Math.max(0,(dist-0.18)/(0.80-0.18))); fall=fall*fall*(3-2*fall);
       if(fall>0) target+=p.depth*fall*0.55;
     }
-    if(target>0.62) target=0.62; if(target<-0.30) target=-0.30;
+    if(target>0.85) target=0.85; if(target<-0.45) target=-0.45;
     offset[i]+=(target-offset[i])*follow;
   }
   // write positions (core + shell share deformation; shell sits 2.8% proud, sinks a touch where damaged)
@@ -426,9 +445,12 @@ function animate(){
   }
   coreGeo.attributes.position.needsUpdate=true; shellGeo.attributes.position.needsUpdate=true;
   coreGeo.computeVertexNormals(); shellGeo.computeVertexNormals();
-  // volume-conserving squash/bulge
+  // volume-conserving squash/bulge + knead flattening (rebound mode decides if it recovers)
   const sq=Math.min(0.085, maxOff*0.16);
-  group.scale.set(1+sq*0.7, 1-sq, 1+sq*0.7);
+  if(reboundMode==='fast') kneadEnergy*=Math.exp(-0.8*dt);
+  else if(reboundMode==='slow') kneadEnergy*=Math.exp(-0.02*dt);
+  flatCur+=(Math.min(0.22, kneadEnergy*0.004)-flatCur)*Math.min(1, dt*3);
+  group.scale.set((1+sq*0.7)*(1+flatCur*0.6), (1-sq)*(1-flatCur), (1+sq*0.7)*(1+flatCur*0.6));
   if(pressMap.size===0 && !rotDrag){
     if(spin) group.rotation.y+=dt*0.55;
     else if(Math.abs(spinVel)>0.02){ group.rotation.y+=spinVel*dt; spinVel*=Math.exp(-1.9*dt); }
@@ -454,6 +476,7 @@ window.__squishy={ get damage(){return coverage;}, get stage(){return stage;}, g
   pressAt(u,v,sec){ simPress={x:u,y:v,prevX:u,prevY:v,holdT:0,depth:0,until:performance.now()+sec*1000}; },
   kneadTo(u,v){ if(simPress){ simPress.x=u; simPress.y=v; } },
   get defPeak(){ let m=0; for(let i=0;i<DW*DH;i++){ const a=Math.abs(defArr[i]); if(a>m)m=a; } return m; },
+  get flat(){ return flatCur; },
   setRebound(m){ reboundMode=m; },
   get flakes(){ return flakesActive; },
   get rotY(){ return group.rotation.y; },
@@ -462,7 +485,7 @@ window.__squishy={ get damage(){return coverage;}, get stage(){return stage;}, g
   brush(u,v,amt){ const before=dmgTotal; brushDamageWrapped(u,v,amt,1); if(dmgDirty) pushDmgTexture(); return dmgTotal-before; },
   reset(){ resetAll(); } };
 function resetAll(){
-  dmgArr.fill(0); dmgTotal=0; defArr.fill(0); offset.fill(0); plastic.fill(0); depthNow=0; lastFlakeMark=0; pressMap.clear(); dmgDirty=true; pushDmgTexture();
+  dmgArr.fill(0); dmgTotal=0; defArr.fill(0); offset.fill(0); plastic.fill(0); depthNow=0; lastFlakeMark=0; kneadEnergy=0; flatCur=0; pressMap.clear(); dmgDirty=true; pushDmgTexture();
   for(const f of flakes){ f.life=0; f.m.visible=false; }
 }
 document.getElementById('resetBtn').onclick=resetAll;
