@@ -334,6 +334,41 @@ function maybeCrackSound(delta, now){
   playBuf(n, 0.9+Math.random()*0.25, 0.5+Math.min(0.4, delta*0.2));
 }
 
+// ---------- sand scrape sound: looped shaped noise, gain follows scrape speed ----------
+let noiseSrc=null, noiseGain=null, noiseFilter=null, noiseBuf=null, scrapeVel=0;
+function ensureScrapeAudio(){
+  if(noiseSrc || !AC) return;
+  const len=2*AC.sampleRate;
+  noiseBuf=AC.createBuffer(1, len, AC.sampleRate);
+  const d=noiseBuf.getChannelData(0);
+  let last=0;
+  for(let i=0;i<len;i++){ const w=Math.random()*2-1; last=(last+0.03*w)/1.03; d[i]=w*0.5+last*2.0; }
+  noiseSrc=AC.createBufferSource(); noiseSrc.buffer=noiseBuf; noiseSrc.loop=true;
+  noiseFilter=AC.createBiquadFilter(); noiseFilter.type='bandpass'; noiseFilter.frequency.value=1800; noiseFilter.Q.value=0.65;
+  noiseGain=AC.createGain(); noiseGain.gain.value=0;
+  noiseSrc.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(AC.destination);
+  noiseSrc.start();
+}
+function scrapeSound(speed, tool){
+  ensureScrapeAudio(); if(!noiseGain) return;
+  const T=SAND_TOOLS[tool];
+  const target=Math.min(0.5, speed*0.11)*(T.sndGain/0.2);
+  noiseGain.gain.setTargetAtTime(target, AC.currentTime, 0.045);
+  noiseFilter.frequency.setTargetAtTime(500+T.snd*1250, AC.currentTime, 0.08);
+}
+function scrapeSoundStop(){ if(noiseGain && AC) noiseGain.gain.setTargetAtTime(0, AC.currentTime, 0.05); }
+function trickleSound(){
+  ensureScrapeAudio(); if(!AC || !noiseBuf) return;
+  const s=AC.createBufferSource(); s.buffer=noiseBuf; s.playbackRate.value=0.7+Math.random()*0.3;
+  const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=900;
+  const g=AC.createGain(); const t=AC.currentTime;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.22, t+0.03);
+  g.gain.exponentialRampToValueAtTime(0.0001, t+0.22);
+  s.connect(f); f.connect(g); g.connect(AC.destination);
+  s.start(t, Math.random()*1.2, 0.3);
+}
+
 // ---------- interaction ----------
 const ray=new THREE.Raycaster(); const ptr=new THREE.Vector2();
 let pressing=false, pressUv=null, holdT=0, depthNow=0, spin=false;
@@ -497,13 +532,12 @@ function animate(){
           const steps=Math.min(5, Math.max(1, Math.round(moved/0.06)));
           for(let s=1;s<=steps;s++) paint(p.prevX+(p.x-p.prevX)*s/steps, p.prevY+(p.y-p.prevY)*s/steps, T.rate);
           spawnFlakes(p, T.grains, .5, T.grainSize, T.elong);
-          if(scrapeWork>T.chunkEvery){ scrapeWork=0; spawnFlakes(p, 2, .85, T.chunkSize, T.elong); }
+          if(scrapeWork>T.chunkEvery){ scrapeWork=0; spawnFlakes(p, 2, .85, T.chunkSize, T.elong); trickleSound(); }
           if(T.level) blurDef(0.04);
-          if(now-lastSandSnd>90){ lastSandSnd=now; playBuf('grain', T.sndGain*(0.8+Math.random()*0.4), T.snd*(0.9+Math.random()*0.25)); }
+          scrapeVel=Math.max(scrapeVel, moved/Math.max(dt,0.001));
           kneadEnergy+=moved;
-        } else {
-          paint(p.x, p.y, T.rate*T.still);
         }
+        // standing still with the tool down scrapes nothing: sand only comes off by dragging
         p.prevX=p.x; p.prevY=p.y;
         continue;
       }
@@ -532,6 +566,10 @@ function animate(){
     if(dDelta>2.2 && now-lastCrunchAt>500){ lastCrunchAt=now; playBuf('crunch', 0.95+Math.random()*0.1, 0.7); spawnFlakes(pressPoint, 5, 1.25); }
     if(dmgTotal-lastFlakeMark>30 && now-lastFlakeAt>130){ lastFlakeMark=dmgTotal; lastFlakeAt=now; spawnFlakes(pressPoint, 2+Math.floor(Math.random()*2), 1); }
   }
+  if(playMode==='sand'){
+    if(scrapeVel>0.25) scrapeSound(scrapeVel, sandTool); else scrapeSoundStop();
+    scrapeVel*=0.55;
+  }
   // tool prop follows the active scrape point, tilted like a held implement
   {
     const ap = pts.length? pts[0] : null;
@@ -555,7 +593,7 @@ function animate(){
       const dv=(v-p.y)*ARC_V;
       const dist=Math.sqrt(du*du+dv*dv);
       let fall=1-Math.min(1,Math.max(0,(dist-0.18*brushScale)/(0.80*brushScale-0.18*brushScale))); fall=fall*fall*(3-2*fall);
-      if(fall>0) target+= (playMode==='sand' ? p.depth*fall*0.3 : toolMode==='bulge' ? -p.depth*fall*0.4 : toolMode==='dent' ? p.depth*fall*0.55 : 0);
+      if(fall>0) target+= (playMode==='sand' ? 0 : toolMode==='bulge' ? -p.depth*fall*0.4 : toolMode==='dent' ? p.depth*fall*0.55 : 0);
     }
     if(target>0.72) target=0.72; if(target<-0.35) target=-0.35;
     offset[i]+=(target-offset[i])*follow;
@@ -574,7 +612,7 @@ function animate(){
   coreGeo.attributes.position.needsUpdate=true; shellGeo.attributes.position.needsUpdate=true;
   coreGeo.computeVertexNormals(); shellGeo.computeVertexNormals();
   // volume-conserving squash/bulge + knead flattening (rebound mode decides if it recovers)
-  const sq=Math.min(0.085, maxOff*0.16);
+  const sq= playMode==='sand' ? 0 : Math.min(0.085, maxOff*0.16);
   if(reboundMode==='fast') kneadEnergy*=Math.exp(-0.8*dt);
   else if(reboundMode==='slow') kneadEnergy*=Math.exp(-0.02*dt);
   flatCur+=(Math.min(0.16, kneadEnergy*0.004)-flatCur)*Math.min(1, dt*3);
