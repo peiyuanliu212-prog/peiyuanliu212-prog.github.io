@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>捏捏 · 脆皮原型（正道版）</title>
+<style>
+  html,body{margin:0;padding:0;background:#f3efe7;color:#3a352c;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden;height:100%;}
+  #app{position:fixed;inset:0;}
+  canvas{display:block;touch-action:none;}
+  .panel{position:fixed;left:0;right:0;top:0;padding:14px 16px 6px;text-align:center;pointer-events:none;z-index:5;}
+  .panel h1{font-size:19px;margin:0 0 4px;font-weight:600;letter-spacing:.5px;}
+  .panel p{font-size:12.5px;margin:2px 0;color:#7a7263;line-height:1.5;}
+  #status{font-size:13px;color:#4c463c;}
+  .bar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;z-index:5;}
+  .bar .lbl{font-size:12px;color:#8a8172;margin-right:-2px;}
+  button{border:1px solid #d8d0bf;background:#fffdf8;color:#4c463c;border-radius:999px;padding:7px 14px;font-size:13.5px;cursor:pointer;}
+  button.on{background:#4c463c;color:#fffdf8;border-color:#4c463c;}
+  button:active{transform:scale(.96);}
+</style>
+<script type="importmap">{"imports":{"three":"./three.module.js"}}</script>
+</head>
+<body>
+<div id="app"></div>
+<div class="panel">
+  <h1>捏捏 · 脆皮原型（正道版）</h1>
+  <p>按住往下压——蜡壳从你按的地方裂开，缝里露出芯；裂过的地方更软、塌得更深</p>
+  <p id="status">按压 0% · 裂纹 0% · 阶段 0</p>
+</div>
+<div class="bar">
+  <span class="lbl">造型</span>
+  <button id="shapeBox" class="on">方块</button><button id="shapeBall">圆球</button>
+  <span class="lbl">芯色</span>
+  <button data-core="#f0a3b8" class="coreBtn on">粉</button><button data-core="#7ec850" class="coreBtn">绿</button><button data-core="#f7d774" class="coreBtn">黄</button>
+  <button id="resetBtn">新的一块（重置）</button>
+  <button id="spinBtn">转一转</button>
+</div>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- renderer / scene ----------
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf3efe7);
+const camera = new THREE.PerspectiveCamera(38, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0, 0.5, 7.9); camera.lookAt(0,-0.05,0);
+
+scene.add(new THREE.AmbientLight(0xfff4e0, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.9); key.position.set(2.5,4,3.5); scene.add(key);
+const fill = new THREE.DirectionalLight(0xdfe8ff, 0.5); fill.position.set(-3,1.5,2); scene.add(fill);
+
+// table + soft shadow blob
+const table = new THREE.Mesh(new THREE.CircleGeometry(2.2,48),
+  new THREE.MeshStandardMaterial({color:0xeae2d0, roughness:0.95}));
+table.rotation.x = -Math.PI/2; table.position.y = -1.34; scene.add(table);
+(function(){
+  const c=document.createElement('canvas'); c.width=c.height=128;
+  const g=c.getContext('2d'); const gr=g.createRadialGradient(64,64,6,64,64,62);
+  gr.addColorStop(0,'rgba(60,50,35,0.42)'); gr.addColorStop(1,'rgba(60,50,35,0)');
+  g.fillStyle=gr; g.fillRect(0,0,128,128);
+  const m=new THREE.Mesh(new THREE.CircleGeometry(1.9,40),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false}));
+  m.rotation.x=-Math.PI/2; m.position.y=-1.33; scene.add(m);
+})();
+
+// ---------- geometry: superellipsoid grid ----------
+const NU=72, NV=48, R=1.25;
+let exponent = 0.5; // boxy
+const NVERT=(NU+1)*(NV+1);
+const restPos=new Float32Array(NVERT*3), restNrm=new Float32Array(NVERT*3);
+const vertUv=new Float32Array(NVERT*2);
+const offset=new Float32Array(NVERT), plastic=new Float32Array(NVERT);
+
+function spow(t,e){ return Math.sign(t)*Math.pow(Math.abs(t),e); }
+function buildRest(){
+  let k=0,k2=0;
+  for(let j=0;j<=NV;j++){
+    const th=j/NV*Math.PI, ct=Math.cos(th), st=Math.sin(th);
+    for(let i=0;i<=NU;i++){
+      const ph=i/NU*Math.PI*2, cp=Math.cos(ph), spp=Math.sin(ph);
+      const x=R*spow(st,exponent)*spow(cp,exponent);
+      const y=R*spow(ct,exponent);
+      const z=R*spow(st,exponent)*spow(spp,exponent);
+      restPos[k]=x; restPos[k+1]=y; restPos[k+2]=z; k+=3;
+      vertUv[k2]=i/NU; vertUv[k2+1]=1-j/NV; k2+=2;
+    }
+  }
+}
+function makeGeometry(){
+  const g=new THREE.BufferGeometry();
+  const pos=new Float32Array(NVERT*3); pos.set(restPos);
+  const uv=new Float32Array(NVERT*2); uv.set(vertUv);
+  const idx=[];
+  for(let j=0;j<NV;j++) for(let i=0;i<NU;i++){
+    const a=j*(NU+1)+i, b=a+1, c=a+NU+1, d=c+1;
+    idx.push(a,b,c, b,d,c);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv,2));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+buildRest();
+const coreGeo = makeGeometry();
+{ const n=coreGeo.attributes.normal.array; restNrm.set(n); }
+
+// ---------- damage field ----------
+const DW=256, DH=128;
+const dmgArr=new Float32Array(DW*DH);
+const dmgCanvas=document.createElement('canvas'); dmgCanvas.width=DW; dmgCanvas.height=DH;
+const dmgCtx=dmgCanvas.getContext('2d');
+const dmgImg=dmgCtx.createImageData(DW,DH);
+for(let i=0;i<DW*DH;i++){ dmgImg.data[i*4+3]=255; }
+const dmgTex=new THREE.CanvasTexture(dmgCanvas);
+dmgTex.wrapS=THREE.RepeatWrapping; dmgTex.minFilter=THREE.LinearFilter; dmgTex.magFilter=THREE.LinearFilter;
+let dmgDirty=true, dmgTotal=0;
+function pushDmgTexture(){
+  for(let i=0;i<DW*DH;i++){ dmgImg.data[i*4]=Math.min(255, dmgArr[i]*255); }
+  dmgCtx.putImageData(dmgImg,0,0); dmgTex.needsUpdate=true; dmgDirty=false;
+}
+function brushDamage(u,v,rate,dt){
+  const cx=u*DW, cy=(1-v)*DH, rad=15, sig=7.5;
+  const x0=Math.max(0,Math.floor(cx-rad)), x1=Math.min(DW-1,Math.ceil(cx+rad));
+  const y0=Math.max(0,Math.floor(cy-rad)), y1=Math.min(DH-1,Math.ceil(cy+rad));
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+    // wrap in x for seam continuity
+    let dx=Math.abs(x-cx); dx=Math.min(dx, DW-dx);
+    const dy=y-cy, d2=dx*dx+dy*dy;
+    const add=rate*dt*Math.exp(-d2/(2*sig*sig));
+    if(add<=0) continue;
+    // write to wrapped column too when near seam
+    const xi = (x===Math.round(cx) && false)? x : x;
+    const idx=y*DW+x;
+    const before=dmgArr[idx];
+    dmgArr[idx]=Math.min(1, before+add);
+    dmgTotal+=dmgArr[idx]-before;
+    if(x<rad){ const j2=y*DW+(x+DW)%DW; }
+  }
+  // seam wrap copy: brush near u=0/1 also paints the other side
+  dmgDirty=true;
+}
+function brushDamageWrapped(u,v,rate,dt){
+  brushDamage(u,v,rate,dt);
+  if(u<0.08) brushDamage(u+1,v,rate,dt);
+  if(u>0.92) brushDamage(u-1,v,rate,dt);
+}
+function dmgAt(u,v){
+  const x=Math.min(DW-1,Math.max(0,Math.round(u*DW))), y=Math.min(DH-1,Math.max(0,Math.round((1-v)*DH)));
+  return dmgArr[y*DW+x];
+}
+
+// ---------- materials / meshes ----------
+const coreMat=new THREE.MeshPhysicalMaterial({color:0xf0a3b8, roughness:0.48, clearcoat:0.55, clearcoatRoughness:0.55});
+const core=new THREE.Mesh(coreGeo, coreMat);
+
+const voroTex=new THREE.TextureLoader().load('./voronoi.png');
+voroTex.wrapS=THREE.RepeatWrapping; voroTex.colorSpace=THREE.NoColorSpace;
+const shellMat=new THREE.ShaderMaterial({
+  uniforms:{ voro:{value:voroTex}, dmgTex:{value:dmgTex},
+    shellCol:{value:new THREE.Color(0xf7f1e3)}, lightDir:{value:new THREE.Vector3(0.45,0.75,0.6).normalize()} },
+  vertexShader:`
+    varying vec2 vUv; varying vec3 vN; varying vec3 vWp;
+    void main(){ vUv=uv; vN=normalize(normalMatrix*normal);
+      vec4 wp=modelMatrix*vec4(position,1.0); vWp=wp.xyz;
+      gl_Position=projectionMatrix*viewMatrix*wp; }`,
+  fragmentShader:`
+    uniform sampler2D voro; uniform sampler2D dmgTex; uniform vec3 shellCol; uniform vec3 lightDir;
+    varying vec2 vUv; varying vec3 vN; varying vec3 vWp;
+    void main(){
+      vec4 vt=texture2D(voro, vUv);
+      float edge=vt.g; float cellR=vt.r; float shade=vt.b;
+      float dmg=texture2D(dmgTex, vUv).r;
+      float wob=(texture2D(voro, vUv*2.7).b-0.87)*0.38;
+      edge+=wob*dmg;
+      float seam=mix(0.0, 0.75, pow(dmg,1.8));
+      if(edge<seam) discard;
+      float dropT=0.78+0.20*cellR;
+      if(dmg>dropT) discard;
+      vec3 N=normalize(vN); vec3 L=normalize(lightDir); vec3 V=normalize(cameraPosition-vWp);
+      float dif=0.42+0.58*max(dot(N,L),0.0);
+      float spec=pow(max(dot(reflect(-L,N),V),0.0),46.0)*0.5;
+      float fres=pow(1.0-max(dot(N,V),0.0),3.0);
+      float band=smoothstep(seam, seam+0.12, edge);
+      vec3 base=shellCol*(0.96+0.07*shade);
+      vec3 col=base*dif + spec*vec3(1.0) + fres*vec3(0.30);
+      col*=mix(1.0, mix(0.68,1.0,band), clamp(dmg*1.7,0.0,1.0));
+      gl_FragColor=vec4(col,1.0);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`
+});
+const shellGeo=makeGeometry();
+const shell=new THREE.Mesh(shellGeo, shellMat);
+const group=new THREE.Group(); group.add(core); group.add(shell); scene.add(group);
+
+// ---------- audio: real crackle grains ----------
+const grainNames=['grain_00.wav','grain_01.wav','grain_02.wav','grain_03.wav','grain_04.wav','grain_05.wav','grain_06.wav','grain_07.wav'];
+let AC=null; const buffers={};
+async function initAudio(){
+  if(AC) { if(AC.state==='suspended') AC.resume(); return; }
+  try{
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    for(const n of grainNames){ const b=await (await fetch('./audio/'+n)).arrayBuffer(); buffers[n]=await AC.decodeAudioData(b); }
+    const b=await (await fetch('./audio/crunch_big.wav')).arrayBuffer(); buffers['crunch']=await AC.decodeAudioData(b);
+  }catch(e){ AC=null; }
+}
+let lastGrainAt=0;
+function playBuf(name, rate, gainV){
+  if(!AC || !buffers[name]) return;
+  const s=AC.createBufferSource(); s.buffer=buffers[name]; s.playbackRate.value=rate;
+  const g=AC.createGain(); g.gain.value=gainV; s.connect(g); g.connect(AC.destination); s.start();
+}
+function maybeCrackSound(delta, now){
+  if(now-lastGrainAt<70) return;
+  lastGrainAt=now;
+  const n=grainNames[Math.floor(Math.random()*grainNames.length)];
+  playBuf(n, 0.9+Math.random()*0.25, 0.5+Math.min(0.4, delta*0.2));
+}
+
+// ---------- interaction ----------
+const ray=new THREE.Raycaster(); const ptr=new THREE.Vector2();
+let pressing=false, pressUv=null, holdT=0, depthNow=0, spin=false;
+let simPress=null; // {u,v,until}
+function pick(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  ptr.x=((e.clientX-r.left)/r.width)*2-1; ptr.y=-((e.clientY-r.top)/r.height)*2+1;
+  ray.setFromCamera(ptr,camera);
+  const hit=ray.intersectObject(core,false)[0];
+  return hit && hit.uv ? hit.uv : null;
+}
+renderer.domElement.addEventListener('pointerdown', e=>{
+  initAudio();
+  const uv=pick(e);
+  if(uv){ pressing=true; pressUv={x:uv.x,y:uv.y}; holdT=0; renderer.domElement.setPointerCapture(e.pointerId); }
+});
+renderer.domElement.addEventListener('pointermove', e=>{
+  if(!pressing) return;
+  const uv=pick(e); if(uv) pressUv={x:uv.x,y:uv.y};
+});
+function endPress(){ pressing=false; pressUv=null; }
+renderer.domElement.addEventListener('pointerup', endPress);
+renderer.domElement.addEventListener('pointercancel', endPress);
+
+// ---------- per-frame update ----------
+const statusEl=document.getElementById('status');
+let lastT=performance.now(), fpsEMA=60, statT=0, stage=0, coverage=0, lastDmgTotal=0, lastCrunchAt=0;
+const ARC_U=7.85, ARC_V=3.93; // approx world arc lengths for uv distances
+function animate(){
+  requestAnimationFrame(animate);
+  const now=performance.now(); let dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  if(dt>0) fpsEMA=fpsEMA*0.95+(1/Math.max(dt,1e-4))*0.05;
+
+  const active = pressing ? pressUv : (simPress && now<simPress.until ? simPress : null);
+  if(simPress && now>=simPress.until) simPress=null;
+  let maxOff=0;
+  if(active){
+    holdT+=dt;
+    const depthTarget=Math.min(0.14+holdT*0.13, 0.44);
+    depthNow=depthTarget;
+    const dmgBefore=dmgTotal;
+    brushDamageWrapped(active.x, active.y, 0.30+depthTarget*0.70, dt);
+    const dDelta=dmgTotal-dmgBefore;
+    if(dDelta>0.02) maybeCrackSound(dDelta, now);
+    if(dDelta>2.2 && now-lastCrunchAt>500){ lastCrunchAt=now; playBuf('crunch', 0.95+Math.random()*0.1, 0.7); }
+    for(let i=0;i<NVERT;i++){
+      const du0=Math.abs(vertUv[i*2]-active.x); const du=Math.min(du0,1-du0)*ARC_U;
+      const dv=(vertUv[i*2+1]-active.y)*ARC_V;
+      const dist=Math.sqrt(du*du+dv*dv);
+      let fall=1-Math.min(1,Math.max(0,(dist-0.18)/(0.80-0.18))); fall=fall*fall*(3-2*fall);
+      if(fall<=0) continue;
+      const desired=depthTarget*fall;
+      if(desired>offset[i]) offset[i]+=(desired-offset[i])*Math.min(1,dt*15);
+      const dAt=dmgAt(vertUv[i*2], vertUv[i*2+1]);
+      const retain=0.08+0.50*dAt;
+      const p=offset[i]*retain;
+      if(p>plastic[i]) plastic[i]=p;
+    }
+  } else {
+    depthNow*=0.9;
+    for(let i=0;i<NVERT;i++){
+      offset[i]+=(plastic[i]-offset[i])*Math.min(1,dt*3.0);
+    }
+  }
+  // write positions (core + shell share deformation; shell sits 2.8% proud, sinks a touch where damaged)
+  const cp=coreGeo.attributes.position.array, shp=shellGeo.attributes.position.array;
+  for(let i=0;i<NVERT;i++){
+    const i3=i*3, o=offset[i];
+    if(o>maxOff) maxOff=o;
+    const nx=restNrm[i3], ny=restNrm[i3+1], nz=restNrm[i3+2];
+    const co=o+0.045;
+    cp[i3]=restPos[i3]-nx*co; cp[i3+1]=restPos[i3+1]-ny*co; cp[i3+2]=restPos[i3+2]-nz*co;
+    const so=o*0.97 + dmgAt(vertUv[i*2],vertUv[i*2+1])*0.025;
+    shp[i3]=restPos[i3]*1.028-nx*so; shp[i3+1]=restPos[i3+1]*1.028-ny*so; shp[i3+2]=restPos[i3+2]*1.028-nz*so;
+  }
+  coreGeo.attributes.position.needsUpdate=true; shellGeo.attributes.position.needsUpdate=true;
+  coreGeo.computeVertexNormals(); shellGeo.computeVertexNormals();
+  // volume-conserving squash/bulge
+  const sq=Math.min(0.085, maxOff*0.16);
+  group.scale.set(1+sq*0.7, 1-sq, 1+sq*0.7);
+  if(spin && !pressing) group.rotation.y+=dt*0.55;
+  if(dmgDirty) pushDmgTexture();
+
+  statT+=dt;
+  if(statT>0.25){
+    statT=0;
+    let cnt=0; for(let i=0;i<DW*DH;i++) if(dmgArr[i]>0.3) cnt++;
+    coverage=cnt/(DW*DH);
+    stage = coverage<0.008?0 : coverage<0.035?1 : coverage<0.09?2 : 3;
+    statusEl.textContent=`按压 ${Math.round(depthNow/R*100)}% · 裂纹 ${Math.round(coverage*100)}% · 阶段 ${stage}`;
+  }
+  renderer.render(scene,camera);
+}
+animate();
+
+// ---------- hooks / ui ----------
+window.__squishy={ get damage(){return coverage;}, get stage(){return stage;}, get fps(){return Math.round(fpsEMA);},
+  get maxOff(){return Math.max(...offset);},
+  pressAt(u,v,sec){ simPress={x:u,y:v,until:performance.now()+sec*1000}; },
+  brush(u,v,amt){ const before=dmgTotal; brushDamageWrapped(u,v,amt,1); if(dmgDirty) pushDmgTexture(); return dmgTotal-before; },
+  reset(){ resetAll(); } };
+function resetAll(){
+  dmgArr.fill(0); dmgTotal=0; offset.fill(0); plastic.fill(0); depthNow=0; holdT=0; dmgDirty=true; pushDmgTexture();
+}
+document.getElementById('resetBtn').onclick=resetAll;
+document.getElementById('spinBtn').onclick=e=>{ spin=!spin; e.target.classList.toggle('on',spin); };
+function setShape(box, btn){
+  exponent=box?0.5:1.0; buildRest();
+  for(const g of [coreGeo,shellGeo]){ const p=g.attributes.position.array; p.set(restPos); g.computeVertexNormals(); }
+  restNrm.set(coreGeo.attributes.normal.array);
+  resetAll();
+  document.getElementById('shapeBox').classList.toggle('on',box);
+  document.getElementById('shapeBall').classList.toggle('on',!box);
+}
+document.getElementById('shapeBox').onclick=()=>setShape(true);
+document.getElementById('shapeBall').onclick=()=>setShape(false);
+document.querySelectorAll('.coreBtn').forEach(b=>b.onclick=()=>{
+  coreMat.color.set(b.dataset.core);
+  document.querySelectorAll('.coreBtn').forEach(x=>x.classList.toggle('on',x===b));
+});
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+</script>
+</body>
+</html>
