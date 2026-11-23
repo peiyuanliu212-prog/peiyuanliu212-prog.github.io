@@ -180,8 +180,8 @@ function paintDef(u,v,rate,dt){
     const x=((xx%DW)+DW)%DW, idx=y*DW+x;
     const g=Math.exp(-(d*d)/(2*sig*sig));
     const ring=Math.exp(-Math.pow(d-2.05*sig,2)/(2*Math.pow(0.55*sig,2)));
-    let delta=-rate*dt*g*noiseArr[idx] + rate*dt*0.16*ring;
-    defArr[idx]=Math.max(-0.85, Math.min(0.45, defArr[idx]+delta));
+    let delta=-rate*dt*g*noiseArr[idx] + rate*dt*0.10*ring;
+    defArr[idx]=Math.max(-0.72, Math.min(0.35, defArr[idx]+delta));
   }
 }
 function paintDefWrapped(u,v,rate,dt){
@@ -205,6 +205,14 @@ function advectDef(du,dv,strength){
   for(let i=0;i<DW*DH;i++) defArr[i]+=(advTmp[i]-defArr[i])*strength;
 }
 let kneadEnergy=0, flatCur=0; // kneading gradually flattens the whole blob (dough being worked)
+// gentle 3x3 smoothing: kills thin membrane spikes the flow can grow, keeps broad doughy shapes
+function blurDef(f){
+  for(let y=0;y<DH;y++) for(let x=0;x<DW;x++){
+    const xm=(x-1+DW)%DW, xp=(x+1)%DW, ym=Math.max(0,y-1), yp=Math.min(DH-1,y+1);
+    advTmp[y*DW+x]=(defArr[y*DW+x]*4 + defArr[y*DW+xm]+defArr[y*DW+xp]+defArr[ym*DW+x]+defArr[yp*DW+x])/8;
+  }
+  for(let i=0;i<DW*DH;i++) defArr[i]+=(advTmp[i]-defArr[i])*f;
+}
 
 // ---------- materials / meshes ----------
 // subtle blotchy texture so the revealed core is a material, not a flat color swatch
@@ -400,12 +408,14 @@ function animate(){
       const moved=Math.sqrt(mdu*mdu + mdv*mdv);
       if(moved>0.01){
         let du=p.x-p.prevX; if(du>0.5) du-=1; if(du<-0.5) du+=1;
-        advectDef(du, p.y-p.prevY, Math.min(0.8, moved*2.0));
+        advectDef(du, p.y-p.prevY, Math.min(0.3, moved*0.8));
+        blurDef(0.10);
         kneadEnergy+=moved;
+        const poleGuard=(p.y<0.07||p.y>0.93)?0.4:1;
         const steps=Math.min(5, Math.max(1, Math.round(moved/0.06)));
         for(let s=1;s<=steps;s++){
           const mx=p.prevX+(p.x-p.prevX)*s/steps, my=p.prevY+(p.y-p.prevY)*s/steps;
-          paintDefWrapped(mx, my, 1.5, dt);
+          paintDefWrapped(mx, my, 0.9*poleGuard, dt);
           brushDamageWrapped(mx, my, 0.9, dt);
         }
       }
@@ -429,7 +439,7 @@ function animate(){
       let fall=1-Math.min(1,Math.max(0,(dist-0.18)/(0.80-0.18))); fall=fall*fall*(3-2*fall);
       if(fall>0) target+=p.depth*fall*0.55;
     }
-    if(target>0.85) target=0.85; if(target<-0.45) target=-0.45;
+    if(target>0.72) target=0.72; if(target<-0.35) target=-0.35;
     offset[i]+=(target-offset[i])*follow;
   }
   // write positions (core + shell share deformation; shell sits 2.8% proud, sinks a touch where damaged)
@@ -449,7 +459,7 @@ function animate(){
   const sq=Math.min(0.085, maxOff*0.16);
   if(reboundMode==='fast') kneadEnergy*=Math.exp(-0.8*dt);
   else if(reboundMode==='slow') kneadEnergy*=Math.exp(-0.02*dt);
-  flatCur+=(Math.min(0.22, kneadEnergy*0.004)-flatCur)*Math.min(1, dt*3);
+  flatCur+=(Math.min(0.16, kneadEnergy*0.004)-flatCur)*Math.min(1, dt*3);
   group.scale.set((1+sq*0.7)*(1+flatCur*0.6), (1-sq)*(1-flatCur), (1+sq*0.7)*(1+flatCur*0.6));
   if(pressMap.size===0 && !rotDrag){
     if(spin) group.rotation.y+=dt*0.55;
