@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>刮太空沙</title>
+<style>
+  html,body{margin:0;padding:0;background:#f3efe7;color:#3a352c;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden;height:100%;}
+  #app{position:fixed;inset:0;}
+  canvas{display:block;touch-action:none;}
+  .panel{position:fixed;left:0;right:0;top:0;padding:14px 16px 6px;text-align:center;pointer-events:none;z-index:5;}
+  .panel h1{font-size:19px;margin:0 0 4px;font-weight:600;letter-spacing:.5px;}
+  .panel p{font-size:12.5px;margin:2px 0;color:#7a7263;line-height:1.5;}
+  #status{font-size:13px;color:#4c463c;}
+  .bar{position:fixed;left:0;right:0;bottom:0;padding:10px 12px calc(12px + env(safe-area-inset-bottom));display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;z-index:5;}
+  .bar .lbl{font-size:12px;color:#8a8172;margin-right:-2px;}
+  button{border:1px solid #d8d0bf;background:#fffdf8;color:#4c463c;border-radius:999px;padding:7px 14px;font-size:13.5px;cursor:pointer;}
+  button.on{background:#4c463c;color:#fffdf8;border-color:#4c463c;}
+  button:active{transform:scale(.96);}
+</style>
+<script type="importmap">{"imports":{"three":"./three.module.js"}}</script>
+</head>
+<body>
+<div id="app"></div>
+<div class="panel">
+  <h1>刮太空沙</h1>
+  <p id="hint">选个工具，按住沙块拖动往下刮；拖空白处转着刮其他面</p>
+  <p id="status">刮沙 · 刻深 0% · 已刮下 0%</p>
+</div>
+<div class="bar">
+  <span class="lbl">工具</span>
+  <button data-stool="spatula" class="stoolBtn on">刮刀</button><button data-stool="knife" class="stoolBtn">小刀</button><button data-stool="spoon" class="stoolBtn">勺子</button><button data-stool="comb" class="stoolBtn">梳子</button><button data-stool="brush" class="stoolBtn">刷子</button>
+  <button id="resetBtn">新沙块</button>
+  <button id="spinBtn">转一转</button>
+</div>
+<script type="module">
+import * as THREE from 'three';
+
+// ---------- renderer / scene ----------
+const app = document.getElementById('app');
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+app.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xf3efe7);
+const camera = new THREE.PerspectiveCamera(38, innerWidth/innerHeight, 0.1, 100);
+camera.position.set(0, 0.5, 7.9); camera.lookAt(0,-0.05,0);
+
+scene.add(new THREE.AmbientLight(0xfff4e0, 0.55));
+const key = new THREE.DirectionalLight(0xffffff, 1.9); key.position.set(2.5,4,3.5); scene.add(key);
+const fill = new THREE.DirectionalLight(0xdfe8ff, 0.5); fill.position.set(-3,1.5,2); scene.add(fill);
+
+// table + soft shadow blob
+const table = new THREE.Mesh(new THREE.CircleGeometry(2.2,48),
+  new THREE.MeshStandardMaterial({color:0xeae2d0, roughness:0.95}));
+table.rotation.x = -Math.PI/2; table.position.y = -1.34; scene.add(table);
+(function(){
+  const c=document.createElement('canvas'); c.width=c.height=128;
+  const g=c.getContext('2d'); const gr=g.createRadialGradient(64,64,6,64,64,62);
+  gr.addColorStop(0,'rgba(60,50,35,0.42)'); gr.addColorStop(1,'rgba(60,50,35,0)');
+  g.fillStyle=gr; g.fillRect(0,0,128,128);
+  const m=new THREE.Mesh(new THREE.CircleGeometry(1.9,40),
+    new THREE.MeshBasicMaterial({map:new THREE.CanvasTexture(c), transparent:true, depthWrite:false}));
+  m.rotation.x=-Math.PI/2; m.position.y=-1.33; scene.add(m);
+})();
+
+// ---------- geometry: superellipsoid grid ----------
+const NU=72, NV=48, R=1.25;
+let exponent = 0.62; // boxy but well-rounded (0.5 read as a flat sticker face)
+const NVERT=(NU+1)*(NV+1);
+const restPos=new Float32Array(NVERT*3), restNrm=new Float32Array(NVERT*3);
+const vertUv=new Float32Array(NVERT*2);
+const offset=new Float32Array(NVERT), plastic=new Float32Array(NVERT);
+
+function spow(t,e){ return Math.sign(t)*Math.pow(Math.abs(t),e); }
+function buildRest(){
+  let k=0,k2=0;
+  for(let j=0;j<=NV;j++){
+    const th=j/NV*Math.PI, ct=Math.cos(th), st=Math.sin(th);
+    for(let i=0;i<=NU;i++){
+      const ph=i/NU*Math.PI*2, cp=Math.cos(ph), spp=Math.sin(ph);
+      const x=R*spow(st,exponent)*spow(cp,exponent);
+      const y=R*spow(ct,exponent);
+      const z=R*spow(st,exponent)*spow(spp,exponent);
+      restPos[k]=x; restPos[k+1]=y; restPos[k+2]=z; k+=3;
+      vertUv[k2]=i/NU; vertUv[k2+1]=1-j/NV; k2+=2;
+    }
+  }
+}
+function makeGeometry(){
+  const g=new THREE.BufferGeometry();
+  const pos=new Float32Array(NVERT*3); pos.set(restPos);
+  const uv=new Float32Array(NVERT*2); uv.set(vertUv);
+  const idx=[];
+  for(let j=0;j<NV;j++) for(let i=0;i<NU;i++){
+    const a=j*(NU+1)+i, b=a+1, c=a+NU+1, d=c+1;
+    idx.push(a,b,c, b,d,c);
+  }
+  g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+  g.setAttribute('uv', new THREE.BufferAttribute(uv,2));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+buildRest();
+const coreGeo = makeGeometry();
+{ const n=coreGeo.attributes.normal.array; restNrm.set(n); }
+
+// ---------- damage field ----------
+const DW=256, DH=128;
+const dmgArr=new Float32Array(DW*DH);
+const dmgCanvas=document.createElement('canvas'); dmgCanvas.width=DW; dmgCanvas.height=DH;
+const dmgCtx=dmgCanvas.getContext('2d');
+const dmgImg=dmgCtx.createImageData(DW,DH);
+for(let i=0;i<DW*DH;i++){ dmgImg.data[i*4+3]=255; }
+const dmgTex=new THREE.CanvasTexture(dmgCanvas);
+dmgTex.wrapS=THREE.RepeatWrapping; dmgTex.minFilter=THREE.LinearFilter; dmgTex.magFilter=THREE.LinearFilter;
+let dmgDirty=true, dmgTotal=0;
+function pushDmgTexture(){
+  for(let i=0;i<DW*DH;i++){ dmgImg.data[i*4]=Math.min(255, dmgArr[i]*255); }
+  dmgCtx.putImageData(dmgImg,0,0); dmgTex.needsUpdate=true; dmgDirty=false;
+}
+function brushDamage(u,v,rate,dt){
+  const cx=u*DW, cy=(1-v)*DH, rad=18*brushScale, sig=9*brushScale;
+  const x0=Math.max(0,Math.floor(cx-rad)), x1=Math.min(DW-1,Math.ceil(cx+rad));
+  const y0=Math.max(0,Math.floor(cy-rad)), y1=Math.min(DH-1,Math.ceil(cy+rad));
+  for(let y=y0;y<=y1;y++) for(let x=x0;x<=x1;x++){
+    // wrap in x for seam continuity
+    let dx=Math.abs(x-cx); dx=Math.min(dx, DW-dx);
+    const dy=y-cy, d2=dx*dx+dy*dy;
+    const add=rate*dt*Math.exp(-d2/(2*sig*sig));
+    if(add<=0) continue;
+    // write to wrapped column too when near seam
+    const xi = (x===Math.round(cx) && false)? x : x;
+    const idx=y*DW+x;
+    const before=dmgArr[idx];
+    dmgArr[idx]=Math.min(1, before+add);
+    dmgTotal+=dmgArr[idx]-before;
+    if(x<rad){ const j2=y*DW+(x+DW)%DW; }
+  }
+  // seam wrap copy: brush near u=0/1 also paints the other side
+  dmgDirty=true;
+}
+function brushDamageWrapped(u,v,rate,dt){
+  brushDamage(u,v,rate,dt);
+  if(u<0.08) brushDamage(u+1,v,rate,dt);
+  if(u>0.92) brushDamage(u-1,v,rate,dt);
+}
+function dmgAt(u,v){
+  const x=Math.min(DW-1,Math.max(0,Math.round(u*DW))), y=Math.min(DH-1,Math.max(0,Math.round((1-v)*DH)));
+  return dmgArr[y*DW+x];
+}
+
+// ---------- brush tools ----------
+let toolMode='dent'; // dent | bulge | smooth
+let brushScale=1;
+let ringGain=0.10;
+// ---------- kinetic-sand mode ----------
+let playMode='crisp'; // crisp | sand
+let baseZ=1, scrapeWork=0, lastSandSnd=0;
+function scrapePaint(u,v,rate,dt,sigMul=1){
+  // narrow deep groove, no bulge ring: a scraper shaving sand away
+  const cx=u*DW, cy=(1-v)*DH, sig=7*brushScale*sigMul, rad=20*brushScale*Math.max(1,sigMul);
+  const x0=Math.floor(cx-rad), x1=Math.ceil(cx+rad), y0=Math.max(0,Math.floor(cy-rad)), y1=Math.min(DH-1,Math.ceil(cy+rad));
+  for(let y=y0;y<=y1;y++) for(let xx=x0;xx<=x1;xx++){
+    const dx=xx-cx, dy=y-cy, d2=dx*dx+dy*dy;
+    if(d2>rad*rad) continue;
+    const x=((xx%DW)+DW)%DW, idx=y*DW+x;
+    const g=Math.exp(-d2/(2*sig*sig));
+    defArr[idx]=Math.max(-0.72, defArr[idx]-rate*dt*g*noiseArr[idx]);
+  }
+  scrapeWork+=rate*dt*8;
+}
+function scrapePaintWrapped(u,v,rate,dt,sigMul=1){
+  scrapePaint(u,v,rate,dt,sigMul);
+  if(u<0.06) scrapePaint(u+1,v,rate,dt,sigMul);
+  if(u>0.94) scrapePaint(u-1,v,rate,dt,sigMul);
+}
+function smoothDef(u,v,dt){
+  const cx=u*DW, cy=(1-v)*DH, sig=12*brushScale, rad=30*brushScale;
+  const x0=Math.floor(cx-rad), x1=Math.ceil(cx+rad), y0=Math.max(0,Math.floor(cy-rad)), y1=Math.min(DH-1,Math.ceil(cy+rad));
+  for(let y=y0;y<=y1;y++) for(let xx=x0;xx<=x1;xx++){
+    const dx=xx-cx, dy=y-cy, d2=dx*dx+dy*dy;
+    if(d2>rad*rad) continue;
+    const x=((xx%DW)+DW)%DW, idx=y*DW+x;
+    const g=Math.exp(-d2/(2*sig*sig));
+    defArr[idx]*=(1-Math.min(1, 1.5*dt*g));
+    const before=dmgArr[idx], after=Math.max(0, before-0.35*dt*g);
+    if(after!==before){ dmgArr[idx]=after; dmgTotal+=after-before; dmgDirty=true; }
+  }
+}
+function smoothDefWrapped(u,v,dt){
+  smoothDef(u,v,dt);
+  if(u<0.1) smoothDef(u+1,v,dt);
+  if(u>0.9) smoothDef(u-1,v,dt);
+}
+
+// ---------- sculpt field: persistent shape (negative = dented in, positive = bulged out) ----------
+const defArr=new Float32Array(DW*DH);
+const noiseArr=new Float32Array(DW*DH);
+for(let i=0;i<DW*DH;i++) noiseArr[i]=0.82+Math.random()*0.36;
+let reboundMode='slow';
+const REBOUND_K={fast:1.5, slow:0.10, none:0};
+const FOLLOW_K={fast:10, slow:3.0, none:1.4};
+function defAt(u,v){
+  const x=((Math.round(u*DW)%DW)+DW)%DW, y=Math.min(DH-1,Math.max(0,Math.round((1-v)*DH)));
+  return defArr[y*DW+x];
+}
+function paintDef(u,v,rate,dt){
+  // rate>0 = press in. Gaussian dent + displaced-material bulge ring + wrinkle noise.
+  const cx=u*DW, cy=(1-v)*DH, sig=13*brushScale, rad=36*brushScale;
+  const x0=Math.floor(cx-rad), x1=Math.ceil(cx+rad), y0=Math.max(0,Math.floor(cy-rad)), y1=Math.min(DH-1,Math.ceil(cy+rad));
+  for(let y=y0;y<=y1;y++) for(let xx=x0;xx<=x1;xx++){
+    const dx=xx-cx, dy=y-cy, d=Math.sqrt(dx*dx+dy*dy);
+    if(d>rad) continue;
+    const x=((xx%DW)+DW)%DW, idx=y*DW+x;
+    const g=Math.exp(-(d*d)/(2*sig*sig));
+    const ring=Math.exp(-Math.pow(d-2.05*sig,2)/(2*Math.pow(0.55*sig,2)));
+    let delta=-rate*dt*g*noiseArr[idx] + rate*dt*ringGain*ring;
+    defArr[idx]=Math.max(-0.72, Math.min(0.35, defArr[idx]+delta));
+  }
+}
+function paintDefWrapped(u,v,rate,dt){
+  paintDef(u,v,rate,dt);
+  if(u<0.1) paintDef(u+1,v,rate,dt);
+  if(u>0.9) paintDef(u-1,v,rate,dt);
+}
+// material flow: shift the whole sculpt field along the knead direction (dents travel & stretch)
+const advTmp=new Float32Array(DW*DH);
+function advectDef(du,dv,strength){
+  if(strength<=0.01) return;
+  const sx=du*DW, sy=-dv*DH;
+  for(let y=0;y<DH;y++) for(let x=0; x<DW; x++){
+    let fx=x-sx, fy=y-sy;
+    fy=Math.min(DH-1.001, Math.max(0, fy));
+    const x0=Math.floor(fx), y0=Math.floor(fy), tx=fx-x0, ty=fy-y0;
+    const xa=((x0%DW)+DW)%DW, xb=(xa+1)%DW, yb=Math.min(DH-1,y0+1);
+    const s00=defArr[y0*DW+xa], s10=defArr[y0*DW+xb], s01=defArr[yb*DW+xa], s11=defArr[yb*DW+xb];
+    advTmp[y*DW+x]=(s00*(1-tx)+s10*tx)*(1-ty)+(s01*(1-tx)+s11*tx)*ty;
+  }
+  for(let i=0;i<DW*DH;i++) defArr[i]+=(advTmp[i]-defArr[i])*strength;
+}
+let kneadEnergy=0, flatCur=0; // kneading gradually flattens the whole blob (dough being worked)
+// gentle 3x3 smoothing: kills thin membrane spikes the flow can grow, keeps broad doughy shapes
+function blurDef(f){
+  for(let y=0;y<DH;y++) for(let x=0;x<DW;x++){
+    const xm=(x-1+DW)%DW, xp=(x+1)%DW, ym=Math.max(0,y-1), yp=Math.min(DH-1,y+1);
+    advTmp[y*DW+x]=(defArr[y*DW+x]*4 + defArr[y*DW+xm]+defArr[y*DW+xp]+defArr[ym*DW+x]+defArr[yp*DW+x])/8;
+  }
+  for(let i=0;i<DW*DH;i++) defArr[i]+=(advTmp[i]-defArr[i])*f;
+}
+
+// ---------- materials / meshes ----------
+// subtle blotchy texture so the revealed core is a material, not a flat color swatch
+const coreTex=(()=>{ const c=document.createElement('canvas'); c.width=512; c.height=256; const g=c.getContext('2d');
+  g.fillStyle='#efefef'; g.fillRect(0,0,512,256);
+  for(let i=0;i<300;i++){ const x=Math.random()*512, y=Math.random()*256, r=14+Math.random()*52;
+    const gr=g.createRadialGradient(x,y,0,x,y,r); const v=165+Math.floor(Math.random()*70);
+    gr.addColorStop(0,`rgba(${v},${v-10},${v-4},0.50)`); gr.addColorStop(1,'rgba(255,255,255,0)');
+    g.fillStyle=gr; g.beginPath(); g.arc(x,y,r,0,7); g.fill(); }
+  for(let i=0;i<3600;i++){ const v=185+Math.floor(Math.random()*70);
+    g.fillStyle=`rgba(${v},${v},${v},0.30)`; g.fillRect(Math.random()*512, Math.random()*256, 1.6, 1.6); }
+  const t=new THREE.CanvasTexture(c); t.wrapS=t.wrapT=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace; return t; })();
+const coreMat=new THREE.MeshPhysicalMaterial({color:0xf0a3b8, roughness:0.55, clearcoat:0.65, clearcoatRoughness:0.5, map:coreTex, bumpMap:coreTex, bumpScale:1.4, roughnessMap:coreTex, sheen:0.6, sheenColor:new THREE.Color(0xffe3ec), sheenRoughness:0.6});
+const core=new THREE.Mesh(coreGeo, coreMat);
+
+const voroTex=new THREE.TextureLoader().load('./voronoi.png');
+voroTex.wrapS=THREE.RepeatWrapping; voroTex.colorSpace=THREE.NoColorSpace;
+const shellMat=new THREE.ShaderMaterial({
+  uniforms:{ voro:{value:voroTex}, dmgTex:{value:dmgTex},
+    shellCol:{value:new THREE.Color(0xf7f1e3)}, lightDir:{value:new THREE.Vector3(0.45,0.75,0.6).normalize()} },
+  vertexShader:`
+    varying vec2 vUv; varying vec3 vN; varying vec3 vWp;
+    void main(){ vUv=uv; vN=normalize(normalMatrix*normal);
+      vec4 wp=modelMatrix*vec4(position,1.0); vWp=wp.xyz;
+      gl_Position=projectionMatrix*viewMatrix*wp; }`,
+  fragmentShader:`
+    uniform sampler2D voro; uniform sampler2D dmgTex; uniform vec3 shellCol; uniform vec3 lightDir;
+    varying vec2 vUv; varying vec3 vN; varying vec3 vWp;
+    void main(){
+      vec4 vt=texture2D(voro, vUv);
+      float edge=vt.g; float cellR=vt.r; float shade=vt.b;
+      vec2 dUv=vUv+(vec2(texture2D(voro, vUv*1.7).r, texture2D(voro, vUv*2.3).b)-0.5)*0.05
+                   +(texture2D(voro, vUv*0.35).rg-0.5)*0.07;
+      float dmg=texture2D(dmgTex, dUv).r;
+      float wob=(texture2D(voro, vUv*2.7).b-0.87)*0.55;
+      edge+=wob*dmg;
+      float seam=mix(0.0, 0.75, pow(dmg,1.8));
+      if(edge<seam) discard;
+      float dropT=0.55+0.28*cellR;
+      if(dmg>dropT) discard;
+      vec3 N=normalize(vN); vec3 L=normalize(lightDir); vec3 V=normalize(cameraPosition-vWp);
+      float dif=0.42+0.58*max(dot(N,L),0.0);
+      float spec=pow(max(dot(reflect(-L,N),V),0.0),46.0)*0.5;
+      float fres=pow(1.0-max(dot(N,V),0.0),3.0);
+      float band=smoothstep(seam, seam+0.12, edge);
+      vec3 base=shellCol*(0.96+0.07*shade);
+      vec3 col=base*dif + spec*vec3(1.0) + fres*vec3(0.30);
+      col*=mix(1.0, mix(0.68,1.0,band), clamp(dmg*1.7,0.0,1.0));
+      gl_FragColor=vec4(col,1.0);
+      #include <tonemapping_fragment>
+      #include <colorspace_fragment>
+    }`
+});
+const shellGeo=makeGeometry();
+const shell=new THREE.Mesh(shellGeo, shellMat);
+const group=new THREE.Group(); group.add(core); group.add(shell); scene.add(group);
+
+// ---------- audio: real crackle grains ----------
+const grainNames=['grain_00.wav','grain_01.wav','grain_02.wav','grain_03.wav','grain_04.wav','grain_05.wav','grain_06.wav','grain_07.wav'];
+let AC=null; const buffers={};
+async function initAudio(){
+  if(AC) { if(AC.state==='suspended') AC.resume(); return; }
+  try{
+    AC=new (window.AudioContext||window.webkitAudioContext)();
+    for(const n of grainNames){ const b=await (await fetch('./audio/'+n)).arrayBuffer(); buffers[n]=await AC.decodeAudioData(b); }
+    const b=await (await fetch('./audio/crunch_big.wav')).arrayBuffer(); buffers['crunch']=await AC.decodeAudioData(b);
+  }catch(e){ AC=null; }
+}
+let lastGrainAt=0;
+function playBuf(name, rate, gainV){
+  if(!AC || !buffers[name]) return;
+  const s=AC.createBufferSource(); s.buffer=buffers[name]; s.playbackRate.value=rate;
+  const g=AC.createGain(); g.gain.value=gainV; s.connect(g); g.connect(AC.destination); s.start();
+}
+function maybeCrackSound(delta, now){
+  if(now-lastGrainAt<70) return;
+  lastGrainAt=now;
+  const n=grainNames[Math.floor(Math.random()*grainNames.length)];
+  playBuf(n, 0.9+Math.random()*0.25, 0.5+Math.min(0.4, delta*0.2));
+}
+
+// ---------- interaction ----------
+const ray=new THREE.Raycaster(); const ptr=new THREE.Vector2();
+let pressing=false, pressUv=null, holdT=0, depthNow=0, spin=false;
+let simPress=null; // {u,v,until}
+let lastHitPoint=null;
+function pick(e){
+  const r=renderer.domElement.getBoundingClientRect();
+  ptr.x=((e.clientX-r.left)/r.width)*2-1; ptr.y=-((e.clientY-r.top)/r.height)*2+1;
+  ray.setFromCamera(ptr,camera);
+  const hit=ray.intersectObject(core,false)[0];
+  if(hit){ lastHitPoint=hit.point.clone(); }
+  return hit && hit.uv ? hit.uv : null;
+}
+function uvToWorld(u,v){
+  const th=(1-v)*Math.PI, ph=u*Math.PI*2;
+  const x=R*spow(Math.sin(th),exponent)*spow(Math.cos(ph),exponent);
+  const y=R*spow(Math.cos(th),exponent);
+  const z=R*spow(Math.sin(th),exponent)*spow(Math.sin(ph),exponent);
+  return group.localToWorld(new THREE.Vector3(x,y,z));
+}
+
+// ---------- shell flakes (debris) ----------
+const flakeGeo=new THREE.TetrahedronGeometry(0.05);
+const flakeMats=[0xf7f1e3,0xefe4d2,0xf3d9c8].map(c=>new THREE.MeshStandardMaterial({color:c, roughness:0.65, flatShading:true, emissive:0x35302a}));
+const flakes=[];
+for(let i=0;i<90;i++){
+  const m=new THREE.Mesh(flakeGeo, flakeMats[i%3]);
+  m.visible=false; m.scale.set(1,0.38,1);
+  scene.add(m);
+  flakes.push({m, vel:new THREE.Vector3(), rot:new THREE.Vector3(), life:0, maxLife:1});
+}
+const flakeMatsSand=[0xe8b06a,0xf0c285,0xd99a4e].map(c=>new THREE.MeshStandardMaterial({color:c, roughness:1, flatShading:true}));
+function setFlakePalette(sand){ const pal=sand?flakeMatsSand:flakeMats; flakes.forEach((f,i)=>{ f.m.material=pal[i%3]; }); }
+
+// ---------- sand toolbox: each implement scrapes differently ----------
+const SAND_TOOLS={
+  spatula:{sig:1.6, rate:1.9, still:0.5, grains:3, grainSize:.3, chunkEvery:9, chunkSize:1.0, elong:2.2, snd:0.8, sndGain:.22},
+  knife:{sig:0.45, rate:3.4, still:0.15, grains:1, grainSize:.28, chunkEvery:6, chunkSize:1.5, elong:1.4, snd:1.35, sndGain:.2},
+  spoon:{sig:1.15, rate:1.3, still:0.6, grains:2, grainSize:.34, chunkEvery:11, chunkSize:1.1, elong:1, snd:0.95, sndGain:.2},
+  comb:{sig:0.22, rate:1.7, still:0.15, grains:4, grainSize:.22, chunkEvery:14, chunkSize:.8, elong:1, snd:1.5, sndGain:.16, teeth:5, toothGap:0.014},
+  brush:{sig:1.9, rate:0.32, still:0.3, grains:5, grainSize:.18, chunkEvery:1e9, chunkSize:.5, elong:1, snd:0.6, sndGain:.1, level:true},
+};
+let sandTool='spatula';
+function makeToolProps(){
+  const metal=new THREE.MeshStandardMaterial({color:0xd8dce2, roughness:.35, metalness:.7});
+  const dark=new THREE.MeshStandardMaterial({color:0x3a3f46, roughness:.6});
+  const wood=new THREE.MeshStandardMaterial({color:0xb07a45, roughness:.8});
+  const props={};
+  let g=new THREE.Group();
+  let blade=new THREE.Mesh(new THREE.BoxGeometry(0.52,0.015,0.30), metal); blade.position.z=0.10; g.add(blade);
+  let hd=new THREE.Mesh(new THREE.CylinderGeometry(0.035,0.035,0.34,10), wood); hd.rotation.x=Math.PI/2; hd.position.z=-0.22; g.add(hd);
+  props.spatula=g;
+  g=new THREE.Group();
+  blade=new THREE.Mesh(new THREE.BoxGeometry(0.09,0.012,0.42), metal); blade.position.z=0.12; g.add(blade);
+  hd=new THREE.Mesh(new THREE.CylinderGeometry(0.032,0.036,0.30,10), dark); hd.rotation.x=Math.PI/2; hd.position.z=-0.22; g.add(hd);
+  props.knife=g;
+  g=new THREE.Group();
+  const bowl=new THREE.Mesh(new THREE.SphereGeometry(0.16, 18, 12), metal); bowl.scale.set(1,0.35,1.35); bowl.position.z=0.10; g.add(bowl);
+  hd=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,0.34,10), metal); hd.rotation.x=Math.PI/2; hd.position.z=-0.24; g.add(hd);
+  props.spoon=g;
+  g=new THREE.Group();
+  const spine=new THREE.Mesh(new THREE.BoxGeometry(0.46,0.03,0.07), dark); spine.position.z=-0.05; g.add(spine);
+  for(let i=0;i<6;i++){ const t=new THREE.Mesh(new THREE.BoxGeometry(0.035,0.012,0.20), dark); t.position.set(-0.19+i*0.076, 0, 0.06); g.add(t); }
+  props.comb=g;
+  g=new THREE.Group();
+  const head=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.05,0.10), wood); head.position.z=-0.06; g.add(head);
+  const br=new THREE.Mesh(new THREE.BoxGeometry(0.40,0.05,0.13), new THREE.MeshStandardMaterial({color:0xe8dcc0, roughness:1})); br.position.set(0,-0.045,0.03); g.add(br);
+  hd=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,0.30,10), wood); hd.rotation.x=Math.PI/2; hd.position.z=-0.26; g.add(hd);
+  props.brush=g;
+  for(const k in props){ props[k].visible=false; scene.add(props[k]); }
+  return props;
+}
+const toolProps=makeToolProps();
+let flakesActive=0;
+function spawnFlakes(origin, n, power, sizeMul=1, elong=1){
+  let spawned=0;
+  for(const f of flakes){
+    if(spawned>=n) break;
+    if(f.life>0) continue;
+    f.life=f.maxLife=0.9+Math.random()*0.5;
+    f.m.visible=true;
+    f.m.position.copy(origin).add(new THREE.Vector3((Math.random()-0.5)*0.16,(Math.random()-0.3)*0.1,(Math.random()-0.5)*0.16));
+    f.vel.set((Math.random()-0.5)*1.5*power, (0.7+Math.random()*0.9)*power, (Math.random()-0.5)*1.5*power);
+    f.rot.set(Math.random()*9, Math.random()*9, Math.random()*9);
+    const s=(0.7+Math.random()*0.9)*sizeMul; f.m.scale.set(s*elong,0.38*s*(elong>1?0.45:1),s);
+    spawned++;
+  }
+}
+function updateFlakes(dt){
+  flakesActive=0;
+  for(const f of flakes){
+    if(f.life<=0) continue;
+    flakesActive++;
+    f.life-=dt;
+    if(f.life<=0){ f.m.visible=false; continue; }
+    f.vel.y-=4.6*dt;
+    f.m.position.addScaledVector(f.vel, dt);
+    f.m.rotation.x+=f.rot.x*dt; f.m.rotation.y+=f.rot.y*dt; f.m.rotation.z+=f.rot.z*dt;
+    if(f.m.position.y<-1.29){ f.m.position.y=-1.29; f.vel.y*=-0.32; f.vel.x*=0.65; f.vel.z*=0.65; f.rot.multiplyScalar(0.55); }
+    if(f.life<0.25){ const s=f.m.scale.x*(f.life/0.25); f.m.scale.set(Math.max(0.01,s), Math.max(0.01,0.38*s), Math.max(0.01,s)); }
+  }
+}
+let rotDrag=null, spinVel=0; // drag-to-rotate + flick inertia (rad/s)
+const pressMap=new Map(); // pointerId -> {x,y,prevX,prevY,holdT,depth}
+renderer.domElement.addEventListener('pointerdown', e=>{
+  initAudio();
+  const uv=pick(e);
+  if(uv && pressMap.size<2){ pressMap.set(e.pointerId,{x:uv.x,y:uv.y,prevX:uv.x,prevY:uv.y,holdT:0,depth:0}); spinVel=0; renderer.domElement.setPointerCapture(e.pointerId); }
+  else if(!uv && pressMap.size===0){ rotDrag={x:e.clientX, y:e.clientY}; renderer.domElement.setPointerCapture(e.pointerId); }
+});
+renderer.domElement.addEventListener('pointermove', e=>{
+  const p=pressMap.get(e.pointerId);
+  if(p){ const uv=pick(e); if(uv){ p.x=uv.x; p.y=uv.y; } return; }
+  if(rotDrag){
+    const dx=e.clientX-rotDrag.x, dy=e.clientY-rotDrag.y;
+    rotDrag={x:e.clientX, y:e.clientY};
+    group.rotation.y+=dx*0.009;
+    group.rotation.x=Math.max(-0.65, Math.min(0.65, group.rotation.x+dy*0.005));
+    spinVel=dx*0.009*60;
+  }
+});
+function endPointer(e){ pressMap.delete(e.pointerId); if(pressMap.size===0) rotDrag=null; }
+renderer.domElement.addEventListener('pointerup', endPointer);
+renderer.domElement.addEventListener('pointercancel', endPointer);
+
+// ---------- per-frame update ----------
+const statusEl=document.getElementById('status');
+let lastT=performance.now(), fpsEMA=60, statT=0, stage=0, coverage=0, lastDmgTotal=0, lastCrunchAt=0, lastFlakeMark=0, lastFlakeAt=0, prevActive=null;
+const ARC_U=7.85, ARC_V=3.93; // approx world arc lengths for uv distances
+function animate(){
+  requestAnimationFrame(animate);
+  const now=performance.now(); let dt=Math.min(0.05,(now-lastT)/1000); lastT=now;
+  if(dt>0) fpsEMA=fpsEMA*0.95+(1/Math.max(dt,1e-4))*0.05;
+
+  // gather press points: real pointers (up to 2) + optional simulated press
+  const pts=[...pressMap.values()];
+  if(simPress && now<simPress.until) pts.push(simPress);
+  if(simPress && now>=simPress.until) simPress=null;
+  let maxOff=0;
+  // sculpt field slowly rebounds toward round, per rebound mode
+  const rk= playMode==='sand' ? 0 : REBOUND_K[reboundMode];
+  if(rk>0){ const m=Math.exp(-rk*dt); for(let i=0;i<DW*DH;i++) defArr[i]*=m; }
+  depthNow=0;
+  if(pts.length){
+    const dmgBefore=dmgTotal;
+    for(const p of pts){
+      p.holdT+=dt;
+      p.depth=Math.min(0.14+p.holdT*0.13, 0.44);
+      if(p.depth>depthNow) depthNow=p.depth;
+      // kneading: dragging smears the sculpt along the path + scrubs extra damage (peeling)
+      const mdu=Math.min(Math.abs(p.x-p.prevX), 1-Math.abs(p.x-p.prevX))*ARC_U, mdv=(p.y-p.prevY)*ARC_V;
+      const moved=Math.sqrt(mdu*mdu + mdv*mdv);
+      if(playMode==='sand'){
+        const T=SAND_TOOLS[sandTool];
+        const paint=(u,v,rate)=>{
+          if(T.teeth){ for(let ti=-(T.teeth-1)/2; ti<=(T.teeth-1)/2; ti++) scrapePaintWrapped(u+ti*T.toothGap, v, rate, dt, T.sig); }
+          else scrapePaintWrapped(u, v, rate, dt, T.sig);
+        };
+        if(moved>0.01){
+          paint(p.x, p.y, T.rate);
+          const steps=Math.min(5, Math.max(1, Math.round(moved/0.06)));
+          for(let s=1;s<=steps;s++) paint(p.prevX+(p.x-p.prevX)*s/steps, p.prevY+(p.y-p.prevY)*s/steps, T.rate);
+          spawnFlakes(p, T.grains, .5, T.grainSize, T.elong);
+          if(scrapeWork>T.chunkEvery){ scrapeWork=0; spawnFlakes(p, 2, .85, T.chunkSize, T.elong); }
+          if(T.level) blurDef(0.04);
+          if(now-lastSandSnd>90){ lastSandSnd=now; playBuf('grain', T.sndGain*(0.8+Math.random()*0.4), T.snd*(0.9+Math.random()*0.25)); }
+          kneadEnergy+=moved;
+        } else {
+          paint(p.x, p.y, T.rate*T.still);
+        }
+        p.prevX=p.x; p.prevY=p.y;
+        continue;
+      }
+      if(toolMode==='dent'){ brushDamageWrapped(p.x, p.y, 0.52+p.depth*1.0, dt); paintDefWrapped(p.x, p.y, 0.85, dt); }
+      else if(toolMode==='bulge'){ paintDefWrapped(p.x, p.y, -0.95, dt); }
+      else { smoothDefWrapped(p.x, p.y, dt); }
+      if(moved>0.01){
+        let du=p.x-p.prevX; if(du>0.5) du-=1; if(du<-0.5) du+=1;
+        advectDef(du, p.y-p.prevY, Math.min(0.3, moved*0.8));
+        blurDef(0.10);
+        kneadEnergy+=moved;
+        const poleGuard=(p.y<0.07||p.y>0.93)?0.4:1;
+        const steps=Math.min(5, Math.max(1, Math.round(moved/0.06)));
+        for(let s=1;s<=steps;s++){
+          const mx=p.prevX+(p.x-p.prevX)*s/steps, my=p.prevY+(p.y-p.prevY)*s/steps;
+          if(toolMode==='dent'){ paintDefWrapped(mx, my, 0.9*poleGuard, dt); brushDamageWrapped(mx, my, 0.9, dt); }
+          else if(toolMode==='bulge'){ paintDefWrapped(mx, my, -0.9*poleGuard, dt); }
+          else { smoothDefWrapped(mx, my, dt); }
+        }
+      }
+      p.prevX=p.x; p.prevY=p.y;
+    }
+    const dDelta=dmgTotal-dmgBefore;
+    if(dDelta>0.02) maybeCrackSound(dDelta, now);
+    const pressPoint=uvToWorld(pts[0].x, pts[0].y);
+    if(dDelta>2.2 && now-lastCrunchAt>500){ lastCrunchAt=now; playBuf('crunch', 0.95+Math.random()*0.1, 0.7); spawnFlakes(pressPoint, 5, 1.25); }
+    if(dmgTotal-lastFlakeMark>30 && now-lastFlakeAt>130){ lastFlakeMark=dmgTotal; lastFlakeAt=now; spawnFlakes(pressPoint, 2+Math.floor(Math.random()*2), 1); }
+  }
+  // tool prop follows the active scrape point, tilted like a held implement
+  {
+    const ap = pts.length? pts[0] : null;
+    for(const k in toolProps) toolProps[k].visible = !!ap && k===sandTool;
+    if(ap){
+      const prop=toolProps[sandTool];
+      const wp=uvToWorld(ap.x, ap.y);
+      const n=wp.clone().normalize();
+      prop.position.copy(wp).addScaledVector(n, 0.05);
+      prop.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), n);
+      prop.rotateX(-0.9);
+    }
+  }
+  // compose per-vertex offset: sculpt field + live dent(s)
+  const follow=Math.min(1, dt*(pts.length?18:FOLLOW_K[reboundMode]));
+  for(let i=0;i<NVERT;i++){
+    const u=vertUv[i*2], v=vertUv[i*2+1];
+    let target=-defAt(u,v);
+    for(const p of pts){
+      const du0=Math.abs(u-p.x); const du=Math.min(du0,1-du0)*ARC_U;
+      const dv=(v-p.y)*ARC_V;
+      const dist=Math.sqrt(du*du+dv*dv);
+      let fall=1-Math.min(1,Math.max(0,(dist-0.18*brushScale)/(0.80*brushScale-0.18*brushScale))); fall=fall*fall*(3-2*fall);
+      if(fall>0) target+= (playMode==='sand' ? p.depth*fall*0.3 : toolMode==='bulge' ? -p.depth*fall*0.4 : toolMode==='dent' ? p.depth*fall*0.55 : 0);
+    }
+    if(target>0.72) target=0.72; if(target<-0.35) target=-0.35;
+    offset[i]+=(target-offset[i])*follow;
+  }
+  // write positions (core + shell share deformation; shell sits 2.8% proud, sinks a touch where damaged)
+  const cp=coreGeo.attributes.position.array, shp=shellGeo.attributes.position.array;
+  for(let i=0;i<NVERT;i++){
+    const i3=i*3, o=offset[i];
+    if(o>maxOff) maxOff=o;
+    const nx=restNrm[i3], ny=restNrm[i3+1], nz=restNrm[i3+2];
+    const co=o+0.045;
+    cp[i3]=restPos[i3]-nx*co; cp[i3+1]=restPos[i3+1]-ny*co; cp[i3+2]=restPos[i3+2]-nz*co;
+    const so=o*0.97 + dmgAt(vertUv[i*2],vertUv[i*2+1])*0.025;
+    shp[i3]=restPos[i3]*1.028-nx*so; shp[i3+1]=restPos[i3+1]*1.028-ny*so; shp[i3+2]=restPos[i3+2]*1.028-nz*so;
+  }
+  coreGeo.attributes.position.needsUpdate=true; shellGeo.attributes.position.needsUpdate=true;
+  coreGeo.computeVertexNormals(); shellGeo.computeVertexNormals();
+  // volume-conserving squash/bulge + knead flattening (rebound mode decides if it recovers)
+  const sq=Math.min(0.085, maxOff*0.16);
+  if(reboundMode==='fast') kneadEnergy*=Math.exp(-0.8*dt);
+  else if(reboundMode==='slow') kneadEnergy*=Math.exp(-0.02*dt);
+  flatCur+=(Math.min(0.16, kneadEnergy*0.004)-flatCur)*Math.min(1, dt*3);
+  group.scale.set((1+sq*0.7)*(1+flatCur*0.6), (1-sq)*(1-flatCur), (1+sq*0.7)*(1+flatCur*0.6)*baseZ);
+  if(pressMap.size===0 && !rotDrag){
+    if(spin) group.rotation.y+=dt*0.55;
+    else if(Math.abs(spinVel)>0.02){ group.rotation.y+=spinVel*dt; spinVel*=Math.exp(-1.9*dt); }
+  }
+  updateFlakes(dt);
+  if(dmgDirty) pushDmgTexture();
+
+  statT+=dt;
+  if(statT>0.25){
+    statT=0;
+    let cnt=0; for(let i=0;i<DW*DH;i++) if(dmgArr[i]>0.3) cnt++;
+    coverage=cnt/(DW*DH);
+    stage = coverage<0.008?0 : coverage<0.035?1 : coverage<0.09?2 : 3;
+    if(playMode==='sand'){
+      let peak=0, removed=0; for(let i=0;i<DW*DH;i++){ const a=-defArr[i]; if(a>0){ removed+=a; if(a>peak) peak=a; } }
+      statusEl.textContent=`刮沙 · 刻深 ${Math.round(peak/0.72*100)}% · 已刮下 ${Math.min(99, Math.round(removed/(DW*DH*0.72)*100))}%`;
+    } else {
+      statusEl.textContent=`按压 ${Math.round(depthNow/R*100)}% · 裂纹 ${Math.round(coverage*100)}% · 阶段 ${stage}`;
+    }
+  }
+  renderer.render(scene,camera);
+}
+animate();
+
+// ---------- hooks / ui ----------
+window.__squishy={ get damage(){return coverage;}, get stage(){return stage;}, get fps(){return Math.round(fpsEMA);},
+  get maxOff(){return Math.max(...offset);},
+  pressAt(u,v,sec){ simPress={x:u,y:v,prevX:u,prevY:v,holdT:0,depth:0,until:performance.now()+sec*1000}; },
+  kneadTo(u,v){ if(simPress){ simPress.x=u; simPress.y=v; } },
+  get defPeak(){ let m=0; for(let i=0;i<DW*DH;i++){ const a=Math.abs(defArr[i]); if(a>m)m=a; } return m; },
+  get flat(){ return flatCur; },
+  setRebound(m){ reboundMode=m; },
+  setTool(m){ toolMode=m; },
+  setMode(m){ setPlayMode(m); },
+  setSandTool(t){ sandTool=t; document.querySelectorAll('.stoolBtn').forEach(x=>x.classList.toggle('on',x.dataset.stool===t)); },
+  get sandTool(){ return sandTool; },
+  get mode(){ return playMode; },
+  get flakesOn(){ return flakesActive; },
+  setBrush(s){ brushScale=s; },
+  defVal(u,v){ return defAt(u,v); },
+  get flakes(){ return flakesActive; },
+  get rotY(){ return group.rotation.y; },
+  get rotX(){ return group.rotation.x; },
+  spawnAt(u,v,n){ spawnFlakes(uvToWorld(u,v), n||6, 1.15); },
+  brush(u,v,amt){ const before=dmgTotal; brushDamageWrapped(u,v,amt,1); if(dmgDirty) pushDmgTexture(); return dmgTotal-before; },
+  reset(){ resetAll(); } };
+function resetAll(){
+  dmgArr.fill(0); dmgTotal=0; defArr.fill(0); offset.fill(0); plastic.fill(0); depthNow=0; lastFlakeMark=0; kneadEnergy=0; flatCur=0; pressMap.clear(); dmgDirty=true; pushDmgTexture();
+  for(const f of flakes){ f.life=0; f.m.visible=false; }
+}
+document.getElementById('resetBtn').onclick=resetAll;
+document.querySelectorAll('.rebBtn').forEach(b=>b.onclick=()=>{
+  reboundMode=b.dataset.reb;
+  document.querySelectorAll('.rebBtn').forEach(x=>x.classList.toggle('on',x===b));
+});
+document.querySelectorAll('.toolBtn').forEach(b=>b.onclick=()=>{
+  toolMode=b.dataset.tool;
+  document.querySelectorAll('.toolBtn').forEach(x=>x.classList.toggle('on',x===b));
+});
+{ const br=document.getElementById('brushRange'); if(br) br.oninput=e=>{ brushScale=parseFloat(e.target.value); }; }
+
+// ---------- kinetic sand presentation ----------
+function makeSandTex(){
+  const c=document.createElement('canvas'); c.width=512; c.height=256;
+  const g=c.getContext('2d');
+  const bands=['#f4a259','#ef9db8','#a9d6a5','#f7e08e','#93c5e8'];
+  const bh=256/bands.length;
+  bands.forEach((col,i)=>{ g.fillStyle=col; g.fillRect(0, Math.floor(i*bh), 512, Math.ceil(bh)+1); });
+  for(let i=0;i<11000;i++){
+    const x=Math.random()*512, y=Math.random()*256;
+    g.fillStyle=Math.random()<0.5?'rgba(90,50,20,0.20)':'rgba(255,255,255,0.20)';
+    g.fillRect(x,y,1.6,1.6);
+  }
+  g.fillStyle='rgba(255,255,255,0.75)';
+  for(let i=0;i<260;i++) g.fillRect(Math.random()*512, Math.random()*256, 1.2, 1.2);
+  const t=new THREE.CanvasTexture(c);
+  t.wrapS=THREE.RepeatWrapping; t.colorSpace=THREE.SRGBColorSpace;
+  return t;
+}
+const sandTex=makeSandTex();
+let curCoreColor='#f0a3b8';
+function setPlayMode(m){
+  playMode=m; scrapeWork=0;
+  document.querySelectorAll('.modeBtn').forEach(x=>x.classList.toggle('on',x.dataset.mode===m));
+  const hint=document.getElementById('hint');
+  if(m==='sand'){
+    shell.visible=false; baseZ=0.6; ringGain=0;
+    coreMat.map=sandTex; coreMat.bumpMap=sandTex; coreMat.color.set(0xffffff);
+    coreMat.roughness=.95; coreMat.clearcoat=0; coreMat.sheen=0; coreMat.needsUpdate=true;
+    setFlakePalette(true);
+    document.querySelectorAll('.shapeBtn').forEach(x=>x.classList.toggle('on',x.id==='shapeBox'));
+    setShape(true);
+    hint.textContent='选个工具，按住沙块拖动往下刮；拖空白处转着刮其他面';
+  } else {
+    shell.visible=true; baseZ=1; ringGain=0.10;
+    coreMat.map=coreTex; coreMat.bumpMap=coreTex; coreMat.color.set(curCoreColor);
+    coreMat.roughness=.55; coreMat.clearcoat=.65; coreMat.sheen=.6; coreMat.needsUpdate=true;
+    setFlakePalette(false);
+    resetAll();
+    hint.textContent='按住压、拖着揉都可以，两个手指能同时按；拖空白处转着捏其他面';
+  }
+}
+document.querySelectorAll('.modeBtn').forEach(b=>b.onclick=()=>setPlayMode(b.dataset.mode));
+document.querySelectorAll('.stoolBtn').forEach(b=>b.onclick=()=>{
+  sandTool=b.dataset.stool;
+  document.querySelectorAll('.stoolBtn').forEach(x=>x.classList.toggle('on',x===b));
+});
+setPlayMode('sand');
+document.getElementById('spinBtn').onclick=e=>{ spin=!spin; e.target.classList.toggle('on',spin); };
+function setShape(box, btn){
+  exponent=box?0.62:1.0; buildRest();
+  for(const g of [coreGeo,shellGeo]){ const p=g.attributes.position.array; p.set(restPos); g.computeVertexNormals(); }
+  restNrm.set(coreGeo.attributes.normal.array);
+  resetAll();
+  const sb=document.getElementById('shapeBox'), sl=document.getElementById('shapeBall');
+  if(sb) sb.classList.toggle('on',box);
+  if(sl) sl.classList.toggle('on',!box);
+}
+{ const sb=document.getElementById('shapeBox'), sl=document.getElementById('shapeBall');
+  if(sb) sb.onclick=()=>setShape(true);
+  if(sl) sl.onclick=()=>setShape(false); }
+document.querySelectorAll('.coreBtn').forEach(b=>b.onclick=()=>{
+  curCoreColor=b.dataset.core;
+  if(playMode==='crisp') coreMat.color.set(curCoreColor);
+  document.querySelectorAll('.coreBtn').forEach(x=>x.classList.toggle('on',x===b));
+});
+addEventListener('resize',()=>{ camera.aspect=innerWidth/innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth,innerHeight); });
+</script>
+</body>
+</html>
