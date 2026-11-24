@@ -5555,22 +5555,23 @@ function bpElemColorOf(skillName){
 /* ============ 第 44 批 · Pixelfx 战斗特效＋对应音效（演出层；桥未就绪自动回退现行闪光/飘字） ============ */
 function bpFxKindOf44(e, fxList){
   const fx = fxList || [];
-  let heal = false; const st = {};
+  let heal = false, hit = false; const st = {};
   for(let i = 0; i < fx.length; i++){
     const f = fx[i];
     if(f.t === "heal" || f.t === "hot") heal = true;
+    if(f.t === "hit") hit = true;
     if(f.addStatus) for(let j = 0; j < f.addStatus.length; j++){ const s = f.addStatus[j]; st[(s && s.k) || s] = 1; }
   }
-  if(heal) return "heal";
-  if(st.burn) return "fire";
-  if(st.pois) return "poison";
-  if(st.stun) return "frost";
-  if(st.conf) return "arcane";
+  if(heal && !hit) return "heal"; /* 纯治疗才走治疗光；带伤的自愈技（如抬棺决战）按伤害技呈现 */
   const n = (e && e.skill) || "";
   if(/[火焚焰烧]/.test(n)) return "fire";
   if(/[雷震电]/.test(n)) return "bolt";
   if(/[毒瘴]/.test(n)) return "poison";
   if(/[冰寒霜冻]/.test(n)) return "frost";
+  if(st.burn) return "fire";
+  if(st.pois) return "poison";
+  if(st.stun) return "frost";
+  if(st.conf) return "arcane";
   if(/[阵谋卦策]/.test(n)) return "arcane";
   try{ const d = (typeof ACTIVE_SKILLS !== "undefined" && ACTIVE_SKILLS[n]) || null; if(d && d.stat && d.stat !== "w") return "arcane"; }catch(_){ }
   return "impact";
