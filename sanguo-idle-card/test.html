@@ -712,7 +712,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
   <div class="subpane" data-pane="stage-main">
   <h2 class="sec">逐鹿天下（10 章 × 10 关 · 主线推图）</h2>
   <div class="card"><details class="rules"><summary>主线规则说明</summary><p class="note" style="margin-top:4px">定版主线：10 章 × 10 关逐关推进、不耗体力，每关每日限 3 次（失败计次，05:00 重置）。每章第 5 关小 BOSS、第 10 关关底 BOSS，首通奖励按章递增（普通关元宝／小 BOSS 元宝＋招募令×2／关底 元宝＋招募令×3）。战斗全自动：速度定出手、枪克骑/骑克弓/弓克枪 ×1.25；专属技能怒气满 100 必放。全来源经验汇入经验池，在武将页手动分配升级（满级 50 级）。</p></details></div>
-  <div class="card" style="border-style:dashed"><span class="tag hot">待开放</span> <b>章末抉择 · 11月28日开放</b> <button class="btn sm sub" style="float:right" onclick="showNotice('章末抉择：每打完一章，主线会出一个剧情二选一（比如救百姓还是追残敌）。选哪边会影响后续拿到的资源和武将羁绊走向，不改战斗数值。10 章各有一幕，11 月 28 日开放。')">查看说明</button></div>
+  <div class="card" id="fateCard"></div>
   <div id="stageResult" style="display:none;margin-bottom:10px"><h2 class="sec">最新战报</h2><div class="log" id="stageResultLog"></div></div>
   <div id="stageList"></div>
   <h2 class="sec">战报</h2>
@@ -955,13 +955,16 @@ const CFG = {
     {days:7, yuanbao:600, tickets:5, txt:"元宝 +600 · 招募令 +5"}
   ],
   opsWeiGate: { from:"2026-11-24", to:"2026-11-30", itemId:26, limit:1 }, // 日期门二档「名将列传·魏」：将魂阁限时上架张辽专属「钩镰刀」（ITEM_DEFS id 26，价走 starItemPrice 的 SSR_EX 1600 将星币）；窗口外不可见不可购、过期自动下架
+  /* 第 43 批 · 日期门三档「名将列传·吴/群」＋章末抉择（牌面承诺日 2026-11-28 同开） */
+  opsWuGate: { from:"2026-11-28", to:"2026-12-04", itemIds:[28, 37], limit:1 }, // 三档：三略（陆逊·吴，id 28）＋狼牙槊（吕布·群，id 37），各 1600 将星币、每件限购 1；窗口外不可见不可购、过期自动下架
+  fateOpenDate: "2026-11-28", // 章末抉择开启日：到日自动开放，此前不触发、占位牌不变
   /* 第 42 批 · 武将见闻（牌面承诺日 2026-11-25 开门；熟悉度按人名累计，同名 UR/SSR 同一人） */
   famOpenDate: "2026-11-25", // 见闻开启日：到日自动开放，此前不累计、倍率恒 1
   famLevelsMin: [0, 120, 480, 1440, 4320], // 熟悉度 Lv1–Lv5 的累计陈列分钟门槛（0/2h/8h/24h/72h）
   famBonusPer: 0.03, famBonusCap: 0.12, // 时薪加成：每高 1 级 +3%，封顶 +12%（Lv5）
   famLoreLv: 2, // 见闻解锁等级（累计陈列满 120 分钟）
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b42", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b43", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1316,7 +1319,7 @@ yq:{cleared:0, adReady:{}}, exclFrags:{}, merchant:null, poolTs:0, lastOffline:0
 stageCleared:0,
 tower:{date:todayStr(), layer:0, fails:0, done:false},
 showcase:[], showcaseAcc:0, showcaseTs:Date.now(), showcaseSince:{}, showcasePaid:{},
-signDate:"", sign:null, quests:null, cumLogin:{days:0, last:"", claimed:[]}, weiGateBought:0, newsSeen:{}, tour:{step:0, done:false}, adUsed:{date:todayStr(),count:0}, adPending:null, claims:{noon:"",evening:""}, launchGift:null,
+signDate:"", sign:null, quests:null, cumLogin:{days:0, last:"", claimed:[]}, weiGateBought:0, wuGateBought:{}, fate:{}, bondFate:{}, newsSeen:{}, tour:{step:0, done:false}, adUsed:{date:todayStr(),count:0}, adPending:null, claims:{noon:"",evening:""}, launchGift:null,
 createdAt:Date.now(), tianmingNews:"", migLog:[]};
 }
 let state = newState();
@@ -1623,6 +1626,83 @@ function claimCumLogin(days){
 }
 /* 日期门二档「名将列传·魏」：窗口内（含首尾日）才上架 */
 function weiGateActive(ds){ const n = dateNumOf(ds || todayStr()); return n >= dateNumOf(CFG.opsWeiGate.from) && n <= dateNumOf(CFG.opsWeiGate.to); }
+function wuGateActive(ds){ const n = dateNumOf(ds || todayStr()); return n >= dateNumOf(CFG.opsWuGate.from) && n <= dateNumOf(CFG.opsWuGate.to); }
+/* ============ 第 43 批 · 章末抉择（10 幕二选一，后果落资源/羁绊势、不碰战斗数值；记档下章兑现） ============ */
+function fateOpen(ds){ return dateNumOf(ds || todayStr()) >= dateNumOf(CFG.fateOpenDate); }
+const FATE_ACTS = [
+{ch:1, title:"广宗夜火", scene:"张角病死广宗，黄巾溃兵裹挟着百姓连夜南逃，前路火光冲天。", opts:[{label:"追残敌", desc:"穷追猛打，缴其军资辎重", res:{yuanbao:150}, bond:"霸业"},{label:"安百姓", desc:"先收容流民，开仓放粮", res:{tickets:2}, bond:"仁德"}]},
+{ch:2, title:"虎牢关前", scene:"董卓焚洛阳西迁长安，辎重车队与逃难百姓挤在同一条官道上。", opts:[{label:"夺辎重", desc:"截下西迁辎重，充作军资", res:{souls:300}, bond:"霸业"},{label:"护百姓", desc:"分兵护送洛阳百姓出关", res:{yuanbao:180}, bond:"仁德"}]},
+{ch:3, title:"徐州风云", scene:"陶谦病故，徐州无主，各路诸侯的使者一夜之间全到了小沛。", opts:[{label:"纳徐州", desc:"接下印绶，收编丹阳精兵", res:{exp:400}, bond:"霸业"},{label:"让徐州", desc:"三让而退，赢天下之名", res:{tickets:3}, bond:"仁德"}]},
+{ch:4, title:"乌巢粮屯", scene:"许攸夜奔来投，献上一计：袁绍的粮草，全屯在乌巢。", opts:[{label:"烧乌巢", desc:"亲领轻骑，夜袭粮屯", res:{yuanbao:240}, bond:"奇谋"},{label:"稳大营", desc:"固守官渡，步步为营", res:{exp:550}, bond:"持重"}]},
+{ch:5, title:"火起江东", scene:"烽火连天，曹军大败，败军沿华容道仓皇北窜。", opts:[{label:"追穷寇", desc:"衔尾追击，夺其战船辎重", res:{starcoin:200}, bond:"霸业"},{label:"放生路", desc:"华容道上，义释败军", res:{tickets:3}, bond:"仁德"}]},
+{ch:6, title:"渭水对峙", scene:"马超兵临渭水，韩遂态度摇摆，两军隔水对峙已逾十日。", opts:[{label:"用离间", desc:"一封书信离间韩遂，各个击破", res:{yuanbao:300}, bond:"奇谋"},{label:"正面对决", desc:"列阵破敌，以力服人", res:{exp:700}, bond:"霸业"}]},
+{ch:7, title:"定军山下", scene:"夏侯渊正在山下修补鹿角，黄忠的旗，已经插上了对面山头。", opts:[{label:"夺旗斩将", desc:"居高临下，一鼓而下", res:{souls:450}, bond:"霸业"},{label:"围点打援", desc:"围住定军山，专打来援之敌", res:{yuanbao:330}, bond:"持重"}]},
+{ch:8, title:"连营七百里", scene:"刘备为关羽报仇，连营七百里犯了兵家大忌；陆逊坚守不出，已等了五十天。", opts:[{label:"火烧连营", desc:"等东南风起，一把火", res:{yuanbao:360}, bond:"奇谋"},{label:"扼守峡口", desc:"守住猇亭峡口，耗尽敌军锐气", res:{starcoin:260}, bond:"持重"}]},
+{ch:9, title:"星落秋风", scene:"丞相油尽灯枯，军中秘不发丧；渭水对岸，司马懿坚壁不出。", opts:[{label:"秘不发丧", desc:"秘不发丧，整军徐徐而退", res:{exp:900}, bond:"持重"},{label:"木像退敌", desc:"木像坐车，推到阵前惊退仲达", res:{tickets:4}, bond:"奇谋"}]},
+{ch:10, title:"洛阳宫阙", scene:"三家归晋已成定局，城头上，最后的旗还立着。", opts:[{label:"顺天应人", desc:"解甲归田，保全麾下将士", res:{yuanbao:450}, bond:"仁德"},{label:"立旗到底", desc:"整军再战，虽败犹荣", res:{souls:600}, bond:"霸业"}]}
+];
+function fateActOf(ch){ return FATE_ACTS.find(a=>a.ch===ch) || null; }
+function fateResTxt(res){ const names = {yuanbao:"元宝", tickets:"招募令", souls:"将魂", starcoin:"将星币", exp:"经验池"}; return Object.keys(res).map(k=>(names[k]||k)+" +"+res[k]).join("、"); }
+function fateGrant(res){ Object.keys(res).forEach(function(k){ if(k==="exp") addExpPool(res[k]); else addRes(k, res[k]); }); }
+/* 兑现单一事实源：已记档未兑现的抉择，下一章首关已通关（或第 10 章）即结清；paid 防重复。返回本次兑现说明行。 */
+function fateSettle(){
+  const got = []; if(!state || !state.fate) return got;
+  for(let ch = 1; ch <= 10; ch++){
+    const f = state.fate[ch]; if(!f || f.paid) continue;
+    if(ch === 10 || (state.stageCleared||0) >= ch*10 + 1){
+      const act = fateActOf(ch); const opt = act && act.opts[f.pick]; if(!opt) continue;
+      fateGrant(opt.res);
+      if(opt.bond){ state.bondFate = state.bondFate || {}; state.bondFate[opt.bond] = (state.bondFate[opt.bond]||0) + 1; }
+      f.paid = true;
+      got.push("第" + ch + "章抉择兑现：" + fateResTxt(opt.res) + " · 羁绊势「" + opt.bond + "」+1");
+    }
+  }
+  return got;
+}
+function fateChoose(ch, pick){
+  if(!fateOpen()) return {ok:false, msg:"章末抉择 11月28日开放"};
+  const act = fateActOf(ch); if(!act) return {ok:false, msg:"无此章抉择"};
+  if(pick !== 0 && pick !== 1) return {ok:false, msg:"选项无效"};
+  if((state.stageCleared||0) < ch*10) return {ok:false, msg:"通关本章后才能抉择"};
+  state.fate = state.fate || {};
+  if(state.fate[ch]) return {ok:false, msg:"本章已抉择"};
+  state.fate[ch] = {pick:pick, paid:false};
+  const got = fateSettle();
+  save();
+  return {ok:true, got:got};
+}
+window.fateChooseUI = function(ch, pick){
+  const r = fateChoose(ch, pick);
+  if(!r.ok){ showToast(r.msg); return; }
+  const act = fateActOf(ch);
+  showToast("已记档：「" + act.opts[pick].label + "」" + (r.got && r.got.length? "；" + r.got.join("；") : "（下章通关首关时兑现）"));
+  renderAll();
+};
+function renderFateCard(){
+  const el = document.getElementById("fateCard"); if(!el) return;
+  if(!fateOpen()){
+    el.setAttribute("style", "border-style:dashed");
+    el.innerHTML = "<span class=\"tag hot\">待开放</span> <b>章末抉择 · 11月28日开放</b> <button class=\"btn sm sub\" style=\"float:right\" onclick=\"showNotice('章末抉择：每打完一章，主线出一幕剧情二选一。后果落资源与羁绊势、不改战斗数值，选择记档、下章通关首关时兑现（第十章立即兑现）。11月28日开放前已通关的章节，开门后在这里直接补选，后果照常兑现。')\">查看说明</button>";
+    return;
+  }
+  el.removeAttribute("style");
+  const bf = state.bondFate || {};
+  const axes = ["仁德","霸业","奇谋","持重"].filter(a=>bf[a]).map(a=>a + " " + bf[a]).join(" · ");
+  let picked = 0; FATE_ACTS.forEach(a=>{ if(state.fate && state.fate[a.ch]) picked++; });
+  let h = "<b>章末抉择 · 抉择录</b> <span class='note'>已抉择 " + picked + "/10" + (axes? " · 羁绊势：" + axes : "") + " · 后果记档、下章通关首关兑现</span>";
+  FATE_ACTS.forEach(function(a){
+    const chName = (CHAPTERS_V4[a.ch-1] || {}).name || "";
+    const f = state.fate && state.fate[a.ch];
+    const cleared = (state.stageCleared||0) >= a.ch*10;
+    h += "<div class='famItem'><b>第" + a.ch + "章 " + chName + " · " + a.title + "</b> ";
+    if(f){ const o = a.opts[f.pick]; h += "<span class='note'>已选「" + o.label + "」：" + fateResTxt(o.res) + " · 羁绊势「" + o.bond + "」+1（" + (f.paid? "已兑现" : "已记档，下章兑现") + "）</span>"; }
+    else if(cleared){ h += "<div class='fl'>" + a.scene + "</div>" + a.opts.map(function(o, i){ return "<div style='margin-top:4px'><button class='btn sm' onclick='fateChooseUI(" + a.ch + "," + i + ")'>" + o.label + "</button> <span class='note'>" + o.desc + " → " + fateResTxt(o.res) + " · 羁绊势「" + o.bond + "」+1</span></div>"; }).join(""); }
+    else h += "<span class='note'>待通关（打完本章第 10 关后出抉择）</span>";
+    h += "</div>";
+  });
+  el.innerHTML = h;
+}
+
 /* 橱窗双倍日：倍率系数（结算时按笔归属日期取） */
 function showcaseDateMul(ds){ return (ds || todayStr()) === CFG.opsShowcaseDoubleDate ? CFG.opsShowcaseDoubleMul : 1; }
 /* 明日预告：全部从各系统真实配置/状态推导（签到表/累计档位/日期门配置），不写死奖励文案 */
@@ -1643,6 +1723,8 @@ function tomorrowPreview(ds){
   }
   const g = CFG.opsWeiGate;
   if(tm === g.from){ const wd = ITEM_BY_ID[g.itemId]; if(wd) lines.push("明日开启「名将列传·魏」：将魂阁限时上架 "+wd.bindName+"专属「"+wd.name+"」（"+starPriceOfItem(wd)+" 将星币 · 限购 "+g.limit+" 件 · 到 11月30日下架）"); }
+  if(tm === CFG.opsWuGate.from){ const wuNames = CFG.opsWuGate.itemIds.map(function(wid){ const d2 = ITEM_BY_ID[wid]; return d2? d2.bindName+"专属「"+d2.name+"」" : ""; }).filter(Boolean).join("、"); if(wuNames) lines.push("明日开启「名将列传·吴/群」：将魂阁限时上架 "+wuNames+"（各 1600 将星币 · 每件限购 1 件 · 到 12月4日下架）"); }
+  if(tm === CFG.fateOpenDate) lines.push("明日开启「章末抉择」：每章一幕剧情二选一，后果落资源与羁绊势、不改战斗数值；已通关章节可补选。");
   if(tm === CFG.opsShowcaseDoubleDate) lines.push("明日橱窗双倍日：橱窗每 15 分钟结算产出 ×"+CFG.opsShowcaseDoubleMul);
   return lines;
 }
@@ -1652,6 +1734,8 @@ function todayOpsLines(ds){
   if(today === CFG.cumLoginOpenDate) lines.push("累计登录今日开启：每天进入累计 1 天，满 3/5/7 天领元宝＋招募令（签到页或主页任务卡领取）。");
   if(today === CFG.opsShowcaseDoubleDate) lines.push("今日橱窗双倍日：橱窗每 15 分钟结算产出 ×"+CFG.opsShowcaseDoubleMul+"（按笔归属日期算，仅今日的笔）。");
   if(today === CFG.opsWeiGate.from){ const wd = ITEM_BY_ID[CFG.opsWeiGate.itemId]; if(wd) lines.push("今日开启「名将列传·魏」：将魂阁限时上架 "+wd.bindName+"专属「"+wd.name+"」（"+starPriceOfItem(wd)+" 将星币 · 限购 "+CFG.opsWeiGate.limit+" 件 · 11月30日下架）。"); }
+  if(today === CFG.opsWuGate.from){ const wuNames = CFG.opsWuGate.itemIds.map(function(wid){ const d2 = ITEM_BY_ID[wid]; return d2? d2.bindName+"专属「"+d2.name+"」" : ""; }).filter(Boolean).join("、"); if(wuNames) lines.push("今日开启「名将列传·吴/群」：将魂阁限时上架 "+wuNames+"（各 1600 将星币 · 每件限购 1 件 · 12月4日下架）。"); }
+  if(today === CFG.fateOpenDate) lines.push("今日开启「章末抉择」：每打完一章出一个剧情二选一，后果记档、下章兑现；已通关的章节可在逐鹿页顶部抉择卡补选。");
   return lines;
 }
 function renderOpsToday(){
@@ -1689,7 +1773,7 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配＋移除删档＋扫荡理顺＋页面理顺＋武将见闻）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配＋移除删档＋扫荡理顺＋页面理顺＋武将见闻＋章末抉择与名将列传三档）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 存档同步大修：退出游戏或切到后台时立即把进度同步上云，同步失败自动重试并弹出提醒，告别丢档；换设备时用同一个虎扑账号登录即可接着打。</p>"
        + "<p class='note'>· 存档加固：个别设备本地存储被限制时，进游戏自动改从账号云端找回进度，不再一进游戏就重新开局；本地存不进的进度也会照常同步上云。</p>"
@@ -1700,6 +1784,7 @@ function renderNewsCard(){
        + "<p class='note'>· 扫荡理顺：主线扫荡一次扫完本关今日剩余次数，展开的章节不会再被刷新收起；秘阁的「扫荡领取」改名「提前领取」，不再和扫荡撞名。</p>"
        + "<p class='note'>· 页面理顺：顶部资源栏改实底，翻页不再透字叠影；逐鹿、武将页的长段说明收进可展开规则，关键数字分行展示，看着更清爽。</p>"
        + "<p class='note'>· 武将见闻开放（11月25日）：橱窗里同一武将摆得越久，熟悉度越高（Lv1–Lv5），时薪加成最高 +12%；累计摆满 2 小时解锁该将的见闻短文，首批 30 位名将（UR 全员＋SSR 21 位），其余陆续补录。位置：「更多 → 橱窗」下方的见闻录。</p>"
+       + "<p class='note'>· 章末抉择开放（11月28日）：每打完一章出一个剧情二选一，后果落资源与羁绊势、不改战斗数值，记档后下章兑现；此前已通关的章节在逐鹿页顶部抉择卡直接补选。同日「名将列传·吴/群」开启：将魂阁限时上架陆逊专属「三略」、吕布专属「狼牙槊」，12月4日下架。</p>"
        + "<p class='note'>· 主页改版：出战阵容、五大副本、屯营橱窗一屏直达——主页新增出战阵容陈列（前军/后军一目了然）、五大副本场景入口与屯营/橱窗双卡，签到与待领取顺延其后，不用再翻页找。</p>"
        + "<p class='note'>· 秘阁视频口径修正：兵甲秘阁「看视频开启第 2 轮」「看视频强行闯关」已接入真实激励视频，看完才开启/生效（与战斗跳过同一口径）；一骑当先强行闯关、天命副本每日重置同步接闸。</p>"
        + "<p class='note'>· 开局福利：主页「可领取」卡里可领开服福利——元宝 +2000、招募令 +10，每个存档限领一次；老玩家同样可领，就当这阵子丢档的补偿。</p>"
@@ -1908,6 +1993,9 @@ if(!state.gz || typeof state.gz!=="object") state.gz={date:"", count:0}; if(stat
   if(typeof state.cumLogin.days !== "number" || !(state.cumLogin.days>=0)) state.cumLogin.days = 0;
   if(typeof state.cumLogin.last !== "string") state.cumLogin.last = "";
   if(typeof state.weiGateBought !== "number" || !(state.weiGateBought>=0)) state.weiGateBought = 0;
+  if(!state.wuGateBought || typeof state.wuGateBought !== "object") state.wuGateBought = {}; /* 第 43 批：三档限购计数（按道具 id） */
+  if(!state.fate || typeof state.fate !== "object") state.fate = {}; /* 第 43 批：章末抉择记档 {章:{pick,paid}} */
+  if(!state.bondFate || typeof state.bondFate !== "object") state.bondFate = {}; /* 第 43 批：羁绊势（四轴点数，只记录展示） */
   if(!state.newsSeen || typeof state.newsSeen !== "object") state.newsSeen = {};
   /* 第 30 批 normalize：开局福利领取标记补默认（老档未领过即可领，当丢档补偿） */
   if(state.launchGift === undefined) state.launchGift = null;
@@ -2478,6 +2566,10 @@ if(def.id === CFG.opsWeiGate.itemId){ /* 第 21 批·日期门二档「名将列
 if(!weiGateActive()) return {ok:false,msg:"「名将列传·魏」限时上架未开启（11月24日–11月30日）"};
 if((state.weiGateBought||0) >= CFG.opsWeiGate.limit) return {ok:false,msg:"限时上架每人限购 "+CFG.opsWeiGate.limit+" 件，你已购满"};
 }
+if(CFG.opsWuGate.itemIds.indexOf(def.id) >= 0){ /* 第 43 批·日期门三档「名将列传·吴/群」：窗口外不可购、窗口内每件限购 limit 件 */
+if(!wuGateActive()) return {ok:false,msg:"「名将列传·吴/群」限时上架未开启（11月28日–12月4日）"};
+if(((state.wuGateBought||{})[def.id]||0) >= CFG.opsWuGate.limit) return {ok:false,msg:"限时上架每件限购 "+CFG.opsWuGate.limit+" 件，你已购满"};
+}
 let limitKey = null, limit = 0;
 if(po.cur==="souls"){ limitKey = def.rar+"_GEN"; limit = CFG.soulShopDailyLimit[limitKey]||0;
   if(limit>0 && soulShopCount(limitKey) >= limit) return {ok:false,msg:"今日"+def.rar+" 通用道具已达限购上限（"+limit+" 件/日），明日 0 点重置"};
@@ -2487,6 +2579,7 @@ const e = { uid:_uid++, itemId:def.id, star:1, enh:0 };
 if(po.cur==="souls") e.shopBought = true; /* 第 12 批封漏：将魂购入的道具打标，分解只返将魂（见 itemDecompReward）；将星币购入的专属不打标、分解路径不动 */
 state.equips.push(e);
 if(def.id === CFG.opsWeiGate.itemId) state.weiGateBought = (state.weiGateBought||0)+1; /* 第 21 批：限购计数 */
+if(CFG.opsWuGate.itemIds.indexOf(def.id) >= 0){ state.wuGateBought = state.wuGateBought || {}; state.wuGateBought[def.id] = (state.wuGateBought[def.id]||0)+1; } /* 第 43 批：三档限购计数 */
 if(limitKey){ const s = soulShopSync(); s[limitKey] = (s[limitKey]||0)+1; }
 save();
 return {ok:true,msg:"兑换成功："+def.name+"（"+po.curName+" -"+po.price+"）"};
@@ -2569,10 +2662,12 @@ list.querySelectorAll("[data-soulconv]").forEach(b=>b.onclick = function(){
   renderAll();
 });
 const shop = $("soulShopList"); if(!shop) return;
-const groups = [["UR 专属", d=>d.kind==="专属" && d.rar==="UR"], ["SSR 专属", d=>d.kind==="专属" && d.rar==="SSR" && d.id!==CFG.opsWeiGate.itemId], ["SSR 通用", d=>d.kind==="通用" && d.rar==="SSR"], ["SR 通用", d=>d.kind==="通用" && d.rar==="SR"], ["R 通用", d=>d.kind==="通用" && d.rar==="R"]];
+const groups = [["UR 专属", d=>d.kind==="专属" && d.rar==="UR"], ["SSR 专属", d=>d.kind==="专属" && d.rar==="SSR" && d.id!==CFG.opsWeiGate.itemId && CFG.opsWuGate.itemIds.indexOf(d.id)<0], ["SSR 通用", d=>d.kind==="通用" && d.rar==="SSR"], ["SR 通用", d=>d.kind==="通用" && d.rar==="SR"], ["R 通用", d=>d.kind==="通用" && d.rar==="R"]];
 let shopHtml21 = "";
 if(weiGateActive()){ const wd = ITEM_BY_ID[CFG.opsWeiGate.itemId]; const wpo = wd? itemPriceOf(wd) : null;
   if(wd && wpo) shopHtml21 = "<p class='note' style='margin:6px 0 2px'><b>限时上架 · 名将列传·魏</b>（"+wpo.price+" "+wpo.curName+"/件 · 每人限购 "+CFG.opsWeiGate.limit+" 件 · 已购 "+(state.weiGateBought||0)+"/"+CFG.opsWeiGate.limit+" · 11月30日下架）</p><div class='kv'><span>"+wd.name+"（"+wd.bindName+"专属）</span><button class='btn sub sm' data-soulbuy='"+wd.id+"'>兑换</button></div>"; }
+if(wuGateActive()){ let wu21 = ""; CFG.opsWuGate.itemIds.forEach(function(wid){ const wd2 = ITEM_BY_ID[wid]; const wpo2 = wd2? itemPriceOf(wd2) : null; if(wd2 && wpo2) wu21 += "<div class='kv'><span>"+wd2.name+"（"+wd2.bindName+"专属）</span><button class='btn sub sm' data-soulbuy='"+wd2.id+"'>兑换</button></div>"; });
+  if(wu21){ const wp0 = itemPriceOf(ITEM_BY_ID[CFG.opsWuGate.itemIds[0]]); shopHtml21 += "<p class='note' style='margin:6px 0 2px'><b>限时上架 · 名将列传·吴/群</b>（"+(wp0? wp0.price : 1600)+" 将星币/件 · 每件限购 "+CFG.opsWuGate.limit+" 件 · 已购 "+CFG.opsWuGate.itemIds.map(function(wid){ return ((state.wuGateBought||{})[wid]||0); }).join("/")+"/"+CFG.opsWuGate.limit+" · 12月4日下架）</p>" + wu21; } }
 shop.innerHTML = shopHtml21 + groups.map(gr=>{
   const items = ITEM_DEFS.filter(gr[1]);
   if(!items.length) return "";
@@ -3508,7 +3603,7 @@ const TOUR_STEPS = [
  {screen:"main", tab:"cards", target:"cardList", text:"你的开局将已经自动上阵。以后抽到新武将，点卡上的「上阵/下阵」调整阵容，最多上 5 人。武将页顶部有站位条：点一个槽位，再点武将的「上阵」，就能把人放到指定位置、调前后排。"},
  {screen:"main", tab:"cards", target:"cardList", text:function(){ const hasMat = state && ((state.skillsOwned||[]).length>0 || (state.cards||[]).some((c,i,arr)=>arr.some((o,j)=>j!==i && o.genId===c.genId))); return hasMat? "升星靠重复卡当材料，星越高四维涨得越多；抽到的技能卡在武将详情里学，注意兵种要对位。" : "看到武将名旁边的 ★ 了吗？那是星级。你现在只有一张卡，等抽到同一张卡就能在这里升星；抽到技能卡，也是在这张卡上学。"; }},
  {screen:"main", tab:"pool", target:"rateDisclosure", sub:["pool","rates"], text:"卡池有屯营、招贤、金台、天命四池，外加将魂阁与观战悟法。每个池的出率和保底都公示在这一节，抽之前先看清。"},
- {screen:"main", tab:"stage", target:"stageList", text:"逐鹿天下是主要的成长线：逐关推进拿经验卡，首通给元宝与招募令。点「出战」进入战斗演出：双方武将站位对决、出手与怒技都有画面，血条怒气实时变化；可切 1/2/3 倍速，已通关的关卡还能看视频跳过，文字战报在演出页「战报」里随时可查。副本页里还有通天塔、兵甲秘阁、铜雀演武和虎牢争锋。"},
+ {screen:"main", tab:"stage", target:"stageList", text:"逐鹿天下是主要的成长线：逐关推进拿经验卡，首通给元宝与招募令。点「出战」进入战斗演出：双方武将站位对决、出手与怒技都有画面，血条怒气实时变化；可切 1/2/3 倍速，已通关的关卡还能看视频跳过，文字战报在演出页「战报」里随时可查。副本页里还有通天塔、兵甲秘阁、铜雀演武和虎牢争锋。11月28日起，每打完一章还会出「章末抉择」：剧情二选一，后果记档、下章兑现，已通关的章节也能补选。"},
  {screen:"main", tab:"dex", target:"dexList", text:"图鉴记录 169 名武将的收集进度，67 条羁绊的条件也在这——组队凑羁绊有额外加成。"},
  {screen:"main", tab:"save", target:"saveNoteCard", text:"存档就一句话：自动保存、和账号绑定，不用你操心。这一页能看存档状态，进度会一直保留。"},
  {screen:"main", tab:"more", target:"cumLoginCard", sub:["more","sign"], text:"这里是签到页：每日签到之外还有「累计登录」——每天来一次就累计 1 天，满 3/5/7 天领大奖（元宝＋招募令，奖面都写明了）。累计登录 11月21日开启；开启后主页任务卡上也能直接领。"},
@@ -3696,10 +3791,12 @@ function fightStage(idx){
     addExpPool(ch.exp); const parts = ["经验卡 +"+ch.exp];
     if(idx > state.stageCleared){
       state.stageCleared = idx; lbMarkDirty();
+      fateSettle().forEach(function(m){ parts.push(m); }); /* 第 43 批：下章首关通关 → 上章抉择在此兑现 */
       const s = ((idx-1)%10)+1;
       if(s===5){ addRes("yuanbao", ch.boss5[0]); addRes("tickets", ch.boss5[1]); parts.push("首通：元宝 +"+ch.boss5[0]+"、招募令 +"+ch.boss5[1]); }
       else if(s===10){ addRes("yuanbao", ch.boss10[0]); addRes("tickets", ch.boss10[1]); parts.push("首通：元宝 +"+ch.boss10[0]+"、招募令 +"+ch.boss10[1]); }
       else { addRes("yuanbao", ch.first); parts.push("首通：元宝 +"+ch.first); }
+      if(s===10 && fateOpen() && !(state.fate && state.fate[Math.floor((idx-1)/10)+1])) parts.push("章末抉择：第 "+(Math.floor((idx-1)/10)+1)+" 章待选（逐鹿页顶部抉择卡）");
     }
     rewardMsg = parts.join("、");
   }
@@ -4474,6 +4571,7 @@ if(_tab==="cards"){
     _scEl24.innerHTML = _sh24; }
   const _sp24 = $("showPick"); if(_sp24) _sp24.style.display = "none";
   renderFamCard(); /* 第 42 批：见闻卡（未开门＝占位牌、开门＝见闻录） */
+  renderFateCard(); /* 第 43 批：抉择卡（未开门＝占位牌、开门＝抉择录） */
   const ad = state.adUsed.date===todayStr()? state.adUsed.count : 0;
   $("adInfo").textContent = "今日 "+ad+"/"+CFG.adDailyCap+" 次。";
   const rate = enhTarget? enhRate(enhFeeds.map(u=>state.cards.find(c=>c.uid===u)).filter(Boolean), state.cards.find(c=>c.uid===enhTarget)) : 0;
@@ -4885,6 +4983,7 @@ function enterGame(cloudPayload){
   _inGame214 = true; _booted = true;
   const bs = $("slotScreen"); if(bs) bs.style.display = "none";
   grantOpeningGift(); /* 第 12 批：新档自动随机赠 1 张 SR（openingGift 未标记才发；老档已在 load 标 legacy，不会走到发放） */
+  fateSettle(); /* 第 43 批：开机对账——待兑现抉择在此结清（paid 标记防重复发放） */
   $("app").style.display = "block"; bindOnce(); switchTab("home");
   if(_pendingNotice){ state.flags.sysNotice = _pendingNotice; _pendingNotice = ""; save(); if(state.starterGenId) renderAll(); }
   if(state.migReceipt && !state.migReceipt.seen && state.starterGenId) showMigReceipt();
@@ -5915,7 +6014,7 @@ const BattlePlayer = (function(){
   return { open: open, close: close, isOpen: function(){ return !!S; }, planOf: bpBuildPlan };
 })();
 
-if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, starPriceOfItem:starPriceOfItem, itemPriceOf:itemPriceOf, pickBasicTarget:pickBasicTarget, tryActiveSkill:tryActiveSkill, toggleShowcaseCore:toggleShowcaseCore, showcaseNormalize:showcaseNormalize, showcaseTickValue:showcaseTickValue, showcaseCap:showcaseCap, recPower:recPower, STAGE_REC:STAGE_REC, recPowerHint:recPowerHint, enhProtectPrice:enhProtectPrice, pickBackTarget:pickBackTarget, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, ART, artCellOf, artDivHtml, skillIconHtml, fullCardHtml, refCardOf, sgPost, acctMode, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, famOpen, famMinutesOf, famLevelOf, famBonusMul, famLoreOf, FAM_LORE, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
+if(typeof module!=="undefined" && module.exports){ module.exports = { CFG, GENS, GEN_BY_ID, GROWTH, TIANMING_IDS, EQUIP_TYPES, equipName, ACTIVE_SKILLS, PASSIVE_SKILLS, SKILL_KIND, SKILL_CARD_MAP, PERS_STAT, PERS_MIGRATE, BONDS, RANKS, BEATS, newState, migrateV1toV2, migrateV2toV3, migrateV3toV4, migrateV4toV5, OLD_ROSTER_NAMES, normalizeSkillEntry, load, battleSim, calcDamage, applyRageCut, pickTarget, enhRate, drawNormal, drawYuanbao, drawLimited, drawDestiny:drawDestiny, tmPeriod:tmPeriod, drawGuanzhan:drawGuanzhan, guanzhanRemaining:guanzhanRemaining, convertCardToSoul:convertCardToSoul, buySoulItem:buySoulItem, soulPriceOfItem:soulPriceOfItem, starPriceOfItem:starPriceOfItem, itemPriceOf:itemPriceOf, pickBasicTarget:pickBasicTarget, tryActiveSkill:tryActiveSkill, toggleShowcaseCore:toggleShowcaseCore, showcaseNormalize:showcaseNormalize, showcaseTickValue:showcaseTickValue, showcaseCap:showcaseCap, recPower:recPower, STAGE_REC:STAGE_REC, recPowerHint:recPowerHint, enhProtectPrice:enhProtectPrice, pickBackTarget:pickBackTarget, cardProtected:cardProtected, gainCard:gainCard, fmtDur:fmtDur, PORTRAITS, ART, artCellOf, artDivHtml, skillIconHtml, fullCardHtml, refCardOf, sgPost, acctMode, cardStatsOf, headCardHtml, showDrawn, buyBeads, poolTick, applyTowerResult, addRes, spendRes, resolveUnit, resolveTeam, activeBonds, bondFxText, growthOf, statAt, troopsOf, showcaseRate, showcaseTotalRate, famOpen, famMinutesOf, famLevelOf, famBonusMul, famLoreOf, FAM_LORE, fateOpen, fateChoose, fateSettle, fateResTxt, FATE_ACTS, wuGateActive, addExpPool, levelUpCard, levelUpCost, fightDaily, fightTmDungeon, tmDailyReset, unlockTmDungeon, castSkill, selectTargets, dealDamageEx, healUnit,
   getState:function(){ return state; }, setState:function(s){ state=s; }, claimLaunchGift:claimLaunchGift, claimShowcase:claimShowcase, home34Data:home34Data, renderHome34:renderHome34, home34GoScene:home34GoScene, launchGiftAvailable:launchGiftAvailable, claimHubItems:claimHubItems, doEnhance:doEnhance, starUp:starUp, addCard:addCard, addEquip:addEquip, learnSkill:learnSkill, showcaseAccrue:showcaseAccrue, produceSkillCard:produceSkillCard, migrateV5toV6:migrateV5toV6, migrateV6toV7:migrateV6toV7, castLearned:castLearned, claimDaily:claimDaily, claimRookie:claimRookie, fightStage:fightStage, sweepStage:sweepStage, fightTower:fightTower, updateRank:updateRank, todayStr:todayStr, resolveTeam:resolveTeam, teamCards:teamCards, autoFormation:autoFormation, fightMige:fightMige, forceMige:forceMige, openMigeRound2:openMigeRound2, sweepMige:sweepMige, fightArena:fightArena, arenaTierOf:arenaTierOf, arenaTierName:arenaTierName, arenaRollback:arenaRollback, arenaSync:arenaSync, arenaSeasonNow:arenaSeasonNow, arenaShopLists:arenaShopLists, buyArenaCard:buyArenaCard, buyArenaRandomR:buyArenaRandomR, fightHulao:fightHulao, hulaoWindow:hulaoWindow, hulaoSync:hulaoSync, hulaoSettleSes:hulaoSettleSes, itemDecompValue:itemDecompValue, itemStarUp:itemStarUp, itemEnhance:itemEnhance, itemDecompose:itemDecompose, buyMatPack:buyMatPack, drawGuanzhanExtra:drawGuanzhanExtra, towerCoef:towerCoef, towerRecPower:towerRecPower, towerTeamIds:towerTeamIds, TOWER_POOLS:TOWER_POOLS, TOWER_BOSS:TOWER_BOSS, dunUnit:dunUnit, aiTeamByPower:aiTeamByPower, myTeamPowerV4:myTeamPowerV4, dunDayStr:dunDayStr, dungeonDaySync:dungeonDaySync, migeRoundState:migeRoundState, officeIdx:officeIdx, STAGES_V4:STAGES_V4, CHAPTERS_V4:CHAPTERS_V4, MIGE_V4:MIGE_V4, HULAO_V4:HULAO_V4, OFFICES_V4:OFFICES_V4, ARENA_LB:ARENA_LB, AI_COMPS:AI_COMPS, BASE_IDS_BY_RAR:BASE_IDS_BY_RAR, tourNormalize:tourNormalize, TOUR_STEPS:TOUR_STEPS, doSign:doSign, bumpQuest:bumpQuest, questState:questState, QUEST_DAILY:QUEST_DAILY, QUEST_ROOKIE:QUEST_ROOKIE, SIGN_TABLE:SIGN_TABLE, troopBonds:troopBonds, TROOP_BONDS:TROOP_BONDS, EXCL_EQUIPS:EXCL_EQUIPS, exclDef:exclDef, qualityOf:qualityOf, addExclEquip:addExclEquip, synthExcl:synthExcl, fightYQ:fightYQ, yqEnemyTeam:yqEnemyTeam, yqDropQuality:yqDropQuality, genMerchant:genMerchant, buyMerchant:buyMerchant, tokenShopBuy:tokenShopBuy, settleOffline:settleOffline, produceHeroCard:produceHeroCard, validateImportedState:validateImportedState, SG_API:SG_API, MAIN_KEY:MAIN_KEY, SAVE_KEY:MAIN_KEY, SLOT_COUNT:SLOT_COUNT, SAVE_META_KEY:SAVE_META_KEY, slotKey:slotKey, slotBackupKey:slotBackupKey, curSlot:curSlot, setCurSlot:setCurSlot, curSaveKey:curSaveKey, initSlots:initSlots, acctGet:acctGet, acctPut: acctPut, migrateV7toV8: migrateV7toV8, unlearnSkill: unlearnSkill, learnedByOther: learnedByOther, powerOf: powerOf, teamPower: teamPower, skillEqOf: skillEqOf, ITEM_DEFS: ITEM_DEFS, ITEM_BY_ID: ITEM_BY_ID, itemDefOf: itemDefOf, itemScale: itemScale, canEquipItem: canEquipItem, GROWTH_V4: GROWTH_V4, OLD_ROSTER_V7: OLD_ROSTER_V7, showMigReceipt: showMigReceipt, hideMigReceipt: hideMigReceipt, lbMetrics: lbMetrics, lbSnapshot: lbSnapshot, lbShouldReport: lbShouldReport, lbMarkDirty: lbMarkDirty, lbCaps: LB_CAPS, lbBoards: LB_BOARDS, statBreakdown: statBreakdown, troopsBreakdown: troopsBreakdown, powerBreakdown: powerBreakdown, teamPowerBreakdownHtml: teamPowerBreakdownHtml, skillCalcOf: skillCalcOf, skillCalcText: skillCalcText, learnedCalcText: learnedCalcText, dexFilterRoster: dexFilterRoster, dexFilterItems: dexFilterItems, dexFilterSkills: dexFilterSkills, dexPageSlice: dexPageSlice, DEX_PAGE_SIZE: DEX_PAGE_SIZE, BGM: BGM, grantOpeningGift: grantOpeningGift, ARENA_SSR_TABLE: ARENA_SSR_TABLE, soulShopSync: soulShopSync, soulShopCount: soulShopCount, itemDecompReward: itemDecompReward, formationDedupe: formationDedupe, skillPoolRetireNormalize: skillPoolRetireNormalize, snapBuild: snapBuild, snapClamp: snapClamp, snapPrepareFoe: snapPrepareFoe, snapCacheFoe: snapCacheFoe, snapFoeState: snapFoeState, snapUpload: snapUpload, snapPrefetchFoe: snapPrefetchFoe, lbFetch: lbFetch, lbReport: lbReport, lbEsc: lbEsc, snapClientId: snapClientId, hulaoPickFoes: hulaoPickFoes, runRewardAd: runRewardAd, reconcileAdPending: reconcileAdPending, setAdPromiseTimeoutMs: function(ms){ if(typeof ms==="number" && ms>0) _adPromiseTimeoutMs = ms; }, adFlowBusy: function(){ return _adFlowBusy; }, vataskApi: vataskApi, vataskRefresh: vataskRefresh, grantAdTickets: grantAdTickets, guanzhanBlockMsg: guanzhanBlockMsg, adInitHook: adInitHook, cumLoginState: cumLoginState, cumLoginOpen: cumLoginOpen, cumLoginSync: cumLoginSync, cumClaimableTier: cumClaimableTier, claimCumLogin: claimCumLogin, tomorrowPreview: tomorrowPreview, weiGateActive: weiGateActive, todayOpsLines: todayOpsLines, showcaseDateMul: showcaseDateMul, dateStrOfMs: dateStrOfMs, addDaysStr: addDaysStr, dateNumOf: dateNumOf, showToast: showToast, showNotice: showNotice, toastLog: SG_TOAST_LOG, save: save, saveFailStreak: function(){ return _saveFailStreak; }, flushAcctPush: flushAcctPush, acctSyncHook: acctSyncHook, acctCloudWins: acctCloudWins, acctBuildPayload: acctBuildPayload, acctPushFails: function(){ return _acctPushFails; }, acctDirty: function(){ return _acctDirty; }, acctLastBytes: function(){ return _acctLastBytes; }, BattlePlayer: BattlePlayer, bootEnter: bootEnter, load: load, battleFastMode: battleFastMode, bpRoute32: bpRoute32, bpBuildPlan: bpBuildPlan, artPortraitHtml: artPortraitHtml, bpElemColorOf: bpElemColorOf, bpRunSkipAd: bpRunSkipAd }; }
 /* 第 20 批 P1 测试兼容：ACCT_MODE 不再是冻结常量，exports 以 live getter 暴露——既有测试读 M.ACCT_MODE 仍拿到当前现读值。 */
 if(typeof module!=="undefined" && module.exports){ Object.defineProperty(module.exports, "ACCT_MODE", { enumerable: true, configurable: true, get: function(){ return acctMode(); } }); }
