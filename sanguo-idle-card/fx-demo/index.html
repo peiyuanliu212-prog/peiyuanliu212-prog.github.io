@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>逐鹿定鼎 · 战斗特效演示（Pixelfx 试点）</title>
+<style>
+  body{margin:0;background:#14161c;color:#e8e4da;font-family:"PingFang SC","Microsoft YaHei",sans-serif;}
+  .wrap{max-width:960px;margin:0 auto;padding:14px 12px 30px;}
+  h1{font-size:19px;margin:4px 0 2px;}
+  .sub{color:#9a958a;font-size:13px;margin-bottom:10px;line-height:1.55;}
+  #stageBox{position:relative;background:#1d2027;border:1px solid #3a3f4a;border-radius:10px;overflow:hidden;}
+  canvas#stage{display:block;width:100%;height:auto;}
+  #banner{position:absolute;left:50%;top:34px;transform:translateX(-50%);background:rgba(20,16,10,.82);border:1px solid #c9a227;color:#ffe9a8;padding:6px 18px;border-radius:6px;font-size:17px;letter-spacing:2px;opacity:0;transition:opacity .18s;pointer-events:none;white-space:nowrap;}
+  .btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 4px;}
+  button{background:#2a2e37;color:#e8e4da;border:1px solid #4a4f5a;border-radius:8px;padding:9px 13px;font-size:14px;cursor:pointer;}
+  button:hover{border-color:#c9a227;color:#ffe9a8;}
+  button.auto{background:#5a4310;border-color:#c9a227;color:#ffe9a8;}
+  table{border-collapse:collapse;width:100%;margin-top:14px;font-size:13px;}
+  th,td{border:1px solid #3a3f4a;padding:6px 8px;text-align:left;line-height:1.5;}
+  th{background:#22252d;color:#c9c4b8;}
+  .note{color:#9a958a;font-size:12.5px;line-height:1.65;margin-top:10px;}
+  .tag{display:inline-block;background:#5a4310;color:#ffe9a8;border-radius:4px;padding:0 6px;font-size:12px;margin-right:4px;}
+  .tag.concept{background:#274b5a;color:#bfe6f5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>逐鹿定鼎 · 战斗特效演示（Pixelfx 试点 · 独立演示稿）</h1>
+  <div class="sub">人物 = 游戏现有卡面原图，一像素未改；特效 = Pixelfx 代码特效（无图片、运行时绘制）作为叠加层盖在敌方阵型上。本页不接游戏正式包、不动数值与存档。</div>
+  <div id="stageBox">
+    <canvas id="stage" width="920" height="540"></canvas>
+    <div id="banner"></div>
+  </div>
+  <div class="btns">
+    <button data-fx="fire">周瑜 · 火烧赤壁（火）</button>
+    <button data-fx="bolt">惊雷一击（雷）</button>
+    <button data-fx="arcane">诸葛亮 · 八阵天机（魔法）</button>
+    <button data-fx="frost">霜环（冰 · 概念）</button>
+    <button class="auto" id="autoBtn">▶ 连放一轮</button>
+  </div>
+  <table>
+    <tr><th>类别</th><th>逐鹿真实技能</th><th>Pixelfx 特效</th><th>说明</th></tr>
+    <tr><td>火</td><td>火烧赤壁（周瑜 SSR 专属 · 敌方全体灼烧）</td><td>fire / fire-ring</td><td>地面火环扩散，贴合全体灼烧的范围感</td></tr>
+    <tr><td>雷</td><td>惊雷一击（学习技能 · 单体高伤）</td><td>lightning / lightning-strike</td><td>天雷直劈敌方前排吕布</td></tr>
+    <tr><td>魔法</td><td>八阵天机（诸葛亮 UR 专属 · 群体谋略）</td><td>arcane / magic-circle-cast</td><td>法阵在敌方阵型脚下展开</td></tr>
+    <tr><td>冰</td><td><span class="tag concept">无对应现有技能</span>游戏内无冰系技能与冻结机制</td><td>ice / frost-nova</td><td>概念演示：若日后给眩晕类控制技配冰系表现，效果如本页所示</td></tr>
+  </table>
+  <p class="note">Pixelfx（patch-gg/pixelfx）为 MIT 许可：可商用，须保留版权与许可文件——本演示目录内已附 LICENSE 与 NOTICE.md 原件。特效文件与核心库在 lib/ 下，均为原库代码，未改动。演示页与录屏仅供主人验画面，是否进正式战斗演出二期，等主人点头。</p>
+</div>
+<script type="module">
+import { createFrame, clearFrame, createFx, composite } from "./lib/core/index.js";
+import * as fireRing from "./lib/fx/fire/fire-ring.js";
+import * as bolt from "./lib/fx/lightning/lightning-strike.js";
+import * as circle from "./lib/fx/arcane/magic-circle-cast.js";
+import * as frost from "./lib/fx/ice/frost-nova.js";
+
+const cv = document.getElementById("stage"), ctx = cv.getContext("2d");
+const banner = document.getElementById("banner");
+const ENEMY_CENTER = { x: 722, y: 418 };   // 敌方阵型地面中心
+const ENEMY_FRONT  = { x: 668, y: 420 };   // 吕布脚下
+
+const units = [
+  { img: "cards/guanyu.webp",     name: "关羽",   x: 238, y: 424, foe: false },
+  { img: "cards/zhouyu.webp",     name: "周瑜",   x: 128, y: 402, foe: false },
+  { img: "cards/zhugeliang.webp", name: "诸葛亮", x: 132, y: 292, foe: false },
+  { img: "cards/lvbu.webp",       name: "吕布",   x: 668, y: 424, foe: true },
+  { img: "cards/dongzhuo.webp",   name: "董卓",   x: 806, y: 402, foe: true },
+  { img: "cards/zhangjiao.webp",  name: "张角",   x: 800, y: 292, foe: true },
+];
+for (const u of units) { const im = new Image(); im.src = u.img; u.el = im; }
+
+const SKILLS = {
+  fire:   { mod: fireRing, at: ENEMY_CENTER, scale: 1.9, label: "周瑜 · 火烧赤壁" },
+  bolt:   { mod: bolt,     at: ENEMY_FRONT,  scale: 1.5, label: "惊雷一击" },
+  arcane: { mod: circle,   at: ENEMY_CENTER, scale: 1.8, label: "诸葛亮 · 八阵天机" },
+  frost:  { mod: frost,    at: ENEMY_CENTER, scale: 1.5, label: "霜环 · 概念演示（无对应技能）" },
+};
+
+const active = [];
+function play(key) {
+  const s = SKILLS[key], mod = s.mod, meta = mod.meta;
+  const [W, H] = meta.size, [OX, OY] = meta.origin;
+  const frame = createFrame(W, H);
+  const inst = createFx(mod, { x: OX, y: OY, ...(meta.options || {}) });
+  const off = document.createElement("canvas"); off.width = W; off.height = H;
+  const dur = (typeof meta.duration === "number" && isFinite(meta.duration)) ? meta.duration : 3.6;
+  active.push({ s, frame, inst, off, W, H, OX, OY, t: 0, dur });
+  banner.textContent = s.label; banner.style.opacity = 1;
+  clearTimeout(play._bt); play._bt = setTimeout(() => banner.style.opacity = 0, 1250);
+}
+
+function drawScene() {
+  const g = ctx.createLinearGradient(0, 0, 0, 540);
+  g.addColorStop(0, "#232733"); g.addColorStop(0.72, "#1b1e26"); g.addColorStop(0.721, "#2c2a24"); g.addColorStop(1, "#23201a");
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 920, 540);
+  ctx.fillStyle = "rgba(255,255,255,.05)"; ctx.fillRect(0, 388, 920, 2);
+  ctx.fillStyle = "#8f8a7c"; ctx.font = "13px sans-serif"; ctx.textAlign = "center";
+  ctx.fillText("我 方", 180, 36); ctx.fillText("敌 方", 736, 36);
+  for (const u of units) {
+    ctx.fillStyle = "rgba(0,0,0,.4)";
+    ctx.beginPath(); ctx.ellipse(u.x, u.y + 4, 52, 10, 0, 0, Math.PI * 2); ctx.fill();
+    if (u.el.naturalWidth > 0) ctx.drawImage(u.el, u.x - 48, u.y - 140, 96, 140);
+    ctx.fillStyle = u.foe ? "#e8a09a" : "#a9c8e8"; ctx.font = "13px sans-serif";
+    ctx.fillText(u.name, u.x, u.y + 24);
+  }
+}
+
+let last = performance.now(), acc = 0;
+function loop(now) {
+  let dt = Math.min(0.1, (now - last) / 1000); last = now;
+  drawScene();
+  acc += dt;
+  const step = 1 / 30;
+  for (let i = active.length - 1; i >= 0; i--) {
+    const a = active[i];
+    while (acc >= step) { a.inst.update(step); a.t += step; acc -= step; }
+    clearFrame(a.frame);
+    a.inst.draw(a.frame);
+    const rgba = composite(a.frame, new Uint8ClampedArray(a.W * a.H * 4), null);
+    const octx = a.off.getContext("2d");
+    octx.putImageData(new ImageData(rgba, a.W, a.H), 0, 0);
+    const sc = a.s.scale;
+    ctx.drawImage(a.off, a.s.at.x - a.OX * sc, a.s.at.y - a.OY * sc, a.W * sc, a.H * sc);
+    if (a.t >= a.dur + 0.15) active.splice(i, 1);
+  }
+  if (!active.length) acc = 0;
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+document.querySelectorAll("button[data-fx]").forEach(b => b.addEventListener("click", () => play(b.dataset.fx)));
+function sequence() {
+  const keys = ["fire", "bolt", "arcane", "frost"];
+  keys.forEach((k, i) => setTimeout(() => play(k), 250 + i * 1150));
+}
+document.getElementById("autoBtn").addEventListener("click", sequence);
+if (new URLSearchParams(location.search).get("auto") === "1") setTimeout(sequence, 700);
+</script>
+</body>
+</html>
