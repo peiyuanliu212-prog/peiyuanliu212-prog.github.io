@@ -819,6 +819,7 @@ body{padding-bottom:calc(96px + env(safe-area-inset-bottom))}
     <div class="kv"><span>当前版本</span><b>正式版</b></div>
     <div class="kv"><span>背景音乐（日常／战斗／Boss 三场景）</span><b><label class="note"><input type="checkbox" id="bgmChk"> 开启</label></b></div>
     <div class="kv"><span>战斗演出（关掉＝极速模式：直接出结果＋文字战报）</span><b><label class="note"><input type="checkbox" id="bpAnimChk"> 开启</label></b></div>
+    <div class="kv"><span>战斗音效（技能特效的声音，可单独关）</span><b><label class="note"><input type="checkbox" id="bpSfxChk"> 开启</label></b></div>
     <div class="kv"><span>战斗默认倍速</span><b><label class="note"><input type="radio" name="bpSpeed" id="bpSpd1" value="1"> 1 倍</label> <label class="note"><input type="radio" name="bpSpeed" id="bpSpd2" value="2"> 2 倍</label> <label class="note"><input type="radio" name="bpSpeed" id="bpSpd3" value="3"> 3 倍</label></b></div>
     <div style="margin:8px 0"><button class="btn sub" id="btnSettingsSave">存档说明</button>
     <button class="btn sub" id="btnSettingsRates">查看概率公示</button>
@@ -964,7 +965,7 @@ const CFG = {
   famBonusPer: 0.03, famBonusCap: 0.12, // 时薪加成：每高 1 级 +3%，封顶 +12%（Lv5）
   famLoreLv: 2, // 见闻解锁等级（累计陈列满 120 分钟）
   opsShowcaseDoubleDate: "2026-11-23", opsShowcaseDoubleMul: 2, // 橱窗双倍日：按结算笔归属日期判定，当日笔 ×2
-  opsNewsVer: "b43", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
+  opsNewsVer: "b44", // 本版新内容卡版本标记（主页顶部常驻、点击展开、看过即消）
   soulDecompRate: 0.175, // 商店购入道具（shopBought）分解返将魂率（第 12 批封漏：将魂价×此率取整，不返将星币；与道具分解将星币 17.5% 同率）
   guanzhanDaily: 5,
   dotMul: 0.3,
@@ -1773,7 +1774,7 @@ function renderNewsCard(){
   const seen = state.newsSeen && state.newsSeen[CFG.opsNewsVer];
   if(seen){ el.style.display = "none"; el.innerHTML = ""; return; }
   el.style.display = "block";
-  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配＋移除删档＋扫荡理顺＋页面理顺＋武将见闻＋章末抉择与名将列传三档）</span>";
+  let h = "<b>本版新内容</b> <span class='note'>（存档同步大修＋开局福利＋界面全新改版「赤壁夜江」＋卡图显示修复＋全部对战接入演出＋秘阁视频口径修正＋主页改版＋存档加固＋战斗提示不挡手＋倍速加档＋抽卡动画与全屏适配＋移除删档＋扫荡理顺＋页面理顺＋武将见闻＋章末抉择与名将列传三档＋战斗特效与音效）</span>";
   if(_newsOpen21){
     h += "<p class='note' style='margin-top:4px'>· 存档同步大修：退出游戏或切到后台时立即把进度同步上云，同步失败自动重试并弹出提醒，告别丢档；换设备时用同一个虎扑账号登录即可接着打。</p>"
        + "<p class='note'>· 存档加固：个别设备本地存储被限制时，进游戏自动改从账号云端找回进度，不再一进游戏就重新开局；本地存不进的进度也会照常同步上云。</p>"
@@ -1785,6 +1786,7 @@ function renderNewsCard(){
        + "<p class='note'>· 页面理顺：顶部资源栏改实底，翻页不再透字叠影；逐鹿、武将页的长段说明收进可展开规则，关键数字分行展示，看着更清爽。</p>"
        + "<p class='note'>· 武将见闻开放（11月25日）：橱窗里同一武将摆得越久，熟悉度越高（Lv1–Lv5），时薪加成最高 +12%；累计摆满 2 小时解锁该将的见闻短文，首批 30 位名将（UR 全员＋SSR 21 位），其余陆续补录。位置：「更多 → 橱窗」下方的见闻录。</p>"
        + "<p class='note'>· 章末抉择开放（11月28日）：每打完一章出一个剧情二选一，后果落资源与羁绊势、不改战斗数值，记档后下章兑现；此前已通关的章节在逐鹿页顶部抉择卡直接补选。同日「名将列传·吴/群」开启：将魂阁限时上架陆逊专属「三略」、吕布专属「狼牙槊」，12月4日下架。</p>"
+       + "<p class='note'>· 战斗特效＋音效：技能释放新增专属特效与对应音效——火烧赤壁燃起火环、惊雷一击天雷直劈，法阵、霜环、治疗、剧毒、命中火花各有其形其声；一技能一焦点、同屏不糊，设置里可单独关「战斗音效」。</p>"
        + "<p class='note'>· 主页改版：出战阵容、五大副本、屯营橱窗一屏直达——主页新增出战阵容陈列（前军/后军一目了然）、五大副本场景入口与屯营/橱窗双卡，签到与待领取顺延其后，不用再翻页找。</p>"
        + "<p class='note'>· 秘阁视频口径修正：兵甲秘阁「看视频开启第 2 轮」「看视频强行闯关」已接入真实激励视频，看完才开启/生效（与战斗跳过同一口径）；一骑当先强行闯关、天命副本每日重置同步接闸。</p>"
        + "<p class='note'>· 开局福利：主页「可领取」卡里可领开服福利——元宝 +2000、招募令 +10，每个存档限领一次；老玩家同样可领，就当这阵子丢档的补偿。</p>"
@@ -4865,6 +4867,7 @@ function bind(){
   { const jf = $("jtFac"); if(jf){ jf.value = (state.jt && state.jt.fac) || ""; jf.onchange = function(){ if(!state.jt) state.jt = {draws:0, firstTenDone:false, fac:""}; state.jt.fac = jf.value; save(); }; } }
   { const sc = $("soulAutoChk"); if(sc) sc.onchange = function(){ state.soulAuto = sc.checked; save(); const m=$("soulMsg"); if(m) m.textContent = state.soulAuto? "自动转化已开启：抽卡盈余重复卡将自动转将魂" : "自动转化已关闭"; }; }
   { const bc = $("bgmChk"); if(bc){ bc.checked = state.bgmOn!==false; bc.onchange = function(){ BGM.setEnabled(bc.checked); }; } }
+  { const sc44 = $("bpSfxChk"); if(sc44){ sc44.checked = !(typeof state!=="undefined" && state && state.flags && state.flags.bpSfx44===false); sc44.onchange = function(){ bpSetPref("bpSfx44", sc44.checked); showToast(sc44.checked? "战斗音效已开启" : "战斗音效已关闭"); }; } }
   { const ac = $("bpAnimChk"); if(ac){ ac.checked = !battleFastMode(); ac.onchange = function(){ bpSetPref("bpFast", !ac.checked); showToast(ac.checked? "战斗演出已开启" : "已切换极速模式：战斗直接出结果＋文字战报"); }; }
     const s1 = $("bpSpd1"), s2 = $("bpSpd2"), s3 = $("bpSpd3"); if(s1) s1.checked = bpSpeedPref()===1; if(s2) s2.checked = bpSpeedPref()===2; if(s3) s3.checked = bpSpeedPref()===3;
     if(s1) s1.onchange = function(){ bpSetPref("bpSpeed", 1); };
@@ -5549,6 +5552,70 @@ function bpElemColorOf(skillName){
   for(let i = 0; i < ks.length; i++){ if(skillName.indexOf(ks[i]) >= 0) return map[ks[i]]; }
   return "#d8b25c"; /* 默认兵刃银金 */
 }
+/* ============ 第 44 批 · Pixelfx 战斗特效＋对应音效（演出层；桥未就绪自动回退现行闪光/飘字） ============ */
+function bpFxKindOf44(e, fxList){
+  const fx = fxList || [];
+  let heal = false; const st = {};
+  for(let i = 0; i < fx.length; i++){
+    const f = fx[i];
+    if(f.t === "heal" || f.t === "hot") heal = true;
+    if(f.addStatus) for(let j = 0; j < f.addStatus.length; j++){ const s = f.addStatus[j]; st[(s && s.k) || s] = 1; }
+  }
+  if(heal) return "heal";
+  if(st.burn) return "fire";
+  if(st.pois) return "poison";
+  if(st.stun) return "frost";
+  if(st.conf) return "arcane";
+  const n = (e && e.skill) || "";
+  if(/[火焚焰烧]/.test(n)) return "fire";
+  if(/[雷震电]/.test(n)) return "bolt";
+  if(/[毒瘴]/.test(n)) return "poison";
+  if(/[冰寒霜冻]/.test(n)) return "frost";
+  if(/[阵谋卦策]/.test(n)) return "arcane";
+  try{ const d = (typeof ACTIVE_SKILLS !== "undefined" && ACTIVE_SKILLS[n]) || null; if(d && d.stat && d.stat !== "w") return "arcane"; }catch(_){ }
+  return "impact";
+}
+
+/* 程序化音效（WebAudio 合成、零素材）：与特效同闸，只在主特效放行时响；设置 flags.bpSfx44 可关 */
+let _sfxCtx44 = null, _sfxNoise44 = null, _sfxLast44 = 0;
+function sgSfx44(kind){
+  try{
+    if(typeof state !== "undefined" && state && state.flags && state.flags.bpSfx44 === false) return;
+    const nowMs = performance.now(); if(nowMs - _sfxLast44 < 90) return; _sfxLast44 = nowMs;
+    const AC = window.AudioContext || window.webkitAudioContext; if(!AC) return;
+    if(!_sfxCtx44) _sfxCtx44 = new AC();
+    const ctx = _sfxCtx44; if(ctx.state === "suspended") ctx.resume();
+    const t0 = ctx.currentTime + 0.01;
+    const master = ctx.createGain(); master.gain.value = 0.38; master.connect(ctx.destination);
+    if(!_sfxNoise44){
+      const len = Math.floor(ctx.sampleRate * 0.6); _sfxNoise44 = ctx.createBuffer(1, len, ctx.sampleRate);
+      const ch = _sfxNoise44.getChannelData(0); for(let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    }
+    function noise(dur, fType, f0, f1, vol, delay){
+      const src = ctx.createBufferSource(); src.buffer = _sfxNoise44; src.loop = true;
+      const fl = ctx.createBiquadFilter(); fl.type = fType; const s = t0 + (delay || 0);
+      fl.frequency.setValueAtTime(f0, s);
+      if(f1) fl.frequency.exponentialRampToValueAtTime(Math.max(30, f1), s + dur);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(vol, s + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+      src.connect(fl); fl.connect(g); g.connect(master); src.start(s); src.stop(s + dur + 0.05);
+    }
+    function tone(type, f0, f1, dur, vol, delay){
+      const o = ctx.createOscillator(); o.type = type; const s = t0 + (delay || 0);
+      o.frequency.setValueAtTime(f0, s); if(f1) o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), s + dur);
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, s); g.gain.exponentialRampToValueAtTime(vol, s + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, s + dur);
+      o.connect(g); g.connect(master); o.start(s); o.stop(s + dur + 0.05);
+    }
+    if(kind === "fire"){ noise(0.5, "bandpass", 500, 1500, 0.5, 0); noise(0.3, "lowpass", 300, 120, 0.25, 0.05); }
+    else if(kind === "bolt"){ noise(0.09, "highpass", 1800, 3000, 0.6, 0); tone("sine", 170, 42, 0.38, 0.55, 0.02); }
+    else if(kind === "arcane"){ tone("sine", 1318, null, 0.4, 0.16, 0); tone("sine", 1760, null, 0.5, 0.13, 0.09); tone("sine", 2637, null, 0.35, 0.07, 0.18); }
+    else if(kind === "frost"){ tone("sine", 2510, null, 0.16, 0.14, 0); tone("sine", 3136, null, 0.18, 0.12, 0.06); noise(0.2, "highpass", 3200, 5200, 0.22, 0.02); }
+    else if(kind === "heal"){ [523, 659, 784, 1046].forEach(function(fr, i){ tone("sine", fr, null, 0.34, 0.13, i * 0.07); }); }
+    else if(kind === "poison"){ [300, 210, 140].forEach(function(fr, i){ tone("square", fr, fr * 0.7, 0.11, 0.07, i * 0.09); }); }
+    else { noise(0.12, "lowpass", 900, 200, 0.5, 0); tone("sine", 95, 55, 0.12, 0.3, 0); }
+  }catch(_){ }
+}
 function battleFastMode(){ try{ return !!(typeof state !== "undefined" && state && state.flags && state.flags.bpFast); }catch(e){ return false; } }
 function bpSpeedPref(){ try{ const v = (typeof state !== "undefined" && state && state.flags)? state.flags.bpSpeed : 1; return (v === 2 || v === 3)? v : 1; }catch(e){ return 1; } } /* 第 37 批：倍速加 2 倍中档，pref 接受 2 */
 function bpSetPref(k, v){
@@ -5841,6 +5908,39 @@ const BattlePlayer = (function(){
     const pu = u.figEl.animate([{ transform: "scale(1)" }, { transform: "scale(1.07)" }, { transform: "scale(1)" }], { duration: 300 });
     pu.playbackRate = S.speed; S.anims.push(pu);
   }
+  function bpFxCast44(e, step){
+    if(!S || !window.SgFx || !window.SgFx.ready) return;
+    window.SgFx.setStage(S.stage, S.fxLayer);
+    window.SgFx.setStateFn(function(){ return { speed: S ? (S.speed || 1) : 1, playing: S ? !!S.playing : true }; });
+    const kind = bpFxKindOf44(e, step.fx);
+    const sr = S.stage.getBoundingClientRect();
+    function rectOf(key){
+      const u = unitOf(key); if(!u || !u.el) return null;
+      const r = u.el.getBoundingClientRect();
+      return { cx: r.left - sr.left + r.width / 2, cy: r.top - sr.top + r.height / 2, bottom: r.top - sr.top + r.height, w: r.width, left: r.left - sr.left, right: r.right - sr.left };
+    }
+    let anchor = null;
+    if(kind === "heal"){
+      const rc = rectOf(e.actor); if(rc) anchor = { x: rc.cx, y: rc.bottom, w: rc.w };
+    } else {
+      const keys = [];
+      (step.fx || []).forEach(function(f){ if(f.target && keys.indexOf(f.target) < 0) keys.push(f.target); });
+      const rs = keys.map(rectOf).filter(Boolean);
+      if(!rs.length) return;
+      if(kind === "fire" || kind === "arcane"){
+        const cx = rs.reduce(function(s, r){ return s + r.cx; }, 0) / rs.length;
+        const bottom = Math.max.apply(null, rs.map(function(r){ return r.bottom; }));
+        const spread = Math.max.apply(null, rs.map(function(r){ return r.right; })) - Math.min.apply(null, rs.map(function(r){ return r.left; }));
+        anchor = { x: cx, y: bottom, w: Math.max(spread, rs[0].w) };
+      } else if(kind === "poison" || kind === "impact"){
+        anchor = { x: rs[0].cx, y: rs[0].cy, w: rs[0].w };
+      } else { /* bolt / frost：主目标脚下 */
+        anchor = { x: rs[0].cx, y: rs[0].bottom, w: rs[0].w };
+      }
+    }
+    if(!anchor) return;
+    if(window.SgFx.cast(kind, anchor)) sgSfx44(kind);
+  }
   function playStep(step){
     if(step.banner != null) showBanner("第 " + step.banner + " 回合");
     if(step.notes) step.notes.forEach(n=> miniLabel(n.actor, "被动·" + (n.skill || "")));
@@ -5855,6 +5955,7 @@ const BattlePlayer = (function(){
       const a = unitOf(e.actor);
       const color = bpElemColorOf(e.skill);
       if(step.cutin && a) showCutin(a, e, color); else showSkillBanner(e, color);
+      try{ bpFxCast44(e, step); }catch(_){ } /* 第 44 批：技能特效＋音效（失败静默回退） */
       const base = step.cutin ? .40 : .30;
       step.fx.forEach((f, i)=> schedSub(step.dur * base + i * 60, function(){ applyFx(f, color); }));
     } else if(e.t === "skipAct"){
@@ -6036,5 +6137,6 @@ if(typeof module!=="undefined" && module.exports){ Object.defineProperty(module.
   window.addEventListener('resize', read);
 })();
 </script>
+<script type="module" src="assets/pixelfx/bridge.mjs"></script>
 </body>
 </html>
